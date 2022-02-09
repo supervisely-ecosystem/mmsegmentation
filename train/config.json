@@ -1,0 +1,24 @@
+{
+  "name": "Train MMSegmentation",
+  "type": "app",
+  "categories": [
+    "open-mmlab",
+    "neural network",
+    "semantic segmentation"
+  ],
+  "description": "Dashboard to configure, start and monitor training",
+  "docker_image": "supervisely/mmseg:1.0.0",
+  "main_script": "train/src/main.py",
+  "gui_template": "train/src/gui.html",
+  "task_location": "workspace_tasks",
+  "need_gpu": true,
+  "isolate": true,
+  "icon": "",
+  "icon_cover": false,
+  "instance_version": "6.4.18",
+  "context_menu": {
+    "target": ["images_project"],
+    "context_root": "Neural Networks",
+    "context_category": "MM Segmentation"
+  }
+}

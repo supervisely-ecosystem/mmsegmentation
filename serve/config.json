@@ -1,0 +1,22 @@
+{
+  "name": "Serve MMSegmentation",
+  "type": "app",
+  "categories": [
+    "open-mmlab",
+    "neural network",
+    "semantic segmentation"
+  ],
+  "description": "Deploy model as REST API service",
+  "docker_image": "supervisely/mmseg:1.0.0",
+  "main_script": "serve/src/sly_serve.py",
+  "gui_template": "serve/src/gui.html",
+  "task_location": "workspace_tasks",
+  "need_gpu": true,
+  "icon": "",
+  "isolate": true,
+  "icon_cover": false,
+  "instance_version": "6.4.18",
+  "session_tags": [
+    "deployed_nn"
+  ]
+}

@@ -1,0 +1,158 @@
+[
+  {
+    "model_name" : "ANN",
+    "yml_file" : "ann/ann.yml"
+  },
+  {
+    "model_name" : "APCNet",
+    "yml_file" : "apcnet/apcnet.yml"
+  },
+  {
+    "model_name" : "BiSeNetV1",
+    "yml_file" : "bisenetv1/bisenetv1.yml"
+  },
+  {
+    "model_name" : "BiSeNetV2",
+    "yml_file" : "bisenetv2/bisenetv2.yml"
+  },
+  {
+    "model_name" : "CCNet",
+    "yml_file" : "ccnet/ccnet.yml"
+  },
+  {
+    "model_name" : "CGNet",
+    "yml_file" : "cgnet/cgnet.yml"
+  },
+  {
+    "model_name" : "DANet",
+    "yml_file" : "danet/danet.yml"
+  },
+  {
+    "model_name" : "DeepLabV3",
+    "yml_file" : "deeplabv3/deeplabv3.yml"
+  },
+  {
+    "model_name" : "DeepLabV3+",
+    "yml_file" : "deeplabv3plus/deeplabv3plus.yml"
+  },
+  {
+    "model_name" : "DMNet",
+    "yml_file" : "dmnet/dmnet.yml"
+  },
+  {
+    "model_name" : "DNLNet",
+    "yml_file" : "dnlnet/dnlnet.yml"
+  },
+  {
+    "model_name" : "DPT",
+    "yml_file" : "dpt/dpt.yml"
+  },
+  {
+    "model_name" : "EMANet",
+    "yml_file" : "emanet/emanet.yml"
+  },
+  {
+    "model_name" : "ENCNet",
+    "yml_file" : "encnet/encnet.yml"
+  },
+  {
+    "model_name" : "ERFNet",
+    "yml_file" : "erfnet/erfnet.yml"
+  },
+  {
+    "model_name" : "FastFCN",
+    "yml_file" : "fastfcn/fastfcn.yml"
+  },
+  {
+    "model_name" : "Fast-SCNN",
+    "yml_file" : "fastscnn/fastscnn.yml"
+  },
+  {
+    "model_name" : "FCN",
+    "yml_file" : "fcn/fcn.yml"
+  },
+  {
+    "model_name" : "GCNet",
+    "yml_file" : "gcnet/gcnet.yml"
+  },
+  {
+    "model_name" : "HRNet",
+    "yml_file" : "hrnet/hrnet.yml"
+  },
+  {
+    "model_name" : "ICNet",
+    "yml_file" : "icnet/icnet.yml"
+  },
+  {
+    "model_name" : "ISANet",
+    "yml_file" : "isanet/isanet.yml"
+  },
+  {
+    "model_name" : "MobileNetV2",
+    "yml_file" : "mobilenet_v2/mobilenet_v2.yml"
+  },
+  {
+    "model_name" : "MobileNetV3",
+    "yml_file" : "mobilenet_v3/mobilenet_v3.yml"
+  },
+  {
+    "model_name" : "Non-local Net",
+    "yml_file" : "nonlocal_net/nonlocal_net.yml"
+  },
+  {
+    "model_name" : "OCRNet",
+    "yml_file" : "ocrnet/ocrnet.yml"
+  },
+  {
+    "model_name" : "PointRend",
+    "yml_file" : "point_rend/point_rend.yml"
+  },
+  {
+    "model_name" : "PSANet",
+    "yml_file" : "psanet/psanet.yml"
+  },
+  {
+    "model_name" : "PSPNet",
+    "yml_file" : "pspnet/pspnet.yml"
+  },
+  {
+    "model_name" : "ResNeSt",
+    "yml_file" : "resnest/resnest.yml"
+  },
+  {
+    "model_name" : "SegFormer",
+    "yml_file" : "segformer/segformer.yml"
+  },
+  {
+    "model_name" : "SemanticFPN",
+    "yml_file" : "sem_fpn/sem_fpn.yml"
+  },
+  {
+    "model_name" : "SETR",
+    "yml_file" : "setr/setr.yml"
+  },
+  {
+    "model_name" : "STDC",
+    "yml_file" : "stdc/stdc.yml"
+  },
+  {
+    "model_name" : "Swin Transformer",
+    "yml_file" : "swin/swin.yml"
+  },
+  {
+    "model_name" : "Twins",
+    "yml_file" : "twins/twins.yml"
+  },
+  {
+    "model_name" : "UNet",
+    "yml_file" : "unet/unet.yml"
+  },
+  {
+    "model_name" : "UPerNet",
+    "yml_file" : "upernet/upernet.yml"
+  },
+  {
+    "model_name" : "ViT",
+    "yml_file" : "vit/vit.yml"
+  }
+]
