@@ -1,211 +1,13 @@
 [
   {
-    "model_name" : "ANN",
-    "yml_file" : "ann/ann.yml",
-    "paper_from": "ICCV",
-    "year": 2019
-  },
-  {
-    "model_name" : "APCNet",
-    "yml_file" : "apcnet/apcnet.yml",
-    "paper_from": "CVPR",
-    "year": 2019
-  },
-  {
-    "model_name" : "BiSeNetV1",
-    "yml_file" : "bisenetv1/bisenetv1.yml",
-    "paper_from": "ECCV",
-    "year": 2018
-  },
-  {
-    "model_name" : "BiSeNetV2",
-    "yml_file" : "bisenetv2/bisenetv2.yml",
-    "paper_from": "IJCV",
-    "year": 2021
-  },
-  {
-    "model_name" : "CCNet",
-    "yml_file" : "ccnet/ccnet.yml",
-    "paper_from": "ICCV",
-    "year": 2019
-  },
-  {
-    "model_name" : "CGNet",
-    "yml_file" : "cgnet/cgnet.yml",
-    "paper_from": "TIP",
-    "year": 2020
-  },
-  {
-    "model_name" : "DANet",
-    "yml_file" : "danet/danet.yml",
-    "paper_from": "CVPR",
-    "year": 2019
-  },
-  {
-    "model_name" : "DeepLabV3",
-    "yml_file" : "deeplabv3/deeplabv3.yml",
-    "paper_from": "ArXiv",
-    "year": 2017
-  },
-  {
-    "model_name" : "DeepLabV3+",
-    "yml_file" : "deeplabv3plus/deeplabv3plus.yml",
-    "paper_from": "CVPR",
-    "year": 2018
-  },
-  {
-    "model_name" : "DMNet",
-    "yml_file" : "dmnet/dmnet.yml",
-    "paper_from": "ICCV",
-    "year": 2019
-  },
-  {
-    "model_name" : "DNLNet",
-    "yml_file" : "dnlnet/dnlnet.yml",
-    "paper_from": "ECCV",
-    "year": 2020
-  },
-  {
-    "model_name" : "DPT",
-    "yml_file" : "dpt/dpt.yml",
-    "paper_from": "ArXiv",
-    "year": 2021
-  },
-  {
-    "model_name" : "EMANet",
-    "yml_file" : "emanet/emanet.yml",
-    "paper_from": "ICCV",
-    "year": 2019
-  },
-  {
-    "model_name" : "ENCNet",
-    "yml_file" : "encnet/encnet.yml",
-    "paper_from": "CVPR",
-    "year": 2018
-  },
-  {
-    "model_name" : "ERFNet",
-    "yml_file" : "erfnet/erfnet.yml",
-    "paper_from": "T-ITS",
-    "year": 2018
-  },
-  {
-    "model_name" : "FastFCN",
-    "yml_file" : "fastfcn/fastfcn.yml",
-    "paper_from": "ArXiv",
-    "year": 2019
-  },
-  {
-    "model_name" : "Fast-SCNN",
-    "yml_file" : "fastscnn/fastscnn.yml",
-    "paper_from": "ArXiv",
-    "year": 2019
-  },
-  {
-    "model_name" : "FCN",
-    "yml_file" : "fcn/fcn.yml",
-    "paper_from": "CVPR",
-    "year": 2015
-  },
-  {
-    "model_name" : "GCNet",
-    "yml_file" : "gcnet/gcnet.yml",
-    "paper_from": "ICCVW",
-    "year": 2019
-  },
-  {
-    "model_name" : "HRNet",
-    "yml_file" : "hrnet/hrnet.yml",
-    "paper_from": "CVPR",
-    "year": 2019
-  },
-  {
-    "model_name" : "ICNet",
-    "yml_file" : "icnet/icnet.yml",
-    "paper_from": "ECCV",
-    "year": 2018
-  },
-  {
-    "model_name" : "ISANet",
-    "yml_file" : "isanet/isanet.yml",
-    "paper_from": "ArXiv",
-    "year": 2019
-  },
-  {
-    "model_name" : "MobileNetV2",
-    "yml_file" : "mobilenet_v2/mobilenet_v2.yml",
-    "paper_from": "CVPR",
-    "year": 2018
-  },
-  {
-    "model_name" : "MobileNetV3",
-    "yml_file" : "mobilenet_v3/mobilenet_v3.yml",
-    "paper_from": "ICCV",
-    "year": 2019
-  },
-  {
-    "model_name" : "Non-local Net",
-    "yml_file" : "nonlocal_net/nonlocal_net.yml",
-    "paper_from": "CVPR",
-    "year": 2018
-  },
-  {
-    "model_name" : "OCRNet",
-    "yml_file" : "ocrnet/ocrnet.yml",
-    "paper_from": "ECCV",
-    "year": 2020
-  },
-  {
-    "model_name" : "PointRend",
-    "yml_file" : "point_rend/point_rend.yml",
-    "paper_from": "CVPR",
-    "year": 2020
-  },
-  {
-    "model_name" : "PSANet",
-    "yml_file" : "psanet/psanet.yml",
-    "paper_from": "ECCV",
-    "year": 2018
-  },
-  {
-    "model_name" : "PSPNet",
-    "yml_file" : "pspnet/pspnet.yml",
-    "paper_from": "CVPR",
-    "year": 2017
-  },
-  {
-    "model_name" : "ResNeSt",
-    "yml_file" : "resnest/resnest.yml",
-    "paper_from": "ArXiv",
-    "year": 2020
-  },
-  {
     "model_name" : "SegFormer",
     "yml_file" : "segformer/segformer.yml",
     "paper_from": "NeurIPS",
     "year": 2021
   },
   {
-    "model_name" : "SemanticFPN",
-    "yml_file" : "sem_fpn/sem_fpn.yml",
-    "paper_from": "CVPR",
-    "year": 2019
-  },
-  {
-    "model_name" : "SETR",
-    "yml_file" : "setr/setr.yml",
-    "paper_from": "CVPR",
-    "year": 2021
-  },
-  {
-    "model_name" : "STDC",
-    "yml_file" : "stdc/stdc.yml",
-    "paper_from": "CVPR",
-    "year": 2021
-  },
-  {
-    "model_name" : "Swin Transformer",
-    "yml_file" : "swin/swin.yml",
+    "model_name" : "Segmenter",
+    "yml_file" : "segmenter/segmenter.yml",
     "paper_from": "ICCV",
     "year": 2021
   },
@@ -216,10 +18,166 @@
     "year": 2021
   },
   {
-    "model_name" : "UNet",
-    "yml_file" : "unet/unet.yml",
-    "paper_from": "MICCAI",
-    "year": 2016
+    "model_name" : "Swin Transformer",
+    "yml_file" : "swin/swin.yml",
+    "paper_from": "ICCV",
+    "year": 2021
+  },
+  {
+    "model_name" : "DPT",
+    "yml_file" : "dpt/dpt.yml",
+    "paper_from": "ArXiv",
+    "year": 2021
+  },
+  {
+    "model_name" : "SETR",
+    "yml_file" : "setr/setr.yml",
+    "paper_from": "CVPR",
+    "year": 2021
+  },
+  {
+    "model_name" : "ViT",
+    "yml_file" : "vit/vit.yml",
+    "paper_from": "ICLR",
+    "year": 2021
+  },
+  {
+    "model_name" : "STDC",
+    "yml_file" : "stdc/stdc.yml",
+    "paper_from": "CVPR",
+    "year": 2021
+  },
+  {
+    "model_name" : "BiSeNetV2",
+    "yml_file" : "bisenetv2/bisenetv2.yml",
+    "paper_from": "IJCV",
+    "year": 2021
+  },
+  {
+    "model_name" : "CGNet",
+    "yml_file" : "cgnet/cgnet.yml",
+    "paper_from": "TIP",
+    "year": 2020
+  },
+  {
+    "model_name" : "PointRend",
+    "yml_file" : "point_rend/point_rend.yml",
+    "paper_from": "CVPR",
+    "year": 2020
+  },
+  {
+    "model_name" : "DNLNet",
+    "yml_file" : "dnlnet/dnlnet.yml",
+    "paper_from": "ECCV",
+    "year": 2020
+  },
+  {
+    "model_name" : "OCRNet",
+    "yml_file" : "ocrnet/ocrnet.yml",
+    "paper_from": "ECCV",
+    "year": 2020
+  },
+  {
+    "model_name" : "ResNeSt",
+    "yml_file" : "resnest/resnest.yml",
+    "paper_from": "ArXiv",
+    "year": 2020
+  },
+  {
+    "model_name" : "ISANet",
+    "yml_file" : "isanet/isanet.yml",
+    "paper_from": "ArXiv",
+    "year": 2019
+  },
+  {
+    "model_name" : "Fast-SCNN",
+    "yml_file" : "fastscnn/fastscnn.yml",
+    "paper_from": "ArXiv",
+    "year": 2019
+  },
+  {
+    "model_name" : "FastFCN",
+    "yml_file" : "fastfcn/fastfcn.yml",
+    "paper_from": "ArXiv",
+    "year": 2019
+  },
+  {
+    "model_name" : "GCNet",
+    "yml_file" : "gcnet/gcnet.yml",
+    "paper_from": "ICCVW",
+    "year": 2019
+  },
+  {
+    "model_name" : "ANN",
+    "yml_file" : "ann/ann.yml",
+    "paper_from": "ICCV",
+    "year": 2019
+  },
+  {
+    "model_name" : "DMNet",
+    "yml_file" : "dmnet/dmnet.yml",
+    "paper_from": "ICCV",
+    "year": 2019
+  },
+  {
+    "model_name" : "CCNet",
+    "yml_file" : "ccnet/ccnet.yml",
+    "paper_from": "ICCV",
+    "year": 2019
+  },
+  {
+    "model_name" : "EMANet",
+    "yml_file" : "emanet/emanet.yml",
+    "paper_from": "ICCV",
+    "year": 2019
+  },
+  {
+    "model_name" : "APCNet",
+    "yml_file" : "apcnet/apcnet.yml",
+    "paper_from": "CVPR",
+    "year": 2019
+  },
+  {
+    "model_name" : "DANet",
+    "yml_file" : "danet/danet.yml",
+    "paper_from": "CVPR",
+    "year": 2019
+  },
+  {
+    "model_name" : "SemanticFPN",
+    "yml_file" : "sem_fpn/sem_fpn.yml",
+    "paper_from": "CVPR",
+    "year": 2019
+  },
+  {
+    "model_name" : "HRNet",
+    "yml_file" : "hrnet/hrnet.yml",
+    "paper_from": "CVPR",
+    "year": 2019
+  },
+  {
+    "model_name" : "MobileNetV3",
+    "yml_file" : "mobilenet_v3/mobilenet_v3.yml",
+    "paper_from": "ICCV",
+    "year": 2019
+  },
+  {
+    "model_name" : "ENCNet",
+    "yml_file" : "encnet/encnet.yml",
+    "paper_from": "CVPR",
+    "year": 2018
+  },
+  {
+    "model_name" : "Non-local Net",
+    "yml_file" : "nonlocal_net/nonlocal_net.yml",
+    "paper_from": "CVPR",
+    "year": 2018
+  },
+  {
+    "model_name" : "ICNet",
+    "yml_file" : "icnet/icnet.yml",
+    "paper_from": "ECCV",
+    "year": 2018
   },
   {
     "model_name" : "UPerNet",
@@ -228,9 +186,57 @@
     "year": 2018
   },
   {
-    "model_name" : "ViT",
-    "yml_file" : "vit/vit.yml",
-    "paper_from": "ICLR",
-    "year": 2021
+    "model_name" : "DeepLabV3+",
+    "yml_file" : "deeplabv3plus/deeplabv3plus.yml",
+    "paper_from": "CVPR",
+    "year": 2018
+  },
+  {
+    "model_name" : "PSANet",
+    "yml_file" : "psanet/psanet.yml",
+    "paper_from": "ECCV",
+    "year": 2018
+  },
+  {
+    "model_name" : "MobileNetV2",
+    "yml_file" : "mobilenet_v2/mobilenet_v2.yml",
+    "paper_from": "CVPR",
+    "year": 2018
+  },
+  {
+    "model_name" : "BiSeNetV1",
+    "yml_file" : "bisenetv1/bisenetv1.yml",
+    "paper_from": "ECCV",
+    "year": 2018
+  },
+  {
+    "model_name" : "DeepLabV3",
+    "yml_file" : "deeplabv3/deeplabv3.yml",
+    "paper_from": "ArXiv",
+    "year": 2017
+  },
+  {
+    "model_name" : "PSPNet",
+    "yml_file" : "pspnet/pspnet.yml",
+    "paper_from": "CVPR",
+    "year": 2017
+  },
+  {
+    "model_name" : "UNet",
+    "yml_file" : "unet/unet.yml",
+    "paper_from": "MICCAI",
+    "year": 2016
+  },
+  {
+    "model_name" : "ERFNet",
+    "yml_file" : "erfnet/erfnet.yml",
+    "paper_from": "T-ITS",
+    "year": 2017
+  },
+  {
+    "model_name" : "FCN",
+    "yml_file" : "fcn/fcn.yml",
+    "paper_from": "CVPR",
+    "year": 2015
   }
 ]
