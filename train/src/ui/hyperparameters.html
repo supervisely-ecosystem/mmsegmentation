@@ -1,22 +1,16 @@
 <sly-card title="Traning hyperparameters"
-          subtitle="Task progress, detailed logs, metrics charts, and other visualizations"
+          description="Partially taken from default model params"
           :options="{collapsable: true}"
           :collapsed.sync="state.collapsed6"
           :disabled="{disabled: state.disabled6, message: 'Finish previous steps before configure training'}"
           ref="step6"
 >
-    <sly-card title="General hyperparameters"
-              subtitle="Basic training settings"
-              :options="{collapsable: true}"
-              :collapsed.sync="state.collapsedGeneral"
-              style="color: #1fa0ff; box-shadow: none;"
-    >
-        <div style="border-left: 2px solid #1fa0ff; padding: 0 12px">
-
-            <sly-field title="GPU device id"
+    <el-tabs type="border-card" class="el-tabs-cards">
+        <el-tab-pane label="General" :disabled="data.done6">
+            <sly-field title="Device"
                        description="Run nvidia-smi or check agent page to see how many devices your machine has or keep by default">
                 <el-select v-model="state.gpusId" :disabled="true">
-                    <el-option key="0" label="0" value="0"></el-option>
+                    <el-option key="cuda:0" label="cuda:0" value="cuda:0"></el-option>
                 </el-select>
             </sly-field>
 
@@ -55,21 +49,8 @@
                     <span class="ml5">iterations</span>
                 </div>
             </sly-field>
-            <el-button type="primary" class="regular mt10"
-                       @click="state.collapsedGeneral = true;"
-                       v-if="!data.done6">
-                Save general settings
-            </el-button>
-        </div>
-    </sly-card>
-
-    <sly-card title="Checkpoints"
-              subtitle="Checkpoints settings"
-              :options="{collapsable: true}"
-              :collapsed.sync="state.collapsedCheckpoints"
-              style="color: #db7d65; box-shadow: none;"
-    >
-        <div style="border-left: 2px solid #db7d65; padding: 0 12px">
+        </el-tab-pane>
+        <el-tab-pane label="Checkpoints" :disabled="data.done6">
             <sly-field title="Checkpoints interval"
                description="Save checkpoints periodically">
                 <div class="fflex">
@@ -112,22 +93,8 @@
                            :disabled="data.done6">
                 </el-switch>
             </sly-field>
-
-            <el-button type="primary" class="regular mt10"
-                       @click="state.collapsedCheckpoints = true;"
-                       v-if="!data.done6">
-                Save checkpoints settings
-            </el-button>
-        </div>
-    </sly-card>
-
-    <sly-card title="Optimizer"
-              subtitle="Optimizer settings. Main default settings was taken from config of selected model."
-              :options="{collapsable: true}"
-              :collapsed.sync="state.collapsedOptimizer"
-              style="color: #ad03fc; box-shadow: none;"
-    >
-        <div style="border-left: 2px solid #ad03fc; padding: 0 12px">
+        </el-tab-pane>
+        <el-tab-pane label="(Advanced) Optimizer" :disabled="data.done6">
             <sly-field title="Optimizer">
                 <div slot="description">
                     Choose optimizer and its settings, learn more in official
@@ -182,22 +149,8 @@
                     </el-input-number>
                 </div>
             </sly-field>
-
-            <el-button type="primary" class="regular mt10"
-                       @click="state.collapsedOptimizer = true;"
-                       v-if="!data.done6">
-                Save optimizer settings
-            </el-button>
-        </div>
-    </sly-card>
-
-    <sly-card title="Loss and metrics"
-              subtitle="Loss function and metrics settings. Main default settings was taken from config of selected model."
-              :options="{collapsable: true}"
-              :collapsed.sync="state.collapsedLoss"
-              style="color: #AF220E; box-shadow: none;"
-    >
-        <div style="border-left: 2px solid #AF220E; padding: 0 12px">
+        </el-tab-pane>
+        <el-tab-pane label="(Advanced) Losses and metrics" :disabled="data.done6">
             <sly-field title="Decode head loss function">
                 <el-select class=mt10 v-model="state.decodeHeadLoss" :disabled="data.done6">
                     <el-option v-for="loss in data.availableLosses" :key="loss" :label="loss" :value="loss"></el-option>
@@ -265,47 +218,35 @@
                     <el-option v-for="metric in data.availableMetrics" :key="metric" :label="metric" :value="metric"></el-option>
                 </el-select>
             </sly-field>
-
-            <el-button type="primary" class="regular mt10"
-                       @click="state.collapsedLoss = true;"
-                       v-if="!data.done6">
-                Save loss and metrics settings
-            </el-button>
-        </div>
-    </sly-card>
-
-    <sly-card title="LR scheduler"
-              subtitle="LR scheduler settings"
-              :options="{collapsable: true}"
-              :collapsed.sync="state.collapsedLRScheduler"
-              style="color: #07C612; box-shadow: none;"
-    >
-        <div style="border-left: 2px solid #07C612; padding: 0 12px">
-            <sly-field title="LR Scheduler">
-                <div slot="description">
-                    Choose LR scheduler and its settings, learn more in official
-                    <a href="https://pytorch.org/docs/1.9.0/optim.html#how-to-adjust-learning-rate" target="_blank">
-                        pytorch documentation
-                    </a>
-                    or in
-                    <a href="https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/lr_updater.py" target="_blank">
-                        mmcv implementation
-                    </a>
-                </div>
-                <sly-field title="By epoch"
-                       description="Do step of LR scheduler by epochs or by iterations if selected OFF">
-                    <el-switch v-model="state.schedulerByEpochs" on-color="#13ce66" off-color="#B8B8B8" :disabled="data.done6"></el-switch>
-                </sly-field>
-                <sly-field title="INFO: By epoch"
-                       description="Cyclic and OneCycle LR policies won't be able to use when 'by epoch' chosen."
-                       style="padding-top: 0; padding-bottom: 0; margin: 10px 5px;">
+        </el-tab-pane>
+        <el-tab-pane label="(Advanced) Learning rate scheduler" :disabled="data.done6">
+            <div class="mb10">
+                Choose LR scheduler and its settings, learn more in official
+                <a href="https://pytorch.org/docs/1.9.0/optim.html#how-to-adjust-learning-rate" target="_blank">
+                    pytorch documentation
+                </a>
+                or in
+                <a href="https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/lr_updater.py" target="_blank">
+                    mmcv implementation
+                </a>
+            </div>
+            <sly-field title="By epoch"
+                   description="Do step of LR scheduler by epochs or by iterations if selected OFF">
+                <el-switch v-model="state.schedulerByEpochs" on-color="#13ce66" off-color="#B8B8B8" :disabled="data.done6"></el-switch>
+            </sly-field>
+            <sly-field title="INFO: By epoch"
+                   description="Cyclic and OneCycle LR policies won't be able to use when 'by epoch' chosen."
+                   style="padding-top: 0; padding-bottom: 0; margin: 10px 5px;">
 
                 <sly-icon slot="icon" :options="{ color: '#cece66', bgColor: '#f7f7eb', rounded: false }">
                     <i class="zmdi zmdi-info"></i>
                 </sly-icon>
             </sly-field>
-                <el-select class=mt10 v-model="state.lrPolicy" :disabled="data.done6">
-                    <el-option v-if="!state.schedulerByEpochs || (state.schedulerByEpochs && !['Cyclic', 'OneCycle'].includes(policy))" v-for="(policy, policy_ind) in data.availableLrPolicy" :key="policy" :label="data.fullPolicyNames[policy_ind]" :value="policy"></el-option>
+            <sly-field title="LR Scheduler policy">
+                <el-select v-model="state.lrPolicy" :disabled="data.done6">
+                    <el-option v-if="!state.schedulerByEpochs || (state.schedulerByEpochs && !['Cyclic', 'OneCycle'].includes(policy))"
+                               v-for="(policy, policy_ind) in data.availableLrPolicy" :key="policy"
+                               :label="data.fullPolicyNames[policy_ind]" :value="policy"></el-option>
                 </el-select>
             </sly-field>
             <sly-field v-if="state.lrPolicy === 'Step'" title="LR sheduler steps"
@@ -424,58 +365,43 @@
             </sly-field>
 
             <sly-card title="Warmup"
-                      v-if="state.lrPolicy !== 'Fixed'"
-                      subtitle="Warmup parameters of scheduler"
+                      subtitle="Warmup settings"
                       :options="{collapsable: true}"
                       :collapsed.sync="state.collapsedWarmup"
-                      style="color: #37D662; box-shadow: none;"
+                      style="box-shadow: none;"
             >
-                <div style="border-left: 2px solid #37D662; padding: 0 12px">
-                    <sly-field title="Use warmup">
-                        <el-switch v-model="state.useWarmup" on-color="#13ce66" off-color="#B8B8B8" :disabled="data.done6"></el-switch>
-                        <div class="fflex mt10" v-if="state.useWarmup">
-                            <div class="mr5">Warmup strategy:</div>
-                            <el-select class=mt10 v-model="state.warmup" :disabled="data.done6">
-                                <el-option key="constant" label="constant" value="constant"></el-option>
-                                <el-option key="linear" label="linear" value="linear"></el-option>
-                                <el-option key="exp" label="exp" value="exp"></el-option>
-                            </el-select>
-                        </div>
+                <sly-field title="Use warmup">
+                    <el-switch v-model="state.useWarmup" on-color="#13ce66" off-color="#B8B8B8" :disabled="data.done6"></el-switch>
+                    <div class="fflex mt10" v-if="state.useWarmup">
+                        <div class="mr5">Warmup strategy:</div>
+                        <el-select class=mt10 v-model="state.warmup" :disabled="data.done6">
+                            <el-option key="constant" label="constant" value="constant"></el-option>
+                            <el-option key="linear" label="linear" value="linear"></el-option>
+                            <el-option key="exp" label="exp" value="exp"></el-option>
+                        </el-select>
+                    </div>
 
-                    </sly-field>
+                </sly-field>
 
-                    <sly-field title="By epochs" v-if="state.useWarmup"
-                               description="When is True, warmup iters
-                                            means the number of epochs that warmup lasts, otherwise means the
-                                            number of iteration that warmup lasts">
-                        <el-switch v-model="state.warmupByEpoch" on-color="#13ce66" off-color="#B8B8B8" :disabled="data.done6"></el-switch>
-                    </sly-field>
+                <sly-field title="By epochs" v-if="state.useWarmup"
+                           description="When is True, warmup iters
+                                        means the number of epochs that warmup lasts, otherwise means the
+                                        number of iteration that warmup lasts">
+                    <el-switch v-model="state.warmupByEpoch" on-color="#13ce66" off-color="#B8B8B8" :disabled="data.done6"></el-switch>
+                </sly-field>
 
-                    <sly-field title="Warmup iterations" v-if="state.useWarmup"
-                               description="The number of iterations or epochs that warmup lasts">
-                        <el-input-number v-model="state.warmupIters" :min="1" :step="1" :debounce="1000" :disabled="data.done6"></el-input-number>
-                    </sly-field>
+                <sly-field title="Warmup iterations" v-if="state.useWarmup"
+                           description="The number of iterations or epochs that warmup lasts">
+                    <el-input-number v-model="state.warmupIters" :min="1" :step="1" :debounce="1000" :disabled="data.done6"></el-input-number>
+                </sly-field>
 
-                    <sly-field title="Warmup ratio" v-if="state.useWarmup"
-                               description="LR used at the beginning of warmup equals to warmup_ratio * initial_lr">
-                        <el-input-number v-model="state.warmupRatio" :min="0.0001" :step="0.0001" :max="1" :debounce="1000" :disabled="data.done6"></el-input-number>
-                    </sly-field>
-
-                    <el-button type="primary" class="regular mt10"
-                               @click="state.collapsedWarmup = true;"
-                               v-if="!data.done6">
-                        Save warmup settings
-                    </el-button>
-                </div>
+                <sly-field title="Warmup ratio" v-if="state.useWarmup"
+                           description="LR used at the beginning of warmup equals to warmup_ratio * initial_lr">
+                    <el-input-number v-model="state.warmupRatio" :min="0.0001" :step="0.0001" :max="1" :debounce="1000" :disabled="data.done6"></el-input-number>
+                </sly-field>
             </sly-card>
-
-            <el-button type="primary" class="regular mt10"
-                       @click="state.collapsedLRScheduler = true;"
-                       v-if="!data.done6">
-                Save LR scheduler settings
-            </el-button>
-        </div>
-    </sly-card>
+        </el-tab-pane>
+    </el-tabs>
 
     <el-button type="primary" class="regular mt10"
                @click="command('use_hyp')"

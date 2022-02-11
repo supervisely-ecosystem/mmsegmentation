@@ -43,9 +43,9 @@ def get_pretrained_models(return_metrics=False):
         with open(os.path.join(g.root_source_path, "configs", model_meta["yml_file"]), "r") as stream:
             model_info = yaml.safe_load(stream)
             model_config[model_meta["model_name"]] = {}
-            model_config[model_meta["model_name"]]["code_url"] = model_info["Collections"][0]["Code"]["URL"]
-            model_config[model_meta["model_name"]]["paper_title"] = model_info["Collections"][0]["Paper"]["Title"]
-            model_config[model_meta["model_name"]]["paper_url"] = model_info["Collections"][0]["Paper"]["URL"]
+            # model_config[model_meta["model_name"]]["code_url"] = model_info["Collections"][0]["Code"]["URL"]
+            # model_config[model_meta["model_name"]]["paper_title"] = model_info["Collections"][0]["Paper"]["Title"]
+            # model_config[model_meta["model_name"]]["paper_url"] = model_info["Collections"][0]["Paper"]["URL"]
             model_config[model_meta["model_name"]]["checkpoints"] = []
             mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
             # TODO: change link to current version of package
@@ -61,12 +61,10 @@ def get_pretrained_models(return_metrics=False):
                     checkpoint_info["inference_time"] = "-"
                 checkpoint_info["crop_size"] = model["Metadata"]["crop size"]
                 checkpoint_info["lr_schd"] = model["Metadata"]["lr schd"]
-                """
                 try:
                     checkpoint_info["training_memory"] = model["Metadata"]["Training Memory (GB)"]
                 except KeyError:
                     checkpoint_info["training_memory"] = "-"
-                """
                 checkpoint_info["config_file"] = model["Config"]
                 checkpoint_info["dataset"] = model["Results"][0]["Dataset"]
                 for metric_name, metric_val in model["Results"][0]["Metrics"].items():
@@ -85,13 +83,13 @@ def get_pretrained_models(return_metrics=False):
 
 def get_table_columns(metrics):
     columns = [
-        {"key": "name", "title": "Checkpoint name", "subtitle": None},
+        {"key": "name", "title": " ", "subtitle": None},
         {"key": "backbone", "title": "Backbone", "subtitle": None},
         {"key": "dataset", "title": "Dataset", "subtitle": None},
         {"key": "inference_time", "title": "Inference time", "subtitle": "(ms/im)"},
         {"key": "crop_size", "title": "Input size", "subtitle": "(H, W)"},
         {"key": "lr_schd", "title": "LR scheduler", "subtitle": "steps"},
-        # {"key": "training_memory", "title": "Training memory", "subtitle": "GB"},
+        {"key": "training_memory", "title": "Training memory", "subtitle": "GB"},
     ]
     for metric in metrics:
         columns.append({"key": metric, "title": f"{metric} score", "subtitle": None})

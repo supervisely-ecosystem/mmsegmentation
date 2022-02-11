@@ -11,9 +11,19 @@ from mmcv import Config
 cfg = None
 
 def init(data, state):
-    state['pretrainedModel'] = 'ANN'
+    state['pretrainedModel'] = 'SegFormer'
     data["pretrainedModels"], metrics = get_pretrained_models(return_metrics=True)
-    data["pretrainedModelsList"] = list(data["pretrainedModels"].keys())
+    model_select_info = []
+    for model_name, params in data["pretrainedModels"].items():
+        model_select_info.append({
+            "name": model_name,
+            "paper_from": params["paper_from"],
+            "year": params["year"]
+        })
+    model_select_info = sorted(model_select_info, key=lambda elem: (-elem['year'], elem['name']))
+    data["pretrainedModelsInfo"] = model_select_info
+    data["configLinks"] = {model_name: params["config_url"] for model_name, params in data["pretrainedModels"].items()}
+
     data["modelColumns"] = get_table_columns(metrics)
 
     state["selectedModel"] = {pretrained_model: data["pretrainedModels"][pretrained_model]["checkpoints"][0]['name']
@@ -27,7 +37,23 @@ def init(data, state):
     state["auxiliaryHeadLoss"] = "CrossEntropyLoss"
     state["decodeHeadLossWeight"] = 1.0
     state["auxiliaryHeadLossWeight"] = 0.4
-
+    state["lrPolicy"] = "Fixed"
+    state["useWarmup"] = False
+    state["warmup"] = "constant"
+    state["warmupIters"] = 0
+    state["warmupRatio"] = 0.1
+    state["schedulerByEpochs"] = False
+    state["minLREnabled"] = False
+    state["minLR"] = None
+    state["minLRRatio"] = None
+    state["power"] = 1
+    state["momentum"] = 0.9
+    state["beta1"] = 0.9
+    state["beta2"] = 0.999
+    state["imgWidth"] = 256
+    state["imgHeight"] = 256
+    state["batchSizePerGPU"] = 4
+    state["workersPerGPU"] = 2
     state["weightsInitialization"] = "pretrained"  # "custom"
     state["collapsed5"] = True
     state["disabled5"] = True
@@ -58,12 +84,13 @@ def get_pretrained_models(return_metrics=False):
         with open(os.path.join(g.root_source_dir, "configs", model_meta["yml_file"]), "r") as stream:
             model_info = yaml.safe_load(stream)
             model_config[model_meta["model_name"]] = {}
-            model_config[model_meta["model_name"]]["code_url"] = model_info["Collections"][0]["Code"]["URL"]
-            model_config[model_meta["model_name"]]["paper_title"] = model_info["Collections"][0]["Paper"]["Title"]
-            model_config[model_meta["model_name"]]["paper_url"] = model_info["Collections"][0]["Paper"]["URL"]
+            # model_config[model_meta["model_name"]]["code_url"] = model_info["Collections"][0]["Code"]["URL"]
+            # model_config[model_meta["model_name"]]["paper_title"] = model_info["Collections"][0]["Paper"]["Title"]
+            # model_config[model_meta["model_name"]]["paper_url"] = model_info["Collections"][0]["Paper"]["URL"]
             model_config[model_meta["model_name"]]["checkpoints"] = []
+            model_config[model_meta["model_name"]]["paper_from"] = model_meta["paper_from"]
+            model_config[model_meta["model_name"]]["year"] = model_meta["year"]
             mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
-            # TODO: change link to current version of package
             model_config[model_meta["model_name"]]["config_url"] = f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/" + model_meta["yml_file"].split("/")[0]
             checkpoint_keys = []
             for model in model_info["Models"]:
@@ -76,12 +103,10 @@ def get_pretrained_models(return_metrics=False):
                     checkpoint_info["inference_time"] = "-"
                 checkpoint_info["crop_size"] = model["Metadata"]["crop size"]
                 checkpoint_info["lr_schd"] = model["Metadata"]["lr schd"]
-                """
                 try:
                     checkpoint_info["training_memory"] = model["Metadata"]["Training Memory (GB)"]
                 except KeyError:
                     checkpoint_info["training_memory"] = "-"
-                """
                 checkpoint_info["config_file"] = model["Config"]
                 checkpoint_info["dataset"] = model["Results"][0]["Dataset"]
                 for metric_name, metric_val in model["Results"][0]["Metrics"].items():
@@ -100,13 +125,13 @@ def get_pretrained_models(return_metrics=False):
 
 def get_table_columns(metrics):
     columns = [
-        {"key": "name", "title": "Checkpoint name", "subtitle": None},
+        {"key": "name", "title": " ", "subtitle": None},
         {"key": "backbone", "title": "Backbone", "subtitle": None},
         {"key": "dataset", "title": "Dataset", "subtitle": None},
         {"key": "inference_time", "title": "Inference time", "subtitle": "(ms/im)"},
         {"key": "crop_size", "title": "Input size", "subtitle": "(H, W)"},
         {"key": "lr_schd", "title": "LR scheduler", "subtitle": "steps"},
-        # {"key": "training_memory", "title": "Training memory", "subtitle": "GB"},
+        {"key": "training_memory", "title": "Training memory", "subtitle": "GB"},
     ]
     for metric in metrics:
         columns.append({"key": metric, "title": f"{metric} score", "subtitle": None})
@@ -161,6 +186,24 @@ def init_default_cfg_args(cfg):
                 "payload": cfg.model.auxiliary_head[0].loss_decode.loss_weight if isinstance(cfg.model.auxiliary_head, list) else cfg.model.auxiliary_head.loss_decode.loss_weight
             }
         ])
+    if hasattr(cfg.data, "samples_per_gpu"):
+        params.extend([{
+            "field": "state.batchSizePerGPU",
+            "payload": cfg.data.samples_per_gpu
+        }])
+    if hasattr(cfg.data, "workers_per_gpu"):
+        params.extend([{
+            "field": "state.workersPerGPU",
+            "payload": cfg.data.workers_per_gpu
+        }])
+    if hasattr(cfg, "crop_size"):
+        params.extend([{
+            "field": "state.imgHeight",
+            "payload": cfg.crop_size[0]
+        },{
+            "field": "state.imgWidth",
+            "payload": cfg.crop_size[1]
+        }])
     if hasattr(cfg.optimizer, "type"):
         params.extend([{
             "field": "state.optimizer",
@@ -176,6 +219,64 @@ def init_default_cfg_args(cfg):
             "field": "state.weightDecay",
             "payload": cfg.optimizer.weight_decay
         }])
+    if hasattr(cfg.optimizer, "momentum"):
+        params.extend([{
+            "field": "state.momentum",
+            "payload": cfg.optimizer.momentum
+        }])
+    if hasattr(cfg.optimizer, "betas"):
+        params.extend([{
+            "field": "state.beta1",
+            "payload": cfg.optimizer.betas[0]
+        },{
+            "field": "state.beta2",
+            "payload": cfg.optimizer.betas[1]
+        }])
+    # take lr scheduler params
+    if hasattr(cfg, "lr_config"):
+        if hasattr(cfg.lr_config, "policy"):
+            policy = cfg.lr_config.policy.capitalize()
+            params.extend([{
+                "field": "state.lrPolicy",
+                "payload": policy
+            }])
+        if hasattr(cfg.lr_config, "warmup"):
+            params.extend([{
+                "field": "state.useWarmup",
+                "payload": True
+            },{
+                "field": "state.warmup",
+                "payload": cfg.lr_config.warmup
+            }])
+        if hasattr(cfg.lr_config, "warmup_iters"):
+            params.extend([{
+                "field": "state.warmupIters",
+                "payload": cfg.lr_config.warmup_iters
+            }])
+        if hasattr(cfg.lr_config, "warmup_ratio"):
+            params.extend([{
+                "field": "state.warmupRatio",
+                "payload": cfg.lr_config.warmup_ratio
+            }])
+        if hasattr(cfg.lr_config, "by_epoch"):
+            params.extend([{
+                "field": "state.schedulerByEpochs",
+                "payload": cfg.lr_config.by_epoch
+            }])
+        if hasattr(cfg.lr_config, "min_lr"):
+            params.extend([{
+                "field": "state.minLREnabled",
+                "payload": True
+            },{
+                "field": "state.minLR",
+                "payload": cfg.lr_config.min_lr
+            }])
+        if hasattr(cfg.lr_config, "power"):
+            params.extend([{
+                "field": "state.power",
+                "payload": cfg.lr_config.power
+            }])
+
     return params
 
 
@@ -193,7 +294,7 @@ def download_weights(api: sly.Api, task_id, context, state, app_logger):
                 raise ValueError(f"Weights file has unsupported extension {sly.fs.get_file_ext(weights_path_remote)}. "
                                  f"Supported: '.pth'")
 
-            g.local_weights_path = os.path.join(g.artifacts_dir, sly.fs.get_file_name_with_ext(weights_path_remote))
+            g.local_weights_path = os.path.join(g.my_app.data_dir, sly.fs.get_file_name_with_ext(weights_path_remote))
             if sly.fs.file_exists(g.local_weights_path):
                 os.remove(g.local_weights_path)
 
@@ -208,7 +309,7 @@ def download_weights(api: sly.Api, task_id, context, state, app_logger):
             weights_url = selected_model.get('weights')
             config_file = selected_model.get('config_file')
             if weights_url is not None:
-                g.local_weights_path = os.path.join(g.artifacts_dir, sly.fs.get_file_name_with_ext(weights_url))
+                g.local_weights_path = os.path.join(g.my_app.data_dir, sly.fs.get_file_name_with_ext(weights_url))
                 g.model_config_local_path = os.path.join(g.root_source_dir, config_file)
                 # TODO: check that pretrained weights are exist on remote server
                 if sly.fs.file_exists(g.local_weights_path) is False:

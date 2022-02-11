@@ -7,10 +7,6 @@ def init_general(state):
     state["epochs"] = 80
     state["gpusId"] = 0
 
-    state["imgWidth"] = 256
-    state["imgHeight"] = 256
-    state["batchSizePerGPU"] = 4
-    state["workersPerGPU"] = 2
     state["valInterval"] = 10
     state["logConfigInterval"] = 5
 
@@ -22,10 +18,7 @@ def init_checkpoints(state):
     state["saveBest"] = True
 
 def init_optimizer(state):
-    state["momentum"] = 0.9
     state["nesterov"] = False
-    state["beta1"] = 0.9
-    state["beta2"] = 0.999
     state["amsgrad"] = False
     # state["momentumDecay"] = 0.004
     state["gradClipEnabled"] = False
@@ -45,24 +38,18 @@ def init_losses(data, state):
     state["auxiliaryAlpha"] = 0.5
     state["auxiliaryGamma"] = 2.0
     data["availableMetrics"] = ["mIoU", "mDice"]
-    state["evalMetrics"] = ["mIoU"]
+    state["evalMetrics"] = ["mIoU", "mDice"]
 
 
 def init_lr_scheduler(data, state):
     # LR scheduler params
-    state["schedulerByEpochs"] = False
     data["availableLrPolicy"] = ["Fixed", "Step", "Exp", "Poly", "Inv", "CosineAnnealing", "FlatCosineAnnealing",
-                                  "CosineRestart", "Cyclic", "OneCycle"]
+                                 "CosineRestart", "Cyclic", "OneCycle"]
     data["fullPolicyNames"] = ["Constant LR", "Step LR", "Exponential LR", "Polynomial LR Decay",
-                                "Inverse Square Root LR", "Cosine Annealing LR", "Flat + Cosine Annealing LR",
-                                "Cosine Annealing with Restarts", "Cyclic LR", "OneCycle LR"]
-    state["lrPolicy"] = "Fixed"
+                               "Inverse Square Root LR", "Cosine Annealing LR", "Flat + Cosine Annealing LR",
+                               "Cosine Annealing with Restarts", "Cyclic LR", "OneCycle LR"]
     state["lr_step"] = ""
     state["gamma"] = 0.1
-    state["minLREnabled"] = False
-    state["minLR"] = None
-    state["minLRRatio"] = None
-    state["power"] = 1
     state["startPercent"] = 0.75
     state["periods"] = ""
     state["restartWeights"] = ""
@@ -79,10 +66,6 @@ def init_lr_scheduler(data, state):
     state["divFactor"] = 25
     state["finalDivFactor"] = 1e4
     state["threePhase"] = False
-    state["useWarmup"] = False
-    state["warmup"] = "constant"
-    state["warmupIters"] = 0
-    state["warmupRatio"] = 0.1
     state["warmupByEpoch"] = False
 
 def init(data, state):
@@ -92,12 +75,7 @@ def init(data, state):
     init_losses(data, state)
     init_lr_scheduler(data, state)
 
-    state["collapsedGeneral"] = True
-    state["collapsedCheckpoints"] = True
-    state["collapsedOptimizer"] = True
-    state["collapsedLRScheduler"] = True
     state["collapsedWarmup"] = True
-    state["collapsedLoss"] = True
     state["collapsed6"] = True
     state["disabled6"] = True
     state["done6"] = False

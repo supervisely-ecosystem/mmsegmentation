@@ -80,35 +80,33 @@
             <div>{{state.chartTrainLoss.options.smoothingWeight}}</div>
             <div class="fflex">
                 <sly-line-chart
-                        style="width: 33%;"
+                        style="width: 50%;"
                         :options.sync="state.chartLR.options"
                         :content="state.chartLR.series">
                 </sly-line-chart>
 
                 <sly-line-chart
-                        style="width: 33%;"
+                        style="width: 50%;"
                         :options.sync="state.chartTrainLoss.options"
                         :content="state.chartTrainLoss.series">
                 </sly-line-chart>
             </div>
         </sly-field>
-        <sly-field title="Mean metrics charts">
+        <sly-field v-for="metric in data.availableMetrics"
+                   v-if="state.evalMetrics.includes(metric)"
+                   :title="metric.slice(1)">
             <div class="fflex">
                 <sly-line-chart
                     v-for="mean_chart in state.mean_charts"
-                    v-if="state.evalMetrics.includes(mean_chart.metric)"
-                    style="width: 33%;"
+                    v-if="metric === mean_chart.metric"
+                    style="width: 50%;"
                     :options.sync="mean_chart.options"
                     :content="mean_chart.series">
                 </sly-line-chart>
-            </div>
-        </sly-field>
-        <sly-field title="Per-class metrics charts">
-            <div class="fflex">
                 <sly-line-chart
                     v-for="class_chart in state.class_charts"
-                    v-if="state.evalMetrics.includes(class_chart.metric)"
-                    style="width: 33%;"
+                    v-if="metric === class_chart.metric"
+                    style="width: 50%;"
                     :options.sync="class_chart.options"
                     :content="class_chart.series">
                 </sly-line-chart>

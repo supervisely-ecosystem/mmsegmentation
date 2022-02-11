@@ -15,7 +15,6 @@
   "isolate": true,
   "icon": "",
   "icon_cover": false,
-  "instance_version": "6.4.18",
   "context_menu": {
     "target": ["images_project"],
     "context_root": "Neural Networks",

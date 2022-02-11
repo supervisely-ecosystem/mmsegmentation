@@ -54,6 +54,7 @@ class SuperviselyLoggerHook(TextLoggerHook):
                 {"field": "state.chartTrainLoss.series[0].data", "payload": [[epoch_float, round(log_dict["loss"], 6)]],
                  "append": True},
             ])
+            '''
             self._lrs.append(log_dict["lr"])
             fields.append({
                 "field": "state.chartLR.options.yaxisInterval",
@@ -62,6 +63,7 @@ class SuperviselyLoggerHook(TextLoggerHook):
                     round(max(self._lrs) + max(self._lrs) / 10.0, 5)
                 ]
             })
+            '''
 
             if 'time' in log_dict.keys():
                 fields.extend([

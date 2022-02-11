@@ -74,7 +74,7 @@ def init_chart(title, names, xs, ys, smoothing=None, yrange=None, decimals=None,
 def init_charts(data, state):
     state["smoothing"] = 0.6
     state["chartLR"] = init_chart("LR", names=["lr"], xs = [[]], ys = [[]], smoothing=None,
-                                 yrange=[state["lr"] - state["lr"] / 2.0, state["lr"] + state["lr"] / 2.0],
+                                 # yrange=[state["lr"] - state["lr"] / 2.0, state["lr"] + state["lr"] / 2.0],
                                  decimals=6, xdecimals=2)
     state["chartTrainLoss"] = init_chart("Train Loss", names=["loss"], xs=[[]], ys=[[]], smoothing=state["smoothing"], decimals=6, xdecimals=2)
     state["mean_charts"] = {}

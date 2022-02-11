@@ -112,7 +112,17 @@ def init_model(api: sly.Api, task_id, context, state, app_logger):
 def init_state_and_data(data, state):
     state['pretrainedModel'] = 'ANN'
     data["pretrainedModels"], metrics = utils.get_pretrained_models(return_metrics=True)
-    data["pretrainedModelsList"] = list(data["pretrainedModels"].keys())
+    model_select_info = []
+    for model_name, params in data["pretrainedModels"].items():
+        model_select_info.append({
+            "name": model_name,
+            "paper_from": params["paper_from"],
+            "year": params["year"]
+        })
+    model_select_info = sorted(model_select_info, key=lambda elem: (-elem['year'], elem['name']))
+    data["pretrainedModelsInfo"] = model_select_info
+    data["configLinks"] = {model_name: params["config_url"] for model_name, params in data["pretrainedModels"].items()}
+
     data["modelColumns"] = utils.get_table_columns(metrics)
     state["weightsInitialization"] = "pretrained"
     state["selectedModel"] = {pretrained_model: data["pretrainedModels"][pretrained_model]["checkpoints"][0]['name']
