@@ -68,16 +68,16 @@ def init_cfg_optimizer(cfg, state):
             delattr(cfg.optimizer, "betas")
         cfg.optimizer.momentum = state["momentum"]
         cfg.optimizer.nesterov = state["nesterov"]
-    elif state["optimizer"] in ["Adam", "Adamax", "AdamW"]:
+    elif state["optimizer"] in ["Adam", "Adamax", "AdamW", "NAdam", "RAdam"]:
         if hasattr(cfg.optimizer, "momentum"):
             delattr(cfg.optimizer, "momentum")
         if hasattr(cfg.optimizer, "nesterov"):
             delattr(cfg.optimizer, "nesterov")
         cfg.optimizer.betas = (state["beta1"], state["beta2"])
-        if state["optimizer"] != "Adamax":
+        if state["optimizer"] in ["Adam", "AdamW"]:
             cfg.optimizer.amsgrad = state["amsgrad"]
-        # if state["optimizer"] == "NAdam":
-        #     cfg.optimizer.momentum_decay = state["momentumDecay"]
+        if state["optimizer"] == "NAdam":
+            cfg.optimizer.momentum_decay = state["momentumDecay"]
 
 def init_cfg_pipelines(cfg):
     cfg.train_pipeline = [
@@ -249,7 +249,7 @@ def init_cfg_lr(cfg, state):
         lr_config["cyclic_times"] = state["cyclicTimes"]
         lr_config["step_ratio_up"] = state["stepRatioUp"]
         lr_config["anneal_strategy"] = state["annealStrategy"]
-        # lr_config["gamma"] = state["cyclicGamma"]
+        lr_config["gamma"] = state["cyclicGamma"]
     elif state["lrPolicy"] == "OneCycle":
         lr_config["anneal_strategy"] = state["annealStrategy"]
         lr_config["max_lr"] = [float(maxlr) for maxlr in state["maxLR"].split(",")]

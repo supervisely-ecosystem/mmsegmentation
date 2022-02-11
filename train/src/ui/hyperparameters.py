@@ -20,7 +20,7 @@ def init_checkpoints(state):
 def init_optimizer(state):
     state["nesterov"] = False
     state["amsgrad"] = False
-    # state["momentumDecay"] = 0.004
+    state["momentumDecay"] = 0.004
     state["gradClipEnabled"] = False
     state["maxNorm"] = 1
 
@@ -58,7 +58,7 @@ def init_lr_scheduler(data, state):
     state["cyclicTimes"] = 1
     state["stepRatioUp"] = 0.4
     state["annealStrategy"] = "cos"
-    # state["cyclicGamma"] = 1
+    state["cyclicGamma"] = 1
     state["totalStepsEnabled"] = False
     state["totalSteps"] = None
     state["maxLR"] = ""
