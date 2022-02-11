@@ -80,13 +80,13 @@
             <div>{{state.chartTrainLoss.options.smoothingWeight}}</div>
             <div class="fflex">
                 <sly-line-chart
-                        style="width: 50%;"
+                        style="width: 35%;"
                         :options.sync="state.chartLR.options"
                         :content="state.chartLR.series">
                 </sly-line-chart>
 
                 <sly-line-chart
-                        style="width: 50%;"
+                        style="width: 35%;"
                         :options.sync="state.chartTrainLoss.options"
                         :content="state.chartTrainLoss.series">
                 </sly-line-chart>
@@ -99,14 +99,14 @@
                 <sly-line-chart
                     v-for="mean_chart in state.mean_charts"
                     v-if="metric === mean_chart.metric"
-                    style="width: 50%;"
+                    style="width: 35%;"
                     :options.sync="mean_chart.options"
                     :content="mean_chart.series">
                 </sly-line-chart>
                 <sly-line-chart
                     v-for="class_chart in state.class_charts"
                     v-if="metric === class_chart.metric"
-                    style="width: 50%;"
+                    style="width: 35%;"
                     :options.sync="class_chart.options"
                     :content="class_chart.series">
                 </sly-line-chart>

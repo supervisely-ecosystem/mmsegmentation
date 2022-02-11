@@ -75,6 +75,7 @@ def init(data, state):
     init_losses(data, state)
     init_lr_scheduler(data, state)
 
+    state["currentTab"] = "general"
     state["collapsedWarmup"] = True
     state["collapsed6"] = True
     state["disabled6"] = True

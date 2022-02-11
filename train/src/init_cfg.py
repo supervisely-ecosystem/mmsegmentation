@@ -174,7 +174,7 @@ def init_cfg_training(cfg, state):
     cfg.gpu_ids = range(1)
     cfg.img_norm_cfg = dict(
         mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
-    cfg.crop_size = (state["imgWidth"], state["imgHeight"])
+    cfg.crop_size = (state["input_size"]["value"]["width"], state["input_size"]["value"]["height"])
     cfg.load_from = g.local_weights_path
 
     cfg.work_dir = g.my_app.data_dir

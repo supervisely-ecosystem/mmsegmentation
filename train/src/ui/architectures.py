@@ -31,8 +31,20 @@ def init_default_cfg_params(state):
     state["momentum"] = 0.9
     state["beta1"] = 0.9
     state["beta2"] = 0.999
-    state["imgWidth"] = 256
-    state["imgHeight"] = 256
+    state["input_size"] = {
+        "value": {
+            "width": 256,
+            "height": 256,
+            "proportional": False
+        },
+        "options": {
+            "proportions": {
+              "width": 100,
+              "height": 100
+            },
+            "min": 64
+        }
+    }
     state["batchSizePerGPU"] = 4
     state["workersPerGPU"] = 2
 
@@ -202,11 +214,17 @@ def init_default_cfg_args(cfg):
         }])
     if hasattr(cfg, "crop_size"):
         params.extend([{
-            "field": "state.imgHeight",
+            "field": "state.input_size.value.height",
             "payload": cfg.crop_size[0]
         },{
-            "field": "state.imgWidth",
+            "field": "state.input_size.value.width",
             "payload": cfg.crop_size[1]
+        },{
+            "field": "state.input_size.options.proportions.height",
+            "payload": 100
+        },{
+            "field": "state.input_size.options.proportions.width",
+            "payload": 100 * (cfg.crop_size[1] / cfg.crop_size[0])
         }])
     if hasattr(cfg.optimizer, "type"):
         params.extend([{

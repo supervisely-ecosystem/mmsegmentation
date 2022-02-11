@@ -5,8 +5,8 @@
           :disabled="{disabled: state.disabled6, message: 'Finish previous steps before configure training'}"
           ref="step6"
 >
-    <el-tabs type="border-card" class="el-tabs-cards">
-        <el-tab-pane label="General" :disabled="data.done6">
+    <el-tabs type="border-card" class="el-tabs-cards" v-model="state.currentTab">
+        <el-tab-pane label="General" name="general" :disabled="data.done6">
             <sly-field title="Device"
                        description="Run nvidia-smi or check agent page to see how many devices your machine has or keep by default">
                 <el-select v-model="state.gpusId" :disabled="true">
@@ -17,14 +17,10 @@
             <sly-field title="Number of epochs">
                 <el-input-number v-model="state.epochs" :min="1" :max="10000" :disabled="data.done6"></el-input-number>
             </sly-field>
-            <sly-field title="Input image width (in pixels)"
-                       description="Model input width resolution">
-                <el-input-number v-model="state.imgWidth" :min="64" :disabled="data.done6"></el-input-number>
+            <sly-field title="Input size" description="Model input resolution">
+                <sly-size v-model="state.input_size.value" :options="state.input_size.options"></sly-size>
             </sly-field>
-            <sly-field title="Input image height (in pixels)"
-                       description="Model input height resolution">
-                <el-input-number v-model="state.imgHeight" :min="64" :disabled="data.done6"></el-input-number>
-            </sly-field>
+
             <sly-field title="Batch size per GPU"
                description="number of samples for a single GPU">
                 <el-input-number v-model="state.batchSizePerGPU" :min="1" :disabled="data.done6"></el-input-number>
@@ -50,7 +46,7 @@
                 </div>
             </sly-field>
         </el-tab-pane>
-        <el-tab-pane label="Checkpoints" :disabled="data.done6">
+        <el-tab-pane label="Checkpoints" name="checkpoints" :disabled="data.done6">
             <sly-field title="Checkpoints interval"
                description="Save checkpoints periodically">
                 <div class="fflex">
@@ -94,7 +90,7 @@
                 </el-switch>
             </sly-field>
         </el-tab-pane>
-        <el-tab-pane label="(Advanced) Optimizer" :disabled="data.done6">
+        <el-tab-pane label="Optimizer (Advanced)" name="optimizer" :disabled="data.done6">
             <sly-field title="Optimizer">
                 <div slot="description">
                     Choose optimizer and its settings, learn more in official
@@ -150,7 +146,7 @@
                 </div>
             </sly-field>
         </el-tab-pane>
-        <el-tab-pane label="(Advanced) Losses and metrics" :disabled="data.done6">
+        <el-tab-pane label="Losses and metrics (Advanced)" name="losses" :disabled="data.done6">
             <sly-field title="Decode head loss function">
                 <el-select class=mt10 v-model="state.decodeHeadLoss" :disabled="data.done6">
                     <el-option v-for="loss in data.availableLosses" :key="loss" :label="loss" :value="loss"></el-option>
@@ -219,7 +215,7 @@
                 </el-select>
             </sly-field>
         </el-tab-pane>
-        <el-tab-pane label="(Advanced) Learning rate scheduler" :disabled="data.done6">
+        <el-tab-pane label="Learning rate scheduler (Advanced)" name="lr_scheduler" :disabled="data.done6">
             <div class="mb10">
                 Choose LR scheduler and its settings, learn more in official
                 <a href="https://pytorch.org/docs/1.9.0/optim.html#how-to-adjust-learning-rate" target="_blank">
