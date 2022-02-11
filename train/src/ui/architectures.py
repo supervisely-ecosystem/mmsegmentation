@@ -93,11 +93,11 @@ def init(data, state):
     '''
 
 def get_pretrained_models(return_metrics=False):
-    model_yamls = sly.json.load_json_file(os.path.join(g.root_source_dir, "train", "models", "model_meta.json"))
+    model_yamls = sly.json.load_json_file(os.path.join(g.root_source_dir, "models", "model_meta.json"))
     model_config = {}
     all_metrics = []
     for model_meta in model_yamls:
-        with open(os.path.join(g.root_source_dir, "configs", model_meta["yml_file"]), "r") as stream:
+        with open(os.path.join(g.configs_dir, model_meta["yml_file"]), "r") as stream:
             model_info = yaml.safe_load(stream)
             model_config[model_meta["model_name"]] = {}
             # model_config[model_meta["model_name"]]["code_url"] = model_info["Collections"][0]["Code"]["URL"]

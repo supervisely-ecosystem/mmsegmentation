@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 import sys
 import supervisely as sly
-
+import shutil
+import pkg_resources
 
 my_app = sly.AppService()
 api = my_app.public_api
@@ -39,3 +40,13 @@ ui_sources_dir = os.path.join(source_path, "ui")
 sly.logger.info(f"UI source directory: {ui_sources_dir}")
 sys.path.append(ui_sources_dir)
 sly.logger.info(f"Added to sys.path: {ui_sources_dir}")
+
+configs_dir = os.path.join(root_source_dir, "configs")
+mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
+if os.path.isdir(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}"):
+    if os.path.isdir(configs_dir):
+        shutil.rmtree(configs_dir)
+    sly.logger.info(f"Getting model configs of current mmsegmentation version {mmseg_ver}...")
+    shutil.copytree(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}/configs", configs_dir)
+    models_cnt = len(os.listdir(configs_dir)) - 1
+    sly.logger.info(f"Found {models_cnt} models in {configs_dir} directory.")
