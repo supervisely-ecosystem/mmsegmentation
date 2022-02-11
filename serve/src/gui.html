@@ -31,13 +31,13 @@
         height: auto; line-height: normal; border-radius: 4px; }
     </sly-style>
     <div>
-        <el-tabs type="border-card" class="el-tabs-cards mb10" v-model="state.weightsInitialization">
+        <el-tabs type="border-card" class="el-tabs-cards" v-model="state.weightsInitialization">
             <el-tab-pane name="pretrained" :disabled="state.deployed">
                 <el-radio slot="label" v-model="state.weightsInitialization" label="pretrained" :disabled="state.deployed">
                     Pretrained models
                     <div>weights pretrained on popular datasets</div>
                 </el-radio>
-                <div style="display: flex; flex-direction: row; width: 100%; align-items: stretch">
+                <div class="mb10" style="display: flex; flex-direction: row; width: 100%; align-items: stretch">
                     <div style="width: 100%">
                         <div>
                             <div class="mb10">Architecture:</div>
@@ -120,12 +120,14 @@
                 <el-option key="cuda:0" label="cuda:0" value="cuda:0"></el-option>
             </el-select>
         </sly-field>
-        <el-button type="primary" class="regular mt10"
+        <el-button type="primary" class="regular mt10 mr15"
                    v-if="!state.deployed"
                    :loading="state.loading"
                    @click="state.loading = true; command('run')">
             Serve
         </el-button>
+        <span v-if="state.loading && state.weightsInitialization == 'pretrained'">Downloading pretrained weights...</span>
+        <span v-if="state.loading && state.weightsInitialization == 'custom'">Downloading custom weights...</span>
         <div v-if="state.deployed">
             <i class="zmdi zmdi-check-circle ml5 mr5 mt10" style="color: #13ce66"></i>
             <span v-if="state.weightsInitialization == 'custom'" style="color: #5a6772;">Custom model has been successfully deployed.</span>

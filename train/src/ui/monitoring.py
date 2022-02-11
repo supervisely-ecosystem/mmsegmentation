@@ -207,8 +207,8 @@ def train(api: sly.Api, task_id, context, state, app_logger):
 
         cfg = init_cfg(state, img_dir, ann_dir, classes, palette)
 
-        os.makedirs(os.path.join(g.checkpoints_dir, "artifacts"), exist_ok=True)
-        cfg.dump(os.path.join(g.checkpoints_dir, "artifacts", "config.py"))
+        os.makedirs(os.path.join(g.checkpoints_dir, cfg.work_dir.split('/')[-1]), exist_ok=True)
+        cfg.dump(os.path.join(g.checkpoints_dir, cfg.work_dir.split('/')[-1], "config.py"))
 
         # Build the dataset
         datasets = [build_dataset(cfg.data.train)]

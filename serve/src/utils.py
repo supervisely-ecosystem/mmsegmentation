@@ -29,7 +29,7 @@ def inference_image_path(image_path, context, state, app_logger):
         obj_class = g.meta.get_obj_class(class_name)
         label = sly.Label(sly.Bitmap(class_mask), obj_class)
         labels.append(label)
-    print(raw_result.shape)
+
     ann = sly.Annotation(img_size=raw_result.shape, labels=labels, )
     ann_json = ann.to_json()
 
@@ -47,6 +47,8 @@ def get_pretrained_models(return_metrics=False):
             # model_config[model_meta["model_name"]]["paper_title"] = model_info["Collections"][0]["Paper"]["Title"]
             # model_config[model_meta["model_name"]]["paper_url"] = model_info["Collections"][0]["Paper"]["URL"]
             model_config[model_meta["model_name"]]["checkpoints"] = []
+            model_config[model_meta["model_name"]]["paper_from"] = model_meta["paper_from"]
+            model_config[model_meta["model_name"]]["year"] = model_meta["year"]
             mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
             # TODO: change link to current version of package
             model_config[model_meta["model_name"]]["config_url"] = f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/" + model_meta["yml_file"].split("/")[0]

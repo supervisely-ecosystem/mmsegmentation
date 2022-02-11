@@ -10,26 +10,7 @@ from mmcv import Config
 
 cfg = None
 
-def init(data, state):
-    state['pretrainedModel'] = 'SegFormer'
-    data["pretrainedModels"], metrics = get_pretrained_models(return_metrics=True)
-    model_select_info = []
-    for model_name, params in data["pretrainedModels"].items():
-        model_select_info.append({
-            "name": model_name,
-            "paper_from": params["paper_from"],
-            "year": params["year"]
-        })
-    model_select_info = sorted(model_select_info, key=lambda elem: (-elem['year'], elem['name']))
-    data["pretrainedModelsInfo"] = model_select_info
-    data["configLinks"] = {model_name: params["config_url"] for model_name, params in data["pretrainedModels"].items()}
-
-    data["modelColumns"] = get_table_columns(metrics)
-
-    state["selectedModel"] = {pretrained_model: data["pretrainedModels"][pretrained_model]["checkpoints"][0]['name']
-                              for pretrained_model in data["pretrainedModels"].keys()}
-    state["useAuxiliaryHead"] = True
-    # default hyperparams that may be reassigned from model default params
+def init_default_cfg_params(state):
     state["optimizer"] = "SGD"
     state["lr"] = 0.001
     state["weightDecay"] = 0
@@ -54,14 +35,39 @@ def init(data, state):
     state["imgHeight"] = 256
     state["batchSizePerGPU"] = 4
     state["workersPerGPU"] = 2
+
+def init(data, state):
+    state['pretrainedModel'] = 'SegFormer'
+    data["pretrainedModels"], metrics = get_pretrained_models(return_metrics=True)
+    model_select_info = []
+    for model_name, params in data["pretrainedModels"].items():
+        model_select_info.append({
+            "name": model_name,
+            "paper_from": params["paper_from"],
+            "year": params["year"]
+        })
+    model_select_info = sorted(model_select_info, key=lambda elem: (-elem['year'], elem['name']))
+    data["pretrainedModelsInfo"] = model_select_info
+    data["configLinks"] = {model_name: params["config_url"] for model_name, params in data["pretrainedModels"].items()}
+
+    data["modelColumns"] = get_table_columns(metrics)
+
+    state["selectedModel"] = {pretrained_model: data["pretrainedModels"][pretrained_model]["checkpoints"][0]['name']
+                              for pretrained_model in data["pretrainedModels"].keys()}
+    state["useAuxiliaryHead"] = True
     state["weightsInitialization"] = "pretrained"  # "custom"
     state["collapsed5"] = True
     state["disabled5"] = True
-
+    state["weightsPath"] = ""
+    data["done5"] = False
     state["loadingModel"] = False
+
+    # default hyperparams that may be reassigned from model default params
+    init_default_cfg_params(state)
 
     sly.app.widgets.ProgressBar(g.task_id, g.api, "data.progress6", "Download weights", is_size=True,
                                 min_report_percent=5).init_data(data)
+    '''
     data["github_icon"] = {
         "imageUrl": "https://github.githubassets.com/favicons/favicon.png",
         "rounded": False,
@@ -72,9 +78,7 @@ def init(data, state):
         "rounded": False,
         "bgColor": "rgba(0,0,0,0)"
     }
-    state["weightsPath"] = ""
-
-    data["done5"] = False
+    '''
 
 def get_pretrained_models(return_metrics=False):
     model_yamls = sly.json.load_json_file(os.path.join(g.root_source_dir, "train", "models", "model_meta.json"))
@@ -156,7 +160,7 @@ def download_custom_config(state):
                                            min_report_percent=5)
 
     weights_remote_dir = os.path.dirname(state["weightsPath"])
-    g.model_config_local_path = os.path.join(g.checkpoints_dir, 'artifacts', 'custom_loaded_config.py')
+    g.model_config_local_path = os.path.join(g.checkpoints_dir, g.my_app.data_dir.split('/')[-1], 'custom_loaded_config.py')
 
     config_remote_dir = os.path.join(weights_remote_dir, f'config.py')
     if g.api.file.exists(g.team_id, config_remote_dir):

@@ -177,7 +177,7 @@ def init_cfg_training(cfg, state):
     cfg.crop_size = (state["imgWidth"], state["imgHeight"])
     cfg.load_from = g.local_weights_path
 
-    cfg.work_dir = os.path.join(g.artifacts_dir)
+    cfg.work_dir = g.my_app.data_dir
 
     if not hasattr(cfg, "runner"):
         cfg.runner = ConfigDict()
