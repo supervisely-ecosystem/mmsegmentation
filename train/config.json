@@ -7,7 +7,7 @@
     "semantic segmentation"
   ],
   "description": "Dashboard to configure, start and monitor training",
-  "docker_image": "supervisely/mmseg:1.0.0",
+  "docker_image": "supervisely/mmseg:1.1.0",
   "main_script": "train/src/main.py",
   "gui_template": "train/src/gui.html",
   "task_location": "workspace_tasks",
