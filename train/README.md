@@ -1,7 +1,7 @@
 
 <div align="center" markdown>
 
-<img src="https://i.imgur.com/5QJrX7k.png"/>  
+<img src="https://i.imgur.com/cakRJGh.jpg"/>  
 
 # Train MMSegmentation
 
