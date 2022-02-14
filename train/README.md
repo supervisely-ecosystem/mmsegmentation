@@ -27,6 +27,7 @@
 Train MMSegmentation models in Supervisely.
 
 Application key points:
+- All Semantic Segmentation models from MM Toolbox
 - Use pretrained MMSegmentation models
 - Define Train / Validation splits
 - Select classes for training
