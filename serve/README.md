@@ -1,7 +1,6 @@
 
 <div align="center" markdown>
-
-<img src="https://i.imgur.com/cakRJGh.jpg"/>  
+<img src="https://i.imgur.com/wQEmCI5.jpg"/>  
 
 # Serve MMSegmentation
 
