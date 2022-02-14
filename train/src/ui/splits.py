@@ -83,6 +83,21 @@ def verify_train_val_sets(train_set, val_set):
         raise ValueError("Val set is empty, check or change split configuration")
 
 
+def set_dataset_ind_to_items(project_dir):
+    datasets = os.listdir(project_dir)
+    ds_cnt = 0
+    for dataset in datasets:
+        if not os.path.isdir(os.path.join(project_dir, dataset)):
+            continue # meta.json
+
+        img_dir = os.path.join(project_dir, dataset, "img")
+        ann_dir = os.path.join(project_dir, dataset, "ann")
+        for file in os.listdir(img_dir):
+            os.rename(os.path.join(img_dir, file), os.path.join(img_dir, f"{ds_cnt}_{file}"))
+        for file in os.listdir(ann_dir):
+            os.rename(os.path.join(ann_dir, file), os.path.join(ann_dir, f"{ds_cnt}_{file}"))
+        ds_cnt += 1
+
 @g.my_app.callback("create_splits")
 @sly.timeit
 @g.my_app.ignore_errors_and_show_dialog_window()
@@ -91,6 +106,8 @@ def create_splits(api: sly.Api, task_id, context, state, app_logger):
     global train_set, val_set
     try:
         api.task.set_field(task_id, "state.splitInProgress", True)
+        # to support duplicates
+        set_dataset_ind_to_items(g.project_dir)
         train_set, val_set = get_train_val_sets(g.project_dir, state)
         sly.logger.info(f"Train set: {len(train_set)} images")
         sly.logger.info(f"Val set: {len(val_set)} images")
@@ -122,7 +139,6 @@ def create_splits(api: sly.Api, task_id, context, state, app_logger):
         _save_set(val_set_path, val_set)
 
 def _save_set(save_path, items):
-    res = []
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     with open(os.path.join(save_path), 'w') as f:
         f.writelines(item.name + '\n' for item in items)
