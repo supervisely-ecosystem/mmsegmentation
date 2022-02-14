@@ -35,14 +35,15 @@ Application key points:
 - Tune hyperparameters
 - Monitor Metrics charts
 - Save training artifacts to Team Files
+- Supports only Bitmap and Polygons
 
 # How to Run
 
 ### 1. Add [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) to your team
-<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="https://i.imgur.com/FvszlJJ.png" width="350px" style='padding-bottom: 10px'/>
+<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="https://i.imgur.com/e2r6ccw.png" width="350px" style='padding-bottom: 10px'/>
 
-### 2. Run application from supervisely project [(example)](https://ecosystem.supervise.ly/projects/lemons-annotated)
-<img src="https://i.imgur.com/BpMDuXC.png" width="100%" style='padding-top: 10px'>  
+### 2. Run app from context menu of the project with annotations (polygon and bitmap only) [(example)](https://ecosystem.supervise.ly/projects/lemons-annotated)
+<img src="https://i.imgur.com/XczjaNy.png" width="100%" style='padding-top: 10px'>  
 
 
 # Demo
