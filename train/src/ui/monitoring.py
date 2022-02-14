@@ -185,7 +185,7 @@ def prepare_segmentation_data(state, img_dir, ann_dir):
 
         imgfiles_to_move = os.listdir(os.path.join(temp_project_seg_dir, dataset, img_dir))
         for filename in imgfiles_to_move:
-            shutil.move(os.path.join(os.path.join(temp_project_seg_dir, dataset, img_dir, filename)),
+            shutil.move(os.path.join(temp_project_seg_dir, dataset, img_dir, filename),
                         os.path.join(g.project_seg_dir, img_dir))
 
     shutil.rmtree(temp_project_seg_dir)
