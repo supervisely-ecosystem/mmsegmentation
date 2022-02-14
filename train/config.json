@@ -13,8 +13,8 @@
   "task_location": "workspace_tasks",
   "need_gpu": true,
   "isolate": true,
-  "icon": "",
-  "icon_cover": false,
+  "icon": "https://i.imgur.com/H8p2bjF.png",
+  "icon_cover": true,
   "context_menu": {
     "target": ["images_project"],
     "context_root": "Neural Networks",
