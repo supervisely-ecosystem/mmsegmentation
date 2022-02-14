@@ -24,7 +24,7 @@
 
 # Overview
 
-Train Detectron2 (Instance Segmentation) models in Supervisely.
+Train MMSegmentation models in Supervisely.
 
 Application key points:
 - Only Instance Segmentation models available
@@ -39,8 +39,8 @@ Application key points:
 
 # How to Run
 
-### 1. Add [Train Detectron2](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/detectron2/supervisely/train) to your team
-<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/detectron2/supervisely/train" src="https://imgur.com/hqpA5m1.png" width="350px" style='padding-bottom: 10px'/>
+### 1. Add [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) to your team
+<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="https://imgur.com/hqpA5m1.png" width="350px" style='padding-bottom: 10px'/>
 
 ### 2. Run application from [labeled using [Bitmaps, Polygons] project](https://ecosystem.supervise.ly/projects/lemons-annotated)
 <img src="https://imgur.com/W6pWc5L.png" width="80%" style='padding-top: 10px'>  
@@ -58,5 +58,5 @@ Application key points:
 
 # Acknowledgment
 
-This app is based on the great work `Detectron2` ([github](https://github.com/facebookresearch/detectron2)). ![GitHub Org's stars](https://img.shields.io/github/stars/facebookresearch/detectron2?style=social)
+This app is based on the great work `MMSegmentation` ([github](https://github.com/open-mmlab/mmsegmentation)). ![GitHub Org's stars](https://img.shields.io/github/stars/open-mmlab/mmsegmentation?style=social)
 
