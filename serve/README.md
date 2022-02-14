@@ -1,15 +1,15 @@
 
 <div align="center" markdown>
 
-<img src="https://i.imgur.com/5QJrX7k.png"/>  
+<img src="https://i.imgur.com/223ItT5.png"/>  
 
 # Serve MMSegmentation
 
 <p align="center">
   <a href="#Overview">Overview</a> •
   <a href="#How-To-Run">How To Run</a> •
-  <a href="#Demo">Demo</a> •
-  <a href="#Screenshot">Screenshot</a> •
+  <a href="#How-To-Use">How To Use</a> •
+  <a href="#Common-apps">Common Apps</a> •
   <a href="#Acknowledgment">Acknowledgment</a>
 </p>
 
@@ -27,20 +27,25 @@
 Serve MMSegmentation model as Supervisely Application. MMSegmentation is an open source semantic segmentation toolbox based on PyTorch. Learn more about MMSegmentation and available models [here](https://github.com/open-mmlab/mmsegmentation).
 
 Application key points:
-- Select from 7 architectures and many pretrained models to serve
+- Select from 7 architectures and 40 pretrained models to serve
 - Deployed on GPU or CPU
 
 
 # How to Run
 
-### 1. Add [Serve Detectron2](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/detectron2/supervisely/instance_segmentation/serve) to your team
-<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/detectron2/supervisely/instance_segmentation/serve" src="https://imgur.com/jKrRF7p.png" width="350px" style='padding-bottom: 10px'/>
+### 1. Add [Serve MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/serve) to your team
+<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/serve" src="https://i.imgur.com/Yx569vO.png" width="350px" style='padding-bottom: 10px'/>
 
-### 2. Choose architecture, pretrained model, deploying device and press the **Run** button
-<img src="https://imgur.com/DLDYMbk.png" width="80%" style='padding-top: 10px'>  
+### 2. Run the application from Plugins & Apps page
+<img src="https://i.imgur.com/IJZx809.png" width="80%" style='padding-top: 10px'>  
 
-### 3. Wait for the model to deploy
-<img src="https://imgur.com/KFdwTER.png" width="80%">  
+# How to Use
+
+### 1. Select architecture, pretrained model, deploying device and press the **Serve** button
+<img src="https://i.imgur.com/yEmmskW.png" width="80%">  
+
+### 2. Wait for the model to deploy
+<img src="https://i.imgur.com/FZeg5gT.png" width="80%">  
 
 
 # Common apps
