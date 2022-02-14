@@ -1,7 +1,7 @@
 
 <div align="center" markdown>
 
-<img src="https://imgur.com/T7nLLdH.png"/>  
+<img src="https://i.imgur.com/5QJrX7k.png"/>  
 
 # Train MMSegmentation
 
@@ -27,22 +27,20 @@
 Train MMSegmentation models in Supervisely.
 
 Application key points:
-- Only Instance Segmentation models available
+- Use pretrained MMSegmentation models
 - Define Train / Validation splits
 - Select classes for training
 - Define augmentations
-- Use pretrained Detectron2 models
 - Tune hyperparameters
 - Monitor Metrics charts
-- Preview model predictions in real time
-- Save trained models to Team Files
+- Save training artifacts to Team Files
 
 # How to Run
 
 ### 1. Add [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) to your team
 <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="https://imgur.com/hqpA5m1.png" width="350px" style='padding-bottom: 10px'/>
 
-### 2. Run application from [labeled using [Bitmaps, Polygons] project](https://ecosystem.supervise.ly/projects/lemons-annotated)
+### 2. Run application from supervisely project [(example)](https://ecosystem.supervise.ly/projects/lemons-annotated)
 <img src="https://imgur.com/W6pWc5L.png" width="80%" style='padding-top: 10px'>  
 
 
@@ -54,7 +52,7 @@ Application key points:
 
 # Screenshot
 
-<img src="https://imgur.com/3tGR1DX.png" width="100%" style='padding-top: 10px'>
+<img src="https://i.imgur.com/FaAcORc.png" width="100%" style='padding-top: 10px'>
 
 # Acknowledgment
 
