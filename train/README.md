@@ -38,10 +38,10 @@ Application key points:
 # How to Run
 
 ### 1. Add [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) to your team
-<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="https://imgur.com/hqpA5m1.png" width="350px" style='padding-bottom: 10px'/>
+<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="https://i.imgur.com/FvszlJJ.png" width="350px" style='padding-bottom: 10px'/>
 
 ### 2. Run application from supervisely project [(example)](https://ecosystem.supervise.ly/projects/lemons-annotated)
-<img src="https://imgur.com/W6pWc5L.png" width="80%" style='padding-top: 10px'>  
+<img src="https://i.imgur.com/BpMDuXC.png" width="100%" style='padding-top: 10px'>  
 
 
 # Demo
