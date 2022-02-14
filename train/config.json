@@ -13,7 +13,7 @@
   "task_location": "workspace_tasks",
   "need_gpu": true,
   "isolate": true,
-  "icon": "https://i.imgur.com/H8p2bjF.png",
+  "icon": "https://i.imgur.com/GaEFmkH.png",
   "icon_cover": true,
   "context_menu": {
     "target": ["images_project"],
