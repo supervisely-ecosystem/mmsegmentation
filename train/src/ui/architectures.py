@@ -1,5 +1,4 @@
 import errno
-import json
 import os
 import requests
 import yaml
@@ -18,7 +17,7 @@ def init_default_cfg_params(state):
     state["auxiliaryHeadLoss"] = "CrossEntropyLoss"
     state["decodeHeadLossWeight"] = 1.0
     state["auxiliaryHeadLossWeight"] = 0.4
-    state["lrPolicy"] = "Fixed"
+    state["lrPolicy"] = "Cyclic"
     state["useWarmup"] = False
     state["warmup"] = "constant"
     state["warmupIters"] = 0
@@ -259,7 +258,7 @@ def init_default_cfg_args(cfg):
             policy = cfg.lr_config.policy.capitalize()
             params.extend([{
                 "field": "state.lrPolicy",
-                "payload": policy
+                "payload": "Cyclic"
             }])
         if hasattr(cfg.lr_config, "warmup"):
             params.extend([{

@@ -4,14 +4,14 @@ import sly_globals as g
 
 
 def init_general(state):
-    state["epochs"] = 80
+    state["epochs"] = 15
     state["gpusId"] = 0
 
-    state["valInterval"] = 10
+    state["valInterval"] = 1
     state["logConfigInterval"] = 5
 
 def init_checkpoints(state):
-    state["checkpointInterval"] = 20
+    state["checkpointInterval"] = 1
     state["maxKeepCkptsEnabled"] = True
     state["maxKeepCkpts"] = 2
     state["saveLast"] = True
@@ -48,14 +48,15 @@ def init_lr_scheduler(data, state):
     data["fullPolicyNames"] = ["Constant LR", "Step LR", "Exponential LR", "Polynomial LR Decay",
                                "Inverse Square Root LR", "Cosine Annealing LR", "Flat + Cosine Annealing LR",
                                "Cosine Annealing with Restarts", "Cyclic LR", "OneCycle LR"]
+
     state["lr_step"] = ""
     state["gamma"] = 0.1
     state["startPercent"] = 0.75
     state["periods"] = ""
     state["restartWeights"] = ""
     state["highestLRRatio"] = 10
-    state["lowestLRRatio"] = 1e-4
-    state["cyclicTimes"] = 1
+    state["lowestLRRatio"] = 1e-3
+    state["cyclicTimes"] = 10
     state["stepRatioUp"] = 0.4
     state["annealStrategy"] = "cos"
     state["cyclicGamma"] = 1
