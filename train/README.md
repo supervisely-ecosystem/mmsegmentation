@@ -35,7 +35,7 @@ Application key points:
 - Tune hyperparameters
 - Monitor Metrics charts
 - Save training artifacts to Team Files
-- Supports only Bitmap and Polygons
+- Support annotations in both bitmap mask and polygon formats
 
 **All MMSegmentation models are supported [(model zoo)](https://github.com/open-mmlab/mmsegmentation/blob/master/docs/en/model_zoo.md)**
 
