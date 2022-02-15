@@ -26,7 +26,7 @@
 Serve MMSegmentation model as Supervisely Application. MMSegmentation is an open source semantic segmentation toolbox based on PyTorch. Learn more about MMSegmentation and available models [here](https://github.com/open-mmlab/mmsegmentation).
 
 Application key points:
-- Serve semantic segmentation models from MMSegmentation
+- Serve custom and MMSegmentation models
 - Deployed on GPU
 
 
@@ -40,17 +40,33 @@ Application key points:
 
 # How to Use
 
-### 1. Select architecture, pretrained model, deploying device and press the **Serve** button
-<img src="https://i.imgur.com/yEmmskW.png" width="80%">  
+### 1 Select architecture, pretrained model, deploying device or load custom weights and press the **Serve** button
+
+
+<table>
+  <tr>
+    <th>MMSegmentation</th>
+    <th>Custom</th>
+  </tr>
+  <tr>
+    <td title="Customer is from Ireland">
+      <img src="https://i.imgur.com/yEmmskW.png" style="width: auto"/>
+    </td>
+    <td title="Customer is from Ireland">
+        <img src="https://i.imgur.com/yEmmskW.png" style="width: auto"/>
+    </td>
+  </tr>
+</table>
 
 ### 2. Wait for the model to deploy
 <img src="https://i.imgur.com/FZeg5gT.png" width="80%">  
 
 
+
+
 # Related apps
 
 You can use served model in next Supervisely Applications ⬇️ 
-  
 
 - [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) - app allows to play with different inference options, monitor metrics charts in real time, and save training artifacts to Team Files.
    
