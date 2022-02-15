@@ -1,6 +1,6 @@
 
 <div align="center" markdown>
-<img src="https://i.imgur.com/wQEmCI5.jpg"/>  
+<img src="https://i.imgur.com/UbiaKsm.jpg"/>  
 
 # Serve MMSegmentation
 
@@ -90,7 +90,7 @@ Supported methods:
 
 # How to Use
 
-### 1 Select architecture, pretrained model, deploying device or load custom weights and press the **Serve** button
+### 1. Select architecture, pretrained model, deploying device or load custom weights and press the **Serve** button
 
 
 <table>
