@@ -116,8 +116,8 @@ Supported datasets:
 
 # Demo
 
-<a data-key="sly-embeded-video-link" href="https://youtu.be/Uzpp7_xhbPQ" data-video-code="Uzpp7_xhbPQ">
-    <img src="https://imgur.com/2j4lNti.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:80%;">
+<a data-key="sly-embeded-video-link" href="https://youtu.be/R2_8qUw8R_A" data-video-code="R2_8qUw8R_A">
+    <img src="https://i.imgur.com/cBMwAlb.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:80%;">
 </a>
 
 # Screenshot
