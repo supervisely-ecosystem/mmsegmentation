@@ -90,7 +90,7 @@ Supported methods:
 
 # How to Use
 
-## MMesgmentation models
+## Pretrained models
 
 ### 1. Select architecture, pretrained model and press the **Serve** button
 
