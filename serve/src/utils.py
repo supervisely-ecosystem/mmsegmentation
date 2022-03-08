@@ -26,9 +26,11 @@ def inference_image_path(image_path, context, state, app_logger):
     classes = [obj["title"] for obj in g.meta.obj_classes.to_json()]
     for idx, class_name in enumerate(classes):
         class_mask = raw_result == idx
-        obj_class = g.meta.get_obj_class(class_name)
-        label = sly.Label(sly.Bitmap(class_mask), obj_class)
-        labels.append(label)
+        
+        if class_mask.sum() > 0:  # skip empty masks
+            obj_class = g.meta.get_obj_class(class_name)
+            label = sly.Label(sly.Bitmap(class_mask), obj_class)
+            labels.append(label)
 
     ann = sly.Annotation(img_size=raw_result.shape, labels=labels, )
     ann_json = ann.to_json()
