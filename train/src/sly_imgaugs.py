@@ -6,10 +6,14 @@ from mmseg.datasets.builder import PIPELINES
 class SlyImgAugs(object):
     def __init__(self, config_path):
         self.config_path = config_path
-        self.config = sly.json.load_json_file(self.config_path)
-        self.augs = sly.imgaug_utils.build_pipeline(self.config["pipeline"], random_order=self.config["random_order"])
+        if self.config_path is not None:
+            config = sly.json.load_json_file(self.config_path)
+            self.augs = sly.imgaug_utils.build_pipeline(config["pipeline"], random_order=config["random_order"])
+            
 
     def _apply_augs(self, results):
+        if self.config_path is None:
+            return
         img = results["img"]
         mask = results["gt_semantic_seg"]
         res_img, res_mask = sly.imgaug_utils.apply_to_image_and_mask(self.augs, img, mask)
