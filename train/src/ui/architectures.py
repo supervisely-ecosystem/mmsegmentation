@@ -5,6 +5,7 @@ import yaml
 import pkg_resources
 import sly_globals as g
 import supervisely as sly
+from sly.app.v1.widgets.progress_bar import ProgressBar
 from mmcv import Config
 
 cfg = None
@@ -75,7 +76,7 @@ def init(data, state):
     # default hyperparams that may be reassigned from model default params
     init_default_cfg_params(state)
 
-    sly.app.widgets.ProgressBar(g.task_id, g.api, "data.progress6", "Download weights", is_size=True,
+    ProgressBar(g.task_id, g.api, "data.progress6", "Download weights", is_size=True,
                                 min_report_percent=5).init_data(data)
     '''
     data["github_icon"] = {
@@ -166,7 +167,7 @@ def download_sly_file(remote_path, local_path, progress):
 
 
 def download_custom_config(state):
-    progress = sly.app.widgets.ProgressBar(g.task_id, g.api, "data.progress6", "Download config", is_size=True,
+    progress = ProgressBar(g.task_id, g.api, "data.progress6", "Download config", is_size=True,
                                            min_report_percent=5)
 
     weights_remote_dir = os.path.dirname(state["weightsPath"])
@@ -304,7 +305,7 @@ def init_default_cfg_args(cfg):
 @sly.timeit
 # @g.my_app.ignore_errors_and_show_dialog_window()
 def download_weights(api: sly.Api, task_id, context, state, app_logger):
-    progress = sly.app.widgets.ProgressBar(g.task_id, g.api, "data.progress6", "Download weights", is_size=True,
+    progress = ProgressBar(g.task_id, g.api, "data.progress6", "Download weights", is_size=True,
                                            min_report_percent=5)
     try:
         if state["weightsInitialization"] == "custom":
