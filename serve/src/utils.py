@@ -19,7 +19,7 @@ def str_to_class(classname):
 
 
 @sly.process_image_roi
-def inference_image_path(image_path, context, state, app_logger):
+def inference_image_path(image_path, project_meta, context, state, app_logger):
     app_logger.debug("Input path", extra={"path": image_path})
 
     img = cv2.imread(image_path)
