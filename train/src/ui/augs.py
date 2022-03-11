@@ -1,7 +1,7 @@
 import os
 import supervisely as sly
 import sly_globals as g
-from supervisely.app.widgets import CompareGallery
+from supervisely.app.v1.widgets.compare_gallery import CompareGallery
 import input_project
 
 

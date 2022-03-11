@@ -1,7 +1,7 @@
 import datetime
 from mmcv.runner.hooks import HOOKS
 from mmcv.runner.hooks.logger.text import TextLoggerHook
-import supervisely_lib as sly
+import supervisely as sly
 from sly_train_progress import get_progress_cb, set_progress, add_progress_to_request
 import sly_globals as g
 import classes as cls

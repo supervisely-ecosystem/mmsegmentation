@@ -4,7 +4,7 @@ import requests
 import yaml
 import pkg_resources
 import sly_globals as g
-import supervisely_lib as sly
+import supervisely as sly
 from mmcv import Config
 
 cfg = None

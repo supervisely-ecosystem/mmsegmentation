@@ -4,6 +4,7 @@ import sly_globals as g
 import utils
 import os
 
+
 def send_error_data(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -14,7 +15,9 @@ def send_error_data(func):
             request_id = kwargs["context"]["request_id"]
             g.my_app.send_response(request_id, data={"error": repr(e)})
         return value
+
     return wrapper
+
 
 @g.my_app.callback("get_output_classes_and_tags")
 @sly.timeit
@@ -22,11 +25,13 @@ def get_output_classes_and_tags(api: sly.Api, task_id, context, state, app_logge
     request_id = context["request_id"]
     g.my_app.send_response(request_id, data=g.meta.to_json())
 
+
 @g.my_app.callback("get_custom_inference_settings")
 @sly.timeit
 def get_custom_inference_settings(api: sly.Api, task_id, context, state, app_logger):
     request_id = context["request_id"]
     g.my_app.send_response(request_id, data={"settings": {}})
+
 
 @g.my_app.callback("get_session_info")
 @sly.timeit
@@ -40,6 +45,7 @@ def get_session_info(api: sly.Api, task_id, context, state, app_logger):
     }
     request_id = context["request_id"]
     g.my_app.send_response(request_id, data=info)
+
 
 @g.my_app.callback("inference_image_url")
 @sly.timeit

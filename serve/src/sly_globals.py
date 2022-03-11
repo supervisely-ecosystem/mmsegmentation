@@ -4,6 +4,8 @@ import sys
 import shutil
 import pkg_resources
 import supervisely as sly
+from supervisely.app.v1.app_service import AppService
+
 
 root_source_path = str(pathlib.Path(sys.argv[0]).parents[2])
 sly.logger.info(f"Root source directory: {root_source_path}")
@@ -13,7 +15,7 @@ models_configs_dir = os.path.join(root_source_path, "model_configs")
 print(f"Models configs directory: {models_configs_dir}")
 sys.path.append(models_configs_dir)
 
-my_app = sly.AppService()
+my_app = AppService()
 api = my_app.public_api
 
 TASK_ID = my_app.task_id
