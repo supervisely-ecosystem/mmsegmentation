@@ -2,10 +2,11 @@ import os
 from pathlib import Path
 import sys
 import supervisely as sly
+from supervisely.app.v1.app_service import AppService
 import shutil
 import pkg_resources
 
-my_app = sly.AppService()
+my_app = AppService()
 api = my_app.public_api
 task_id = my_app.task_id
 

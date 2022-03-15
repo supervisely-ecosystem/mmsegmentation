@@ -1,5 +1,6 @@
 import supervisely as sly
 
+
 def main():
     api = sly.Api.from_env()
 

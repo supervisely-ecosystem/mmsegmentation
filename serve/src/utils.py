@@ -13,10 +13,13 @@ from mmseg.models import build_segmentor
 from mmcv.cnn.utils import revert_sync_batchnorm
 from mmcv.runner import load_checkpoint
 
+
 def str_to_class(classname):
     return getattr(sys.modules[__name__], classname)
 
-def inference_image_path(image_path, context, state, app_logger):
+
+@sly.process_image_roi
+def inference_image_path(image_path, project_meta, context, state, app_logger):
     app_logger.debug("Input path", extra={"path": image_path})
 
     img = cv2.imread(image_path)
@@ -26,7 +29,7 @@ def inference_image_path(image_path, context, state, app_logger):
     classes = [obj["title"] for obj in g.meta.obj_classes.to_json()]
     for idx, class_name in enumerate(classes):
         class_mask = raw_result == idx
-        
+
         if class_mask.sum() > 0:  # skip empty masks
             obj_class = g.meta.get_obj_class(class_name)
             label = sly.Label(sly.Bitmap(class_mask), obj_class)
@@ -36,6 +39,7 @@ def inference_image_path(image_path, context, state, app_logger):
     ann_json = ann.to_json()
 
     return ann_json
+
 
 def get_pretrained_models(return_metrics=False):
     model_yamls = sly.json.load_json_file(os.path.join(g.root_source_path, "models", "model_meta.json"))
@@ -53,7 +57,9 @@ def get_pretrained_models(return_metrics=False):
             model_config[model_meta["model_name"]]["year"] = model_meta["year"]
             mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
             # TODO: change link to current version of package
-            model_config[model_meta["model_name"]]["config_url"] = f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/" + model_meta["yml_file"].split("/")[0]
+            model_config[model_meta["model_name"]][
+                "config_url"] = f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/" + \
+                                model_meta["yml_file"].split("/")[0]
             checkpoint_keys = []
             for model in model_info["Models"]:
                 checkpoint_info = {}
@@ -150,6 +156,7 @@ def download_weights(state):
                 sly.fs.download(weights_url, g.local_weights_path, g.my_app.cache)
             sly.logger.info("Pretrained weights has been successfully downloaded",
                             extra={"weights": g.local_weights_path})
+
 
 def init_model_and_cfg(state):
     g.cfg = Config.fromfile(g.model_config_local_path)

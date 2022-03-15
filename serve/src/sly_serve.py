@@ -4,6 +4,7 @@ import sly_globals as g
 import utils
 import os
 
+
 def send_error_data(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -14,7 +15,9 @@ def send_error_data(func):
             request_id = kwargs["context"]["request_id"]
             g.my_app.send_response(request_id, data={"error": repr(e)})
         return value
+
     return wrapper
+
 
 @g.my_app.callback("get_output_classes_and_tags")
 @sly.timeit
@@ -22,11 +25,13 @@ def get_output_classes_and_tags(api: sly.Api, task_id, context, state, app_logge
     request_id = context["request_id"]
     g.my_app.send_response(request_id, data=g.meta.to_json())
 
+
 @g.my_app.callback("get_custom_inference_settings")
 @sly.timeit
 def get_custom_inference_settings(api: sly.Api, task_id, context, state, app_logger):
     request_id = context["request_id"]
     g.my_app.send_response(request_id, data={"settings": {}})
+
 
 @g.my_app.callback("get_session_info")
 @sly.timeit
@@ -41,6 +46,7 @@ def get_session_info(api: sly.Api, task_id, context, state, app_logger):
     request_id = context["request_id"]
     g.my_app.send_response(request_id, data=info)
 
+
 @g.my_app.callback("inference_image_url")
 @sly.timeit
 @send_error_data
@@ -52,7 +58,8 @@ def inference_image_url(api: sly.Api, task_id, context, state, app_logger):
         ext = ".jpg"
     local_image_path = os.path.join(g.my_app.data_dir, sly.rand_str(15) + ext)
     sly.fs.download(image_url, local_image_path)
-    results = utils.inference_image_path(local_image_path, context, state, app_logger)
+    results = utils.inference_image_path(image_path=local_image_path, project_meta=g.meta,
+                                         context=context, state=state, app_logger=app_logger)
     sly.fs.silent_remove(local_image_path)
 
     request_id = context["request_id"]
@@ -67,7 +74,8 @@ def inference_image_id(api: sly.Api, task_id, context, state, app_logger):
     image_info = api.image.get_info_by_id(image_id)
     image_path = os.path.join(g.my_app.data_dir, sly.rand_str(10) + image_info.name)
     api.image.download_path(image_id, image_path)
-    ann_json = utils.inference_image_path(image_path, context, state, app_logger)
+    ann_json = utils.inference_image_path(image_path=image_path, project_meta=g.meta,
+                                          context=context, state=state, app_logger=app_logger)
     sly.fs.silent_remove(image_path)
     request_id = context["request_id"]
     g.my_app.send_response(request_id, data=ann_json)
@@ -86,7 +94,8 @@ def inference_batch_ids(api: sly.Api, task_id, context, state, app_logger):
 
     results = []
     for image_path in paths:
-        ann_json = utils.inference_image_path(image_path, context, state, app_logger)
+        ann_json = utils.inference_image_path(image_path=image_path, project_meta=g.meta,
+                                              context=context, state=state, app_logger=app_logger)
         results.append(ann_json)
         sly.fs.silent_remove(image_path)
 
