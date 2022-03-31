@@ -84,28 +84,30 @@ Supported methods:
 
 # How to Run
 
-### 1. Add [Serve MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/serve) app to your team from Ecosystem
+**Step 1.** Add [Serve MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/serve) app to your team from Ecosystem
+
 <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/serve" src="https://i.imgur.com/e1SsMJh.png" width="350px" style='padding-bottom: 10px'/>
 
-### 2. Run the application from Plugins & Apps page
+**Step 2.** Run the application from Plugins & Apps page
+
 <img src="https://i.imgur.com/1uAKeeE.png" width="80%" style='padding-top: 10px'>  
 
 # How to Use
 
-## Pretrained models
+**Pretrained models**
 
-### 1. Select architecture, pretrained model and press the **Serve** button
+**Step 1.** Select architecture, pretrained model and press the **Serve** button
 
 <img src="https://i.imgur.com/yEmmskW.png" style="width: 100%"/>
 
 
-### 2. Wait for the model to deploy
+**Step 2.** Wait for the model to deploy
 <img src="https://i.imgur.com/FZeg5gT.png" width="100%">  
 
 
-## Custom models
+**Custom models**
 
-### Model and directory structure must be acquired via [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) app or manually created with the same directory structure
+Model and directory structure must be acquired via [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) app or manually created with the same directory structure
 
 <img src="https://github.com/supervisely-ecosystem/mmsegmentation/releases/download/v0.0.1/custom_weights_guide-min.gif" style="width: 100%"/>
 
