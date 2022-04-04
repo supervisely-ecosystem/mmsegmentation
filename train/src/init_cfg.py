@@ -1,5 +1,6 @@
 import architectures
 import augs
+import splits
 import os
 import sly_globals as g
 from mmcv import ConfigDict
@@ -127,12 +128,11 @@ def init_cfg_splits(cfg, img_dir, ann_dir, classes, palette):
     cfg.data.train.img_dir = img_dir
     cfg.data.train.ann_dir = ann_dir
     cfg.data.train.pipeline = cfg.train_pipeline
-    cfg.data.train.split = 'splits/train.txt'
+    cfg.data.train.split = splits.train_set_path
     cfg.data.train.classes = classes
     cfg.data.train.palette = palette
     cfg.data.train.img_suffix = ''
     cfg.data.train.seg_map_suffix = '.png'
-    # cfg.data.train.ignore_index = ignore_index
     if hasattr(cfg.data.train, "times"):
         delattr(cfg.data.train, "times")
     if hasattr(cfg.data.train, "dataset"):
@@ -143,12 +143,11 @@ def init_cfg_splits(cfg, img_dir, ann_dir, classes, palette):
     cfg.data.val.img_dir = img_dir
     cfg.data.val.ann_dir = ann_dir
     cfg.data.val.pipeline = cfg.val_pipeline
-    cfg.data.val.split = 'splits/val.txt'
+    cfg.data.val.split = splits.val_set_path
     cfg.data.val.classes = classes
     cfg.data.val.palette = palette
     cfg.data.val.img_suffix = ''
     cfg.data.val.seg_map_suffix = '.png'
-    # cfg.data.val.ignore_index = ignore_index
 
     cfg.data.test.type = cfg.dataset_type
     cfg.data.test.data_root = cfg.data_root
@@ -160,7 +159,6 @@ def init_cfg_splits(cfg, img_dir, ann_dir, classes, palette):
     cfg.data.test.palette = palette
     cfg.data.test.img_suffix = ''
     cfg.data.test.seg_map_suffix = '.png'
-    # cfg.data.test.ignore_index = ignore_index
 
 
 def init_cfg_training(cfg, state):
@@ -221,7 +219,9 @@ def init_cfg_lr(cfg, state):
         warmup_ratio=state["warmupRatio"]
     )
     if state["lrPolicy"] == "Step":
-        lr_config["lr_step"] = [int(step) for step in state["lr_step"].split(",")]
+        steps = [int(step) for step in state["lr_step"].split(",")]
+        assert len(steps)
+        lr_config["step"] = steps
         lr_config["gamma"] = state["gamma"]
         lr_config["min_lr"] = state["minLR"]
     elif state["lrPolicy"] == "Exp":
@@ -265,21 +265,28 @@ def init_cfg(state, img_dir, ann_dir, classes, palette):
 
     # Since we use ony one GPU, BN is used instead of SyncBN
     cfg.norm_cfg = dict(type='BN', requires_grad=True)
-    if cfg.pretrained_model not in ["DPT", "SegFormer", "SETR", "Swin Transformer", "Twins", "ViT"]:
+    if cfg.pretrained_model not in ["DPT", "Segformer", "SETR", "Swin Transformer", "Twins", "ViT"]:
         cfg.model.backbone.norm_cfg = cfg.norm_cfg
 
     class_weights = init_class_weights(state, classes)
+    if hasattr(cfg.model.backbone, "pretrained"):
+        delattr(cfg.model.backbone, "pretrained")
+
     if isinstance(cfg.model.decode_head, list):
         for i in range(len(cfg.model.decode_head)):
             head = init_cfg_decode_head(cfg, state, classes, class_weights, ind=i)
             for key in head:
                 cfg.model.decode_head[i][key] = head[key]
     else:
-        head = init_cfg_decode_head(cfg, state, classes, class_weights)
-        for key in head:
-            cfg.model.decode_head[key] = head[key]
+        if cfg.pretrained_model == "KNet":
+            for i in range(len(cfg.model.decode_head.kernel_update_head)):
+                cfg.model.decode_head.kernel_update_head[i].num_classes = len(classes)
+            cfg.model.decode_head.kernel_generate_head.num_classes = len(classes)
+        else:
+            head = init_cfg_decode_head(cfg, state, classes, class_weights)
+            for key in head:
+                cfg.model.decode_head[key] = head[key]
 
-    init_cfg_decode_head(cfg, state, classes, class_weights)
     if state["useAuxiliaryHead"]:
         if isinstance(cfg.model.auxiliary_head, list):
             for i in range(len(cfg.model.auxiliary_head)):

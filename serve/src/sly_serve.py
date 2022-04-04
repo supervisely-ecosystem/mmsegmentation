@@ -119,7 +119,7 @@ def init_model(api: sly.Api, task_id, context, state, app_logger):
 
 
 def init_state_and_data(data, state):
-    state['pretrainedModel'] = 'SegFormer'
+    state['pretrainedModel'] = 'Segformer'
     data["pretrainedModels"], metrics = utils.get_pretrained_models(return_metrics=True)
     model_select_info = []
     for model_name, params in data["pretrainedModels"].items():
@@ -139,18 +139,6 @@ def init_state_and_data(data, state):
     state["weightsPath"] = ""
     state["loading"] = False
     state["deployed"] = False
-    '''
-    data["github_icon"] = {
-        "imageUrl": "https://github.githubassets.com/favicons/favicon.png",
-        "rounded": False,
-        "bgColor": "rgba(0,0,0,0)"
-    }
-    data["arxiv_icon"] = {
-        "imageUrl": "https://static.arxiv.org/static/browse/0.3.2.8/images/icons/favicon.ico",
-        "rounded": False,
-        "bgColor": "rgba(0,0,0,0)"
-    }
-    '''
 
 
 def main():

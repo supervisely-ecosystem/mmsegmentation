@@ -1,6 +1,24 @@
 [
   {
-    "model_name" : "SegFormer",
+    "model_name" : "BEiT",
+    "yml_file" : "beit/beit.yml",
+    "paper_from": "ICLR",
+    "year": 2022
+  },
+  {
+    "model_name" : "ConvNeXt",
+    "yml_file" : "convnext/convnext.yml",
+    "paper_from": "CVPR",
+    "year": 2022
+  },
+  {
+    "model_name" : "KNet",
+    "yml_file" : "knet/knet.yml",
+    "paper_from": "NeurIPS",
+    "year": 2021
+  },
+  {
+    "model_name" : "Segformer",
     "yml_file" : "segformer/segformer.yml",
     "paper_from": "NeurIPS",
     "year": 2021
@@ -90,7 +108,7 @@
     "year": 2019
   },
   {
-    "model_name" : "Fast-SCNN",
+    "model_name" : "FastSCNN",
     "yml_file" : "fastscnn/fastscnn.yml",
     "paper_from": "ArXiv",
     "year": 2019
@@ -168,7 +186,7 @@
     "year": 2018
   },
   {
-    "model_name" : "Non-local Net",
+    "model_name" : "NonLocalNet",
     "yml_file" : "nonlocal_net/nonlocal_net.yml",
     "paper_from": "CVPR",
     "year": 2018
@@ -222,16 +240,16 @@
     "year": 2017
   },
   {
-    "model_name" : "UNet",
-    "yml_file" : "unet/unet.yml",
-    "paper_from": "MICCAI",
-    "year": 2016
-  },
-  {
     "model_name" : "ERFNet",
     "yml_file" : "erfnet/erfnet.yml",
     "paper_from": "T-ITS",
     "year": 2017
+  },
+  {
+    "model_name" : "UNet",
+    "yml_file" : "unet/unet.yml",
+    "paper_from": "MICCAI",
+    "year": 2016
   },
   {
     "model_name" : "FCN",

@@ -6,50 +6,13 @@ import pkg_resources
 import sly_globals as g
 import supervisely as sly
 from supervisely.app.v1.widgets.progress_bar import ProgressBar
+import init_default_cfg as init_dc
 from mmcv import Config
 
 cfg = None
 
-def init_default_cfg_params(state):
-    state["optimizer"] = "SGD"
-    state["lr"] = 0.001
-    state["weightDecay"] = 0
-    state["decodeHeadLoss"] = "CrossEntropyLoss"
-    state["auxiliaryHeadLoss"] = "CrossEntropyLoss"
-    state["decodeHeadLossWeight"] = 1.0
-    state["auxiliaryHeadLossWeight"] = 0.4
-    state["lrPolicy"] = "Cyclic"
-    state["useWarmup"] = False
-    state["warmup"] = "constant"
-    state["warmupIters"] = 0
-    state["warmupRatio"] = 0.1
-    state["schedulerByEpochs"] = False
-    state["minLREnabled"] = False
-    state["minLR"] = None
-    state["minLRRatio"] = None
-    state["power"] = 1
-    state["momentum"] = 0.9
-    state["beta1"] = 0.9
-    state["beta2"] = 0.999
-    state["input_size"] = {
-        "value": {
-            "width": 256,
-            "height": 256,
-            "proportional": False
-        },
-        "options": {
-            "proportions": {
-              "width": 100,
-              "height": 100
-            },
-            "min": 64
-        }
-    }
-    state["batchSizePerGPU"] = 4
-    state["workersPerGPU"] = 2
-
 def init(data, state):
-    state['pretrainedModel'] = 'SegFormer'
+    state['pretrainedModel'] = 'Segformer'
     data["pretrainedModels"], metrics = get_pretrained_models(return_metrics=True)
     model_select_info = []
     for model_name, params in data["pretrainedModels"].items():
@@ -74,22 +37,11 @@ def init(data, state):
     state["loadingModel"] = False
 
     # default hyperparams that may be reassigned from model default params
-    init_default_cfg_params(state)
+    init_dc.init_default_cfg_params(state)
 
     ProgressBar(g.task_id, g.api, "data.progress6", "Download weights", is_size=True,
                                 min_report_percent=5).init_data(data)
-    '''
-    data["github_icon"] = {
-        "imageUrl": "https://github.githubassets.com/favicons/favicon.png",
-        "rounded": False,
-        "bgColor": "rgba(0,0,0,0)"
-    }
-    data["arxiv_icon"] = {
-        "imageUrl": "https://static.arxiv.org/static/browse/0.3.2.8/images/icons/favicon.ico",
-        "rounded": False,
-        "bgColor": "rgba(0,0,0,0)"
-    }
-    '''
+
 
 def get_pretrained_models(return_metrics=False):
     model_yamls = sly.json.load_json_file(os.path.join(g.root_source_dir, "models", "model_meta.json"))
@@ -99,9 +51,6 @@ def get_pretrained_models(return_metrics=False):
         with open(os.path.join(g.configs_dir, model_meta["yml_file"]), "r") as stream:
             model_info = yaml.safe_load(stream)
             model_config[model_meta["model_name"]] = {}
-            # model_config[model_meta["model_name"]]["code_url"] = model_info["Collections"][0]["Code"]["URL"]
-            # model_config[model_meta["model_name"]]["paper_title"] = model_info["Collections"][0]["Paper"]["Title"]
-            # model_config[model_meta["model_name"]]["paper_url"] = model_info["Collections"][0]["Paper"]["URL"]
             model_config[model_meta["model_name"]]["checkpoints"] = []
             model_config[model_meta["model_name"]]["paper_from"] = model_meta["paper_from"]
             model_config[model_meta["model_name"]]["year"] = model_meta["year"]
@@ -111,6 +60,7 @@ def get_pretrained_models(return_metrics=False):
             for model in model_info["Models"]:
                 checkpoint_info = {}
                 checkpoint_info["name"] = model["Name"]
+                checkpoint_info["method"] = model["In Collection"]
                 checkpoint_info["backbone"] = model["Metadata"]["backbone"]
                 try:
                     checkpoint_info["inference_time"] = model["Metadata"]["inference time (ms/im)"][0]["value"]
@@ -142,14 +92,15 @@ def get_table_columns(metrics):
     columns = [
         {"key": "name", "title": " ", "subtitle": None},
         {"key": "backbone", "title": "Backbone", "subtitle": None},
+        {"key": "method", "title": "Method", "subtitle": None},
         {"key": "dataset", "title": "Dataset", "subtitle": None},
         {"key": "inference_time", "title": "Inference time", "subtitle": "(ms/im)"},
         {"key": "crop_size", "title": "Input size", "subtitle": "(H, W)"},
         {"key": "lr_schd", "title": "LR scheduler", "subtitle": "steps"},
-        {"key": "training_memory", "title": "Training memory", "subtitle": "GB"},
+        {"key": "training_memory", "title": "Memory", "subtitle": "Training (GB)"},
     ]
     for metric in metrics:
-        columns.append({"key": metric, "title": f"{metric} score", "subtitle": None})
+        columns.append({"key": metric, "title": metric, "subtitle": "score"})
     return columns
 
 
@@ -178,138 +129,14 @@ def download_custom_config(state):
         download_sly_file(config_remote_dir, g.model_config_local_path, progress)
 
 
-def init_default_cfg_args(cfg):
-    params = [
-        {
-            "field": "state.decodeHeadLoss",
-            "payload": cfg.model.decode_head[0].loss_decode.type if isinstance(cfg.model.decode_head, list) else cfg.model.decode_head.loss_decode.type
-        },
-        {
-            "field": "state.decodeHeadLossWeight",
-            "payload": cfg.model.decode_head[0].loss_decode.loss_weight if isinstance(cfg.model.decode_head, list) else cfg.model.decode_head.loss_decode.loss_weight
-        },
-    ]
-    if hasattr(cfg.model, "auxiliary_head") and cfg.model.auxiliary_head is not None:
-        params.extend([
-            {
-                "field": "state.auxiliaryHeadLoss",
-                "payload": cfg.model.decode_head[0].loss_decode.type if isinstance(cfg.model.decode_head,
-                                                                                list) else cfg.model.decode_head.loss_decode.type
-            },
-            {
-                "field": "state.auxiliaryHeadLossWeight",
-                "payload": cfg.model.auxiliary_head[0].loss_decode.loss_weight if isinstance(cfg.model.auxiliary_head, list) else cfg.model.auxiliary_head.loss_decode.loss_weight
-            }
-        ])
-    if hasattr(cfg.data, "samples_per_gpu"):
-        params.extend([{
-            "field": "state.batchSizePerGPU",
-            "payload": cfg.data.samples_per_gpu
-        }])
-    if hasattr(cfg.data, "workers_per_gpu"):
-        params.extend([{
-            "field": "state.workersPerGPU",
-            "payload": cfg.data.workers_per_gpu
-        }])
-    if hasattr(cfg, "crop_size"):
-        params.extend([{
-            "field": "state.input_size.value.height",
-            "payload": cfg.crop_size[0]
-        },{
-            "field": "state.input_size.value.width",
-            "payload": cfg.crop_size[1]
-        },{
-            "field": "state.input_size.options.proportions.height",
-            "payload": 100
-        },{
-            "field": "state.input_size.options.proportions.width",
-            "payload": 100 * (cfg.crop_size[1] / cfg.crop_size[0])
-        }])
-    if hasattr(cfg.optimizer, "type"):
-        params.extend([{
-            "field": "state.optimizer",
-            "payload": cfg.optimizer.type
-        }])
-    if hasattr(cfg.optimizer, "lr"):
-        params.extend([{
-            "field": "state.lr",
-            "payload": cfg.optimizer.lr
-        }])
-    if hasattr(cfg.optimizer, "weight_decay"):
-        params.extend([{
-            "field": "state.weightDecay",
-            "payload": cfg.optimizer.weight_decay
-        }])
-    if hasattr(cfg.optimizer, "momentum"):
-        params.extend([{
-            "field": "state.momentum",
-            "payload": cfg.optimizer.momentum
-        }])
-    if hasattr(cfg.optimizer, "betas"):
-        params.extend([{
-            "field": "state.beta1",
-            "payload": cfg.optimizer.betas[0]
-        },{
-            "field": "state.beta2",
-            "payload": cfg.optimizer.betas[1]
-        }])
-    # take lr scheduler params
-    if hasattr(cfg, "lr_config"):
-        if hasattr(cfg.lr_config, "policy"):
-            policy = cfg.lr_config.policy.capitalize()
-            params.extend([{
-                "field": "state.lrPolicy",
-                "payload": "Cyclic"
-            }])
-        if hasattr(cfg.lr_config, "warmup"):
-            params.extend([{
-                "field": "state.useWarmup",
-                "payload": True
-            },{
-                "field": "state.warmup",
-                "payload": cfg.lr_config.warmup
-            }])
-        if hasattr(cfg.lr_config, "warmup_iters"):
-            params.extend([{
-                "field": "state.warmupIters",
-                "payload": cfg.lr_config.warmup_iters
-            }])
-        if hasattr(cfg.lr_config, "warmup_ratio"):
-            params.extend([{
-                "field": "state.warmupRatio",
-                "payload": cfg.lr_config.warmup_ratio
-            }])
-        if hasattr(cfg.lr_config, "by_epoch"):
-            params.extend([{
-                "field": "state.schedulerByEpochs",
-                "payload": cfg.lr_config.by_epoch
-            }])
-        if hasattr(cfg.lr_config, "min_lr"):
-            params.extend([{
-                "field": "state.minLREnabled",
-                "payload": True
-            },{
-                "field": "state.minLR",
-                "payload": cfg.lr_config.min_lr
-            }])
-        if hasattr(cfg.lr_config, "power"):
-            params.extend([{
-                "field": "state.power",
-                "payload": cfg.lr_config.power
-            }])
-
-    return params
-
-
 @g.my_app.callback("download_weights")
 @sly.timeit
-# @g.my_app.ignore_errors_and_show_dialog_window()
+@g.my_app.ignore_errors_and_show_dialog_window()
 def download_weights(api: sly.Api, task_id, context, state, app_logger):
     progress = ProgressBar(g.task_id, g.api, "data.progress6", "Download weights", is_size=True,
                                            min_report_percent=5)
     try:
         if state["weightsInitialization"] == "custom":
-            # raise NotImplementedError
             weights_path_remote = state["weightsPath"]
             if not weights_path_remote.endswith(".pth"):
                 raise ValueError(f"Weights file has unsupported extension {sly.fs.get_file_ext(weights_path_remote)}. "
@@ -332,7 +159,6 @@ def download_weights(api: sly.Api, task_id, context, state, app_logger):
             if weights_url is not None:
                 g.local_weights_path = os.path.join(g.my_app.data_dir, sly.fs.get_file_name_with_ext(weights_url))
                 g.model_config_local_path = os.path.join(g.root_source_dir, config_file)
-                # TODO: check that pretrained weights are exist on remote server
                 if sly.fs.file_exists(g.local_weights_path) is False:
                     response = requests.head(weights_url, allow_redirects=True)
                     sizeb = int(response.headers.get('content-length', 0))
@@ -362,9 +188,9 @@ def download_weights(api: sly.Api, task_id, context, state, app_logger):
     if state["weightsInitialization"] != "custom":
         cfg.pretrained_model = state["pretrainedModel"]
     # print(f'Config:\n{cfg.pretty_text}')
-    params = init_default_cfg_args(cfg)
+    params = init_dc.init_default_cfg_args(cfg)
     fields.extend(params)
-    if cfg.pretrained_model in ["CGNet", "DPT", "ERFNet", "HRNet", "MobileNetV3", "OCRNet", "PointRend", "SegFormer", "SemanticFPN", "Twins"]:
+    if cfg.pretrained_model in ["CGNet", "DPT", "ERFNet", "HRNet", "MobileNetV3", "OCRNet", "PointRend", "Segformer", "SemanticFPN", "Twins"]:
         fields.extend([
             {"field": "state.useAuxiliaryHead", "payload": False}
         ])

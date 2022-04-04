@@ -85,6 +85,7 @@ def init(data, state):
 
 def restart(data, state):
     data["done6"] = False
+    data["availableMetrics"] = ["mIoU", "mDice"]
 
 
 @g.my_app.callback("use_hyp")
