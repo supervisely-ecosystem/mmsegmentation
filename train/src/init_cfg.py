@@ -81,46 +81,52 @@ def init_cfg_optimizer(cfg, state):
             cfg.optimizer.momentum_decay = state["momentumDecay"]
 
 def init_cfg_pipelines(cfg):
-    cfg.train_pipeline = [
-        dict(type='LoadImageFromFile'),
-        dict(type='LoadAnnotations'),
-        dict(type='SlyImgAugs', config_path=augs.augs_config_path),
-        dict(type='Resize', img_scale=(cfg.crop_size[0], cfg.crop_size[1])),
-        dict(type='Normalize', **cfg.img_norm_cfg),
-        dict(type='DefaultFormatBundle'),
-        dict(type='Collect', keys=['img', 'gt_semantic_seg'], meta_keys=('filename', 'ori_filename', 'ori_shape',
-                                                                         'img_shape', 'scale_factor', 'img_norm_cfg')),
-    ]
+    
+    train_steps_to_remove = ["RandomFlip", "PhotoMetricDistortion"]
+    train_pipeline = []
+    for config_step in cfg.data.train.pipeline:
+        if config_step["type"] in train_steps_to_remove:
+            continue
+        elif config_step["type"] == "LoadAnnotations":
+            config_step["reduce_zero_label"] = False
+            train_pipeline.append(config_step)
+            train_pipeline.append(dict(type='SlyImgAugs', config_path=augs.augs_config_path))
+            continue
+        elif config_step["type"] == "Resize":
+            if config_step["img_scale"][0] < cfg.crop_size[0] or config_step["img_scale"][1] < cfg.crop_size[1]:
+                config_step["img_scale"] = cfg.crop_size
+        elif config_step["type"] == "Normalize":
+            train_pipeline.append(dict(type='Normalize', **cfg.img_norm_cfg))
+            continue
+        elif config_step["type"] == "RandomCrop":
+            config_step["crop_size"] = cfg.crop_size
+        elif config_step["type"] == "Pad":
+            config_step["size"] = cfg.crop_size
+        elif config_step["type"] == "Collect":
+            config_step["meta_keys"] = ('filename', 'ori_filename', 'ori_shape', 'img_shape', 'scale_factor', 'img_norm_cfg')
 
-    cfg.val_pipeline = [
-        dict(type='LoadImageFromFile'),
-        dict(
-            type='MultiScaleFlipAug',
-            img_scale=(cfg.crop_size[0], cfg.crop_size[1]),
-            flip=False,
-            transforms=[
-                dict(type='Resize', keep_ratio=True),
-                dict(type='RandomFlip'),
-                dict(type='Normalize', **cfg.img_norm_cfg),
-                dict(type='ImageToTensor', keys=['img']),
-                dict(type='Collect', keys=['img']),
-            ])
-    ]
+        train_pipeline.append(config_step)
+    cfg.train_pipeline = train_pipeline
 
-    cfg.test_pipeline = [
-        dict(type='LoadImageFromFile'),
-        dict(
-            type='MultiScaleFlipAug',
-            img_scale=(cfg.crop_size[0], cfg.crop_size[1]),
-            flip=False,
-            transforms=[
-                dict(type='Resize', keep_ratio=True),
-                dict(type='RandomFlip'),
-                dict(type='Normalize', **cfg.img_norm_cfg),
-                dict(type='ImageToTensor', keys=['img']),
-                dict(type='Collect', keys=['img']),
-            ])
-    ]
+    test_pipeline = cfg.data.test.pipeline
+    for config_step in test_pipeline:
+        if config_step["type"] == "MultiScaleFlipAug":
+            if config_step["img_scale"][0] < cfg.crop_size[0] or config_step["img_scale"][1] < cfg.crop_size[1]:
+                config_step["img_scale"] = cfg.crop_size
+            transform_pipeline = []
+            for transform_step in config_step["transforms"]:
+                if transform_step["type"] == "Normalize":
+                    transform_pipeline.append(dict(type='Normalize', **cfg.img_norm_cfg))
+                    continue
+                elif transform_step["type"] == "Resize":
+                    transform_step["keep_ratio"] = False
+                transform_pipeline.append(transform_step)
+            config_step["transforms"] = transform_pipeline
+
+    cfg.val_pipeline = test_pipeline
+    cfg.test_pipeline = test_pipeline
+    
+
 
 def init_cfg_splits(cfg, img_dir, ann_dir, classes, palette):
     cfg.data.train.type = cfg.dataset_type
@@ -167,6 +173,7 @@ def init_cfg_training(cfg, state):
 
     cfg.data.samples_per_gpu = state["batchSizePerGPU"]
     cfg.data.workers_per_gpu = state["workersPerGPU"]
+    cfg.data.persistent_workers = True
 
     # TODO: sync with state["gpusId"] if it will be needed
     cfg.gpu_ids = range(1)
@@ -260,14 +267,7 @@ def init_cfg_lr(cfg, state):
         lr_config["three_phase"] = state["threePhase"]
     cfg.lr_config = lr_config
 
-def init_cfg(state, img_dir, ann_dir, classes, palette):
-    cfg = architectures.cfg
-
-    # Since we use ony one GPU, BN is used instead of SyncBN
-    cfg.norm_cfg = dict(type='BN', requires_grad=True)
-    if cfg.pretrained_model not in ["DPT", "Segformer", "SETR", "Swin Transformer", "Twins", "ViT"]:
-        cfg.model.backbone.norm_cfg = cfg.norm_cfg
-
+def init_cfg_model(cfg, state, classes):
     class_weights = init_class_weights(state, classes)
     if hasattr(cfg.model.backbone, "pretrained"):
         delattr(cfg.model.backbone, "pretrained")
@@ -298,6 +298,10 @@ def init_cfg(state, img_dir, ann_dir, classes, palette):
             for key in head:
                 cfg.model.auxiliary_head[key] = head[key]
 
+def init_cfg(state, img_dir, ann_dir, classes, palette):
+    cfg = architectures.cfg
+
+    init_cfg_model(cfg, state, classes)
     init_cfg_optimizer(cfg, state)
     init_cfg_training(cfg, state)
     init_cfg_pipelines(cfg)

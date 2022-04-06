@@ -122,9 +122,11 @@ def init_default_cfg_args(cfg):
     if hasattr(cfg, "lr_config"):
         if hasattr(cfg.lr_config, "policy"):
             policy = cfg.lr_config.policy.capitalize()
+            if policy == "Step":
+                policy = "Fixed" # Sorry but it's difficult to calculate correct N steps 
             params.extend([{
                 "field": "state.lrPolicy",
-                "payload": "Cyclic"
+                "payload": policy
             }])
         if hasattr(cfg.lr_config, "warmup"):
             warmup = cfg.lr_config.warmup

@@ -12,7 +12,7 @@ from mmcv import Config
 cfg = None
 
 def init(data, state):
-    state['pretrainedModel'] = 'Segformer'
+    state['pretrainedModel'] = 'ConvNeXt'
     data["pretrainedModels"], metrics = get_pretrained_models(return_metrics=True)
     model_select_info = []
     for model_name, params in data["pretrainedModels"].items():
@@ -187,10 +187,10 @@ def download_weights(api: sly.Api, task_id, context, state, app_logger):
     cfg = Config.fromfile(g.model_config_local_path)
     if state["weightsInitialization"] != "custom":
         cfg.pretrained_model = state["pretrainedModel"]
-    # print(f'Config:\n{cfg.pretty_text}')
+    # print(f'Config:\n{cfg.pretty_text}') # TODO: debug
     params = init_dc.init_default_cfg_args(cfg)
     fields.extend(params)
-    if cfg.pretrained_model in ["CGNet", "DPT", "ERFNet", "HRNet", "MobileNetV3", "OCRNet", "PointRend", "Segformer", "SemanticFPN", "Twins"]:
+    if not hasattr(cfg.model, "auxiliary_head") or cfg.model.auxiliary_head is None:
         fields.extend([
             {"field": "state.useAuxiliaryHead", "payload": False}
         ])

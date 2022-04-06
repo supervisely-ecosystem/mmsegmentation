@@ -119,7 +119,7 @@ def init_model(api: sly.Api, task_id, context, state, app_logger):
 
 
 def init_state_and_data(data, state):
-    state['pretrainedModel'] = 'Segformer'
+    state['pretrainedModel'] = 'ConvNeXt'
     data["pretrainedModels"], metrics = utils.get_pretrained_models(return_metrics=True)
     model_select_info = []
     for model_name, params in data["pretrainedModels"].items():

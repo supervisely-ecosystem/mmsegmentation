@@ -1,16 +1,17 @@
 [
   {
-    "model_name" : "BEiT",
-    "yml_file" : "beit/beit.yml",
-    "paper_from": "ICLR",
-    "year": 2022
-  },
-  {
     "model_name" : "ConvNeXt",
     "yml_file" : "convnext/convnext.yml",
     "paper_from": "CVPR",
     "year": 2022
   },
+  {
+    "model_name" : "BEiT",
+    "yml_file" : "beit/beit.yml",
+    "paper_from": "ICLR",
+    "year": 2022
+  },
+  
   {
     "model_name" : "KNet",
     "yml_file" : "knet/knet.yml",
