@@ -171,7 +171,6 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette):
             shutil.move(os.path.join(temp_project_seg_dir, dataset, img_dir, filename),
                         os.path.join(g.project_seg_dir, img_dir))
     
-    shutil.rmtree(g.project_dir)
     shutil.rmtree(temp_project_seg_dir)
     g.api.app.set_field(g.task_id, "state.preparingData", False)
 
