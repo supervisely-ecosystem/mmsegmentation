@@ -50,6 +50,8 @@ Supported backbones:
 - [x] [Vision Transformer (ICLR'2021)](https://github.com/open-mmlab/mmsegmentation/tree/master/configs/vit)
 - [x] [Swin Transformer (ICCV'2021)](https://github.com/open-mmlab/mmsegmentation/tree/master/configs/swin)
 - [x] [Twins (NeurIPS'2021)](https://github.com/open-mmlab/mmsegmentation/tree/master/configs/twins)
+- [x] [BEiT (ICLR'2022)](https://github.com/open-mmlab/mmsegmentation/blob/master/configs/beit)
+- [x] [ConvNeXt (CVPR'2022)](https://github.com/open-mmlab/mmsegmentation/blob/master/configs/convnext)
 
 Supported methods:
 
@@ -86,6 +88,7 @@ Supported methods:
 - [x] [DPT (ArXiv'2021)](https://github.com/open-mmlab/mmsegmentation/tree/master/configs/dpt)
 - [x] [Segmenter (ICCV'2021)](https://github.com/open-mmlab/mmsegmentation/tree/master/configs/segmenter)
 - [x] [SegFormer (NeurIPS'2021)](https://github.com/open-mmlab/mmsegmentation/tree/master/configs/segformer)
+- [x] [K-Net (NeurIPS'2021)](https://github.com/open-mmlab/mmsegmentation/blob/master/configs/knet)
 
 
 # How to Run

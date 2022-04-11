@@ -39,10 +39,6 @@ def init(data, state):
     data["outputUrl"] = None
 
 
-def restart(data, state):
-    data["done9"] = False
-
-
 def init_chart(title, names, xs, ys, smoothing=None, yrange=None, decimals=None, xdecimals=None, metric=None):
     series = []
     for name, x, y in zip(names, xs, ys):
@@ -146,23 +142,10 @@ def init_class_charts_series(state):
     g.api.app.set_fields(g.task_id, fields)
 
 
-def prepare_segmentation_data(state, img_dir, ann_dir):
+def prepare_segmentation_data(state, img_dir, ann_dir, palette):
     temp_project_seg_dir = g.project_seg_dir + "_temp"
     sly.Project.to_segmentation_task(g.project_dir, temp_project_seg_dir, target_classes=state["selectedClasses"])
-    shutil.rmtree(g.project_dir)
-    project_seg_temp = sly.Project(temp_project_seg_dir, sly.OpenMode.READ)
-    classes_json = project_seg_temp.meta.obj_classes.to_json()
-    classes = [obj["title"] for obj in classes_json if obj["title"]]
-    '''
-    ignore_index = None
-    for ind, class_name in enumerate(classes):
-        if class_name == "__bg__":
-            ignore_index = ind
-            break
-    '''
-    palette = [obj["color"].lstrip('#') for obj in classes_json]
-    # hex to rgb
-    palette = [[int(color[i:i + 2], 16) for i in (0, 2, 4)] for color in palette]
+
 
     datasets = os.listdir(temp_project_seg_dir)
     os.makedirs(os.path.join(g.project_seg_dir, img_dir), exist_ok=True)
@@ -187,10 +170,9 @@ def prepare_segmentation_data(state, img_dir, ann_dir):
         for filename in imgfiles_to_move:
             shutil.move(os.path.join(temp_project_seg_dir, dataset, img_dir, filename),
                         os.path.join(g.project_seg_dir, img_dir))
-
+    
     shutil.rmtree(temp_project_seg_dir)
     g.api.app.set_field(g.task_id, "state.preparingData", False)
-    return classes, palette
 
 
 @g.my_app.callback("train")
@@ -203,10 +185,18 @@ def train(api: sly.Api, task_id, context, state, app_logger):
 
         img_dir = "img"
         ann_dir = "seg"
-        classes, palette = prepare_segmentation_data(state, img_dir, ann_dir)
+        obj_classes = g.project_meta.obj_classes
+        obj_classes = obj_classes.add(sly.ObjClass(name="__bg__", geometry_type=sly.Bitmap, color=(0,0,0)))
+        classes_json = obj_classes.to_json()
+        classes_json = [obj for obj in classes_json if obj["title"] in state["selectedClasses"] or obj["title"] == "__bg__"]
+        classes = [obj["title"] for obj in classes_json]
+        palette = [obj["color"].lstrip('#') for obj in classes_json]
+        palette = [[int(color[i:i + 2], 16) for i in (0, 2, 4)] for color in palette]
+        if not os.path.exists(g.project_seg_dir):
+            prepare_segmentation_data(state, img_dir, ann_dir, palette)
 
         cfg = init_cfg(state, img_dir, ann_dir, classes, palette)
-
+        # print(f'Config:\n{cfg.pretty_text}') # TODO: debug
         os.makedirs(os.path.join(g.checkpoints_dir, cfg.work_dir.split('/')[-1]), exist_ok=True)
         cfg.dump(os.path.join(g.checkpoints_dir, cfg.work_dir.split('/')[-1], "config.py"))
 
@@ -242,9 +232,9 @@ def train(api: sly.Api, task_id, context, state, app_logger):
             {"field": "state.started", "payload": False},
         ]
         g.api.app.set_fields(g.task_id, fields)
+
+        # stop application
+        g.my_app.stop()
     except Exception as e:
         g.api.app.set_field(task_id, "state.started", False)
         raise e  # app will handle this error and show modal window
-
-    # stop application
-    g.my_app.stop()

@@ -1,9 +1,17 @@
+configs
+data
+.idea
+cache
+.vscode
+
 train/secret_debug.env
 serve/secret_debug.env
-configs
 
 serve/.DS_Store
 train/.DS_Store
 train/src/.DS_Store
 .DS_Store
-.idea/
+
+serve/src/__pycache__
+train/src/__pycache__
+train/src/ui/__pycache__

@@ -6,7 +6,7 @@
           ref="step6"
 >
     <el-tabs type="border-card" class="el-tabs-cards" v-model="state.currentTab">
-        <el-tab-pane label="General" name="general" :disabled="data.done6">
+        <el-tab-pane label="General" name="general">
             <sly-field title="Device"
                        description="Run nvidia-smi or check agent page to see how many devices your machine has or keep by default">
                 <el-select v-model="state.gpusId" :disabled="true">
@@ -46,7 +46,7 @@
                 </div>
             </sly-field>
         </el-tab-pane>
-        <el-tab-pane label="Checkpoints" name="checkpoints" :disabled="data.done6">
+        <el-tab-pane label="Checkpoints" name="checkpoints">
             <sly-field title="Checkpoints interval"
                description="Save checkpoints periodically">
                 <div class="fflex">
@@ -90,11 +90,11 @@
                 </el-switch>
             </sly-field>
         </el-tab-pane>
-        <el-tab-pane label="Optimizer (Advanced)" name="optimizer" :disabled="data.done6">
+        <el-tab-pane label="Optimizer (Advanced)" name="optimizer">
             <sly-field title="Optimizer">
                 <div slot="description">
                     Choose optimizer and its settings, learn more in official
-                    <a href="https://pytorch.org/docs/1.9.0/optim.html#algorithms" target="_blank">
+                    <a href="https://pytorch.org/docs/1.10.0/optim.html#algorithms" target="_blank">
                         pytorch documentation
                     </a>
                 </div>
@@ -142,7 +142,7 @@
                 </div>
             </sly-field>
         </el-tab-pane>
-        <el-tab-pane label="Losses and metrics (Advanced)" name="losses" :disabled="data.done6">
+        <el-tab-pane label="Losses and metrics (Advanced)" name="losses">
             <sly-field title="Decode head loss function">
                 <el-select class=mt10 v-model="state.decodeHeadLoss" :disabled="data.done6">
                     <el-option v-for="loss in data.availableLosses" :key="loss" :label="loss" :value="loss"></el-option>
@@ -165,7 +165,7 @@
                 <el-switch v-model="state.useClassWeights" on-color="#13ce66" off-color="#B8B8B8" :disabled="data.done6"></el-switch>
             </sly-field>
             <sly-field v-if="state.useClassWeights" title="Manual class weights" description="Provide class weights for each class (floats splitted by comma)">
-                <div>Selected classes order: ( <span v-if="state.selectedClasses.includes(class_name)" v-for="class_name in data.classesList" style="font-style: italic;">{{class_name}} </span><span style="font-style: italic;">__bg__</span> )</div>
+                <div>Selected classes order: ( <span v-if="state.selectedClasses.includes(class_name)" v-for="class_name in data.classesList" style="font-style: italic;">{{class_name}},</span><span style="font-style: italic;">__bg__</span> )</div>
                 <el-input v-model="state.classWeights" placeholder="1.2,0.4,0.3"  :debounce="1000" :disabled="data.done6"></el-input>
             </sly-field>
 
@@ -211,10 +211,10 @@
                 </el-select>
             </sly-field>
         </el-tab-pane>
-        <el-tab-pane label="Learning rate scheduler (Advanced)" name="lr_scheduler" :disabled="data.done6">
+        <el-tab-pane label="Learning rate scheduler (Advanced)" name="lr_scheduler">
             <div class="mb10">
                 Choose LR scheduler and its settings, learn more in official
-                <a href="https://pytorch.org/docs/1.9.0/optim.html#how-to-adjust-learning-rate" target="_blank">
+                <a href="https://pytorch.org/docs/1.10.0/optim.html#how-to-adjust-learning-rate" target="_blank">
                     pytorch documentation
                 </a>
                 or in

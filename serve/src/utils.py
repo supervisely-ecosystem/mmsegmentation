@@ -49,9 +49,6 @@ def get_pretrained_models(return_metrics=False):
         with open(os.path.join(g.configs_dir, model_meta["yml_file"]), "r") as stream:
             model_info = yaml.safe_load(stream)
             model_config[model_meta["model_name"]] = {}
-            # model_config[model_meta["model_name"]]["code_url"] = model_info["Collections"][0]["Code"]["URL"]
-            # model_config[model_meta["model_name"]]["paper_title"] = model_info["Collections"][0]["Paper"]["Title"]
-            # model_config[model_meta["model_name"]]["paper_url"] = model_info["Collections"][0]["Paper"]["URL"]
             model_config[model_meta["model_name"]]["checkpoints"] = []
             model_config[model_meta["model_name"]]["paper_from"] = model_meta["paper_from"]
             model_config[model_meta["model_name"]]["year"] = model_meta["year"]
@@ -64,6 +61,7 @@ def get_pretrained_models(return_metrics=False):
             for model in model_info["Models"]:
                 checkpoint_info = {}
                 checkpoint_info["name"] = model["Name"]
+                checkpoint_info["method"] = model["In Collection"]
                 checkpoint_info["backbone"] = model["Metadata"]["backbone"]
                 try:
                     checkpoint_info["inference_time"] = model["Metadata"]["inference time (ms/im)"][0]["value"]
@@ -95,14 +93,15 @@ def get_table_columns(metrics):
     columns = [
         {"key": "name", "title": " ", "subtitle": None},
         {"key": "backbone", "title": "Backbone", "subtitle": None},
+        {"key": "method", "title": "Method", "subtitle": None},
         {"key": "dataset", "title": "Dataset", "subtitle": None},
         {"key": "inference_time", "title": "Inference time", "subtitle": "(ms/im)"},
         {"key": "crop_size", "title": "Input size", "subtitle": "(H, W)"},
         {"key": "lr_schd", "title": "LR scheduler", "subtitle": "steps"},
-        {"key": "training_memory", "title": "Training memory", "subtitle": "GB"},
+        {"key": "training_memory", "title": "Memory", "subtitle": "Training (GB)"},
     ]
     for metric in metrics:
-        columns.append({"key": metric, "title": f"{metric} score", "subtitle": None})
+        columns.append({"key": metric, "title": metric, "subtitle": "score"})
     return columns
 
 

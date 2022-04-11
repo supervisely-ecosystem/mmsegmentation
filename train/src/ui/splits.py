@@ -5,8 +5,8 @@ import os
 train_set = None
 val_set = None
 
-train_set_path = os.path.join(g.project_seg_dir, "splits", "train.txt")
-val_set_path = os.path.join(g.project_seg_dir, "splits", "val.txt")
+train_set_path = os.path.join(g.my_app.data_dir, "train.txt")
+val_set_path = os.path.join(g.my_app.data_dir, "val.txt")
 
 def init(project_info, project_meta: sly.ProjectMeta, data, state):
     data["randomSplit"] = [
@@ -139,6 +139,5 @@ def create_splits(api: sly.Api, task_id, context, state, app_logger):
         _save_set(val_set_path, val_set)
 
 def _save_set(save_path, items):
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
     with open(os.path.join(save_path), 'w') as f:
         f.writelines(item.name + '\n' for item in items)
