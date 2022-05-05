@@ -16,8 +16,11 @@
   "icon": "https://i.imgur.com/GaEFmkH.png",
   "icon_cover": true,
   "context_menu": {
-    "target": ["images_project"],
+    "target": [
+      "images_project"
+    ],
     "context_root": "Neural Networks",
     "context_category": "MM Segmentation"
-  }
+  },
+  "poster": "https://i.imgur.com/scv9x1g.jpg"
 }
