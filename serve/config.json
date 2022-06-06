@@ -2,9 +2,12 @@
   "name": "Serve MMSegmentation",
   "type": "app",
   "categories": [
-    "open-mmlab",
     "neural network",
-    "semantic segmentation"
+    "images",
+    "videos",
+    "semantic segmentation",
+    "segmentation & tracking",
+    "serve"
   ],
   "description": "Deploy model as REST API service",
   "docker_image": "supervisely/mmseg:1.3.0",
