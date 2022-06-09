@@ -161,7 +161,7 @@ def init_model(api: sly.Api, task_id, context, state, app_logger):
         {"field": "state.deployed", "payload": True},
     ]
     g.api.app.set_fields(g.TASK_ID, fields)
-    sly.logger.info("Model has been successfully deployed")
+    sly.logger.info("🟩 Model has been successfully deployed")
 
 
 def init_state_and_data(data, state):
