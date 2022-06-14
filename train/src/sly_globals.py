@@ -6,7 +6,7 @@ from supervisely.app.v1.app_service import AppService
 import shutil
 import pkg_resources
 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 root_source_dir = str(Path(sys.argv[0]).parents[2])
 sly.logger.info(f"Root source directory: {root_source_dir}")
