@@ -26,5 +26,6 @@
     "context_root": "Neural Networks",
     "context_category": "MM Segmentation"
   },
-  "poster": "https://i.imgur.com/scv9x1g.jpg"
+  "poster": "https://i.imgur.com/scv9x1g.jpg",
+  "community_agent": false
 }
