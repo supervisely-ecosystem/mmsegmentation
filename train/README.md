@@ -1,7 +1,8 @@
 
 <div align="center" markdown>
 
-<img src="https://i.imgur.com/scv9x1g.jpg"/>  
+<img src="![Train MMSegmentation](https://user-images.githubusercontent.com/48245050/182847473-9a35f213-c27b-4abd-bd64-c73bf80fb056.jpg)
+"/>  
 
 # Train MMSegmentation
 
