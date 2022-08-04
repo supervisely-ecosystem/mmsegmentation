@@ -1,6 +1,7 @@
 
 <div align="center" markdown>
-<img src="https://i.imgur.com/UbiaKsm.jpg"/>  
+<img src="![Serve MMSegmentation](https://user-images.githubusercontent.com/48245050/182851208-d8e50d77-686e-470d-a136-428856a60ef5.jpg)
+"/>  
 
 # Serve MMSegmentation
 
