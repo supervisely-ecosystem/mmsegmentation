@@ -1,3 +1,2 @@
-supervisely==6.36.0
-supervisely[apps]==6.36.0
+supervisely==6.68.116
 ffmpeg-python==0.2.0
