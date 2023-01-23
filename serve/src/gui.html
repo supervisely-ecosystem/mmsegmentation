@@ -101,8 +101,13 @@
 
         </el-tabs>
         <sly-field title="Device">
-            <el-select v-model="state.device" :disabled="true">
-                <el-option key="cuda:0" label="cuda:0" value="cuda:0"></el-option>
+            <el-select v-model="state.device" :disabled="state.deployed">
+                <el-option 
+                    v-for="(name, i) in data.available_device_names" 
+                    :key="data.available_device_values[i]" 
+                    :label="name" 
+                    :value="data.available_device_values[i]"
+                ></el-option>
             </el-select>
         </sly-field>
         <el-button type="primary" class="regular mt10 mr15"

@@ -1,5 +1,5 @@
 import traceback
-
+import torch
 import supervisely as sly
 import functools
 import sly_globals as g
@@ -181,7 +181,17 @@ def init_state_and_data(data, state):
     state["weightsInitialization"] = "pretrained"
     state["selectedModel"] = {pretrained_model: data["pretrainedModels"][pretrained_model]["checkpoints"][0]['name']
                               for pretrained_model in data["pretrainedModels"].keys()}
-    state["device"] = "cuda:0"
+    device_values = ["cpu"]
+    device_names = ["CPU"]
+    if torch.cuda.is_available():
+        gpus = torch.cuda.device_count()
+        for i in range(gpus):
+            device_values.append(f"cuda:{i}")
+            device_names.append(f"{torch.cuda.get_device_name(i)} (cuda:{i})")
+
+    data["available_device_names"] = device_names
+    data["available_device_values"] = device_values
+    state["device"] = device_values[0]
     state["weightsPath"] = ""
     state["loading"] = False
     state["deployed"] = False
