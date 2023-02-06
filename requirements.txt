@@ -1,2 +1,2 @@
-supervisely==6.68.116
+git+https://github.com/supervisely/supervisely.git@support-ui-inference
 ffmpeg-python==0.2.0

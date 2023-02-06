@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 import torch
 import supervisely as sly
 import supervisely.app.widgets as Widgets
-from supervisely.nn.inference import FilesContext
 import pkg_resources
 from collections import OrderedDict
 from mmcv import Config
@@ -27,36 +26,41 @@ root_source_path = str(Path(__file__).parents[2])
 app_source_path = str(Path(__file__).parents[1])
 load_dotenv(os.path.join(app_source_path, "local.env"))
 load_dotenv(os.path.expanduser("~/supervisely.env"))
+models_meta_path = os.path.join(root_source_path, "models", "model_meta.json")
 
 def str_to_class(classname):
     return getattr(sys.modules[__name__], classname)
 
-# TODO:
+configs_dir = os.path.join(root_source_path, "configs")
 mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
-mmseg_repo_path = os.path.join(root_source_path, f"mmsegmentation-{mmseg_ver}")
-configs_dir = os.path.join(mmseg_repo_path, "configs")
-# if os.path.isdir(mmseg_repo_path):
-#     if os.path.isdir(configs_dir):
-#         shutil.rmtree(configs_dir)
-#     sly.logger.info(f"Getting model configs of current mmsegmentation version {mmseg_ver}...")
-#     shutil.copytree(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}/configs", configs_dir)
-models_cnt = len(os.listdir(configs_dir)) - 1
-sly.logger.info(f"Found {models_cnt} models in {configs_dir} directory.")
+if os.path.isdir(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}"):
+    if os.path.isdir(configs_dir):
+        shutil.rmtree(configs_dir)
+    sly.logger.info(f"Getting model configs of current mmsegmentation version {mmseg_ver}...")
+    shutil.copytree(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}/configs", configs_dir)
+    models_cnt = len(os.listdir(configs_dir)) - 1
+    sly.logger.info(f"Found {models_cnt} models in {configs_dir} directory.")
 
 
 class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
     def load_on_device(
         self,
-        files_context: FilesContext, # from GUI
+        model_dir: str, 
         device: Literal["cpu", "cuda", "cuda:0", "cuda:1", "cuda:2", "cuda:3"] = "cpu",
     ) -> None:
-        config_file = files_context.get("config_file")
-        cfg = Config.fromfile(config_file.location)
+        # pretrained: checkpoint info here
+        model_source = self.gui.get_model_source()
+        if model_source == "Pretrained models":
+            selected_model = self.gui.get_checkpoint_info()
+            weights_path, config_path = self.download_pretrained_files(selected_model, model_dir)
+        elif model_source == "Custom weights":
+            custom_weights_link = self.gui.get_custom_link()
+            weights_path, config_path = self.download_custom_files(custom_weights_link, model_dir)
+        cfg = Config.fromfile(config_path)
         cfg.model.pretrained = None
         cfg.model.train_cfg = None
         model = build_segmentor(cfg.model, test_cfg=cfg.get('test_cfg'))
-        checkpoint = load_checkpoint(model, files_context.get("weights_file").location, map_location='cpu')
-        model_source = self.gui.get_model_source()
+        checkpoint = load_checkpoint(model, weights_path, map_location='cpu')
         if model_source == "Custom weights":
             classes = cfg.checkpoint_config.meta.CLASSES
             palette = cfg.checkpoint_config.meta.PALETTE
@@ -81,11 +85,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
     def get_classes(self) -> List[str]:
         return self.class_names  # e.g. ["cat", "dog", ...]
 
-    def get_models(self) -> Union[List[Dict[str, str]], Dict[str, List[Dict[str, str]]]]:
-        models_meta_path = os.path.join(root_source_path, "models", "model_meta.json")
-        return self.get_pretrained_models(models_meta_path)
-
-    def get_pretrained_models(self, models_meta_path):
+    def get_models(self, add_links=False):
         model_yamls = sly.json.load_json_file(models_meta_path)
         model_config = {}
         for model_meta in model_yamls:
@@ -118,17 +118,48 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                     for metric_name, metric_val in model["Results"][0]["Metrics"].items():
                         checkpoint_info[metric_name] = metric_val
                     #checkpoint_info["config_file"] = os.path.join(f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}", model["Config"])
-                    checkpoint_info["config_file"] = os.path.join(mmseg_repo_path, model["Config"])
-                    checkpoint_info["weights_file"] = model["Weights"]
+                    if add_links:
+                        checkpoint_info["config_file"] = os.path.join(root_source_path, model["Config"])
+                        checkpoint_info["weights_file"] = model["Weights"]
                     model_config[model_meta["model_name"]]["checkpoints"].append(checkpoint_info)
         return model_config
 
-    def get_custom_files(custom_link):
-        weights_remote_dir = os.path.dirname(custom_link)
-        return {
-            "weights_file": custom_link,
-            "config_file": os.path.join(weights_remote_dir, 'config.py')
-        }
+    def download_pretrained_files(self, selected_model: Dict[str, str], model_dir: str):
+        models = self.get_models(add_links=True)
+        model_name = list(self.gui.get_model_info().keys())[0]
+        full_model_info = selected_model
+        for model_info in models[model_name]["checkpoints"]:
+            if model_info["Name"] == selected_model["Name"]:
+                full_model_info = model_info
+        weights_ext = sly.fs.get_file_ext(full_model_info["weights_file"])
+        config_ext = sly.fs.get_file_ext(full_model_info["config_file"])
+        weights_dst_path = os.path.join(model_dir, f"weights{weights_ext}")
+        if not sly.fs.file_exists(weights_dst_path):
+            self.download(
+                src_path=full_model_info["weights_file"], 
+                dst_path=weights_dst_path
+            )
+        config_path = self.download(
+            src_path=full_model_info["config_file"], 
+            dst_path=os.path.join(model_dir, f"config{config_ext}")
+        )
+        
+        return weights_dst_path, config_path
+
+    def download_custom_files(self, custom_link: str, model_dir: str):
+        weights_ext = sly.fs.get_file_ext(custom_link)
+        weights_dst_path = os.path.join(model_dir, f"weights{weights_ext}")
+        if not sly.fs.file_exists(weights_dst_path):
+            self.download(
+                src_path=custom_link,
+                dst_path=weights_dst_path,
+            )
+        config_path = self.download(
+            src_path=os.path.join(os.path.dirname(custom_link), 'config.py'),
+            dst_path=os.path.join(model_dir, 'config.py'),
+        )
+        
+        return weights_dst_path, config_path
 
     def predict(
         self, image_path: str, settings: Dict[str, Any]
@@ -143,9 +174,6 @@ sly.logger.info("Script arguments", extra={
     "context.workspaceId": sly.env.workspace_id(),
 })
 
-# TODO: get from GUI
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print("Using device:", device)
 
 m = MMSegmentationModel(use_gui=True)
 
@@ -157,8 +185,13 @@ else:
     # for local development and debugging
     # TODO: how to be with GUI?
 
-    # location = 
-    # m.load_on_device(m.get_context(location), device)    
+    # location = {
+    #   
+    # }
+    # m.load_on_device("models", device)    
+    # TODO: get from GUI
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print("Using device:", device)
     image_path = "./demo_data/image_01.jpg"
     results = m.predict(image_path, {})
     vis_path = "./demo_data/image_01_prediction.jpg"
