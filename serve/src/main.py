@@ -5,14 +5,14 @@ try:
     from typing import Literal
 except:
     from typing_extensions import Literal
-from typing import List, Any, Dict, Union
+from typing import List, Any, Dict
 from pathlib import Path
 import numpy as np
 import yaml
 from dotenv import load_dotenv
 import torch
 import supervisely as sly
-import supervisely.app.widgets as Widgets
+from supervisely.app.content import StateJson
 import pkg_resources
 from collections import OrderedDict
 from mmcv import Config
@@ -27,6 +27,10 @@ app_source_path = str(Path(__file__).parents[1])
 load_dotenv(os.path.join(app_source_path, "local.env"))
 load_dotenv(os.path.expanduser("~/supervisely.env"))
 models_meta_path = os.path.join(root_source_path, "models", "model_meta.json")
+
+# for local debug
+selected_checkpoint = None 
+selected_model_name = None
 
 def str_to_class(classname):
     return getattr(sys.modules[__name__], classname)
@@ -48,14 +52,19 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         model_dir: str, 
         device: Literal["cpu", "cuda", "cuda:0", "cuda:1", "cuda:2", "cuda:3"] = "cpu",
     ) -> None:
-        # pretrained: checkpoint info here
-        model_source = self.gui.get_model_source()
-        if model_source == "Pretrained models":
-            selected_model = self.gui.get_checkpoint_info()
-            weights_path, config_path = self.download_pretrained_files(selected_model, model_dir)
-        elif model_source == "Custom weights":
-            custom_weights_link = self.gui.get_custom_link()
-            weights_path, config_path = self.download_custom_files(custom_weights_link, model_dir)
+        self.device = device
+        if self.gui is not None:
+            model_source = self.gui.get_model_source()
+            if model_source == "Pretrained models":
+                selected_model = self.gui.get_checkpoint_info()
+                weights_path, config_path = self.download_pretrained_files(selected_model, model_dir)
+            elif model_source == "Custom weights":
+                custom_weights_link = self.gui.get_custom_link()
+                weights_path, config_path = self.download_custom_files(custom_weights_link, model_dir)
+        else:
+            # for local debug only
+            model_source = "Pretrained models"
+            weights_path, config_path = self.download_pretrained_files(selected_checkpoint, model_dir)
         cfg = Config.fromfile(config_path)
         cfg.model.pretrained = None
         cfg.model.train_cfg = None
@@ -64,10 +73,17 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         if model_source == "Custom weights":
             classes = cfg.checkpoint_config.meta.CLASSES
             palette = cfg.checkpoint_config.meta.PALETTE
+            self.selected_model_name = cfg.pretrained_model
+            self.checkpoint_name = "custom"
+            self.dataset_name = "custom"
         elif model_source == "Pretrained models":
             dataset_class_name = cfg.dataset_type
             classes = str_to_class(dataset_class_name).CLASSES
             palette = str_to_class(dataset_class_name).PALETTE
+            self.selected_model_name = list(self.gui.get_model_info().keys())[0]
+            checkpoint_info = self.gui.get_checkpoint_info()
+            self.checkpoint_name = checkpoint_info["Name"]
+            self.dataset_name = checkpoint_info["Dataset"]
 
         model.CLASSES = classes
         model.PALETTE = palette
@@ -84,6 +100,14 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
 
     def get_classes(self) -> List[str]:
         return self.class_names  # e.g. ["cat", "dog", ...]
+
+    def get_info(self) -> dict:
+        info = super().get_info()
+        info["model_name"] = self.selected_model_name
+        info["checkpoint_name"] = self.checkpoint_name
+        info["pretrained_on_dataset"] = self.dataset_name
+        info["device"] = self.device
+        return info
 
     def get_models(self, add_links=False):
         model_yamls = sly.json.load_json_file(models_meta_path)
@@ -126,7 +150,11 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
 
     def download_pretrained_files(self, selected_model: Dict[str, str], model_dir: str):
         models = self.get_models(add_links=True)
-        model_name = list(self.gui.get_model_info().keys())[0]
+        if self.gui is not None:
+            model_name = list(self.gui.get_model_info().keys())[0]
+        else:
+            # for local debug only
+            model_name = selected_model_name
         full_model_info = selected_model
         for model_info in models[model_name]["checkpoints"]:
             if model_info["Name"] == selected_model["Name"]:
@@ -182,16 +210,13 @@ if sly.is_production():
     # just ignore it during development
     m.serve()
 else:
-    # for local development and debugging
-    # TODO: how to be with GUI?
-
-    # location = {
-    #   
-    # }
-    # m.load_on_device("models", device)    
-    # TODO: get from GUI
+    # for local development and debugging without GUI
+    models = m.get_models(add_links=True)
+    selected_model_name = "MobileNetV2"
+    selected_checkpoint = models[selected_model_name]["checkpoints"][0]
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Using device:", device)
+    m.load_on_device(m.model_dir, device)
     image_path = "./demo_data/image_01.jpg"
     results = m.predict(image_path, {})
     vis_path = "./demo_data/image_01_prediction.jpg"
