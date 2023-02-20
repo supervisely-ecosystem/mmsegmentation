@@ -12,7 +12,9 @@ import yaml
 from dotenv import load_dotenv
 import torch
 import supervisely as sly
-from supervisely.app.content import StateJson
+import supervisely.app.widgets as Widgets
+from supervisely.api.file_api import FileApi
+import supervisely.nn.inference.gui as GUI
 import pkg_resources
 from collections import OrderedDict
 from mmcv import Config
@@ -58,7 +60,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             if model_source == "Pretrained models":
                 selected_model = self.gui.get_checkpoint_info()
                 weights_path, config_path = self.download_pretrained_files(selected_model, model_dir)
-            elif model_source == "Custom weights":
+            elif model_source == "Custom models":
                 custom_weights_link = self.gui.get_custom_link()
                 weights_path, config_path = self.download_custom_files(custom_weights_link, model_dir)
         else:
@@ -70,7 +72,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         cfg.model.train_cfg = None
         model = build_segmentor(cfg.model, test_cfg=cfg.get('test_cfg'))
         checkpoint = load_checkpoint(model, weights_path, map_location='cpu')
-        if model_source == "Custom weights":
+        if model_source == "Custom models":
             classes = cfg.checkpoint_config.meta.CLASSES
             palette = cfg.checkpoint_config.meta.PALETTE
             self.selected_model_name = cfg.pretrained_model
@@ -161,7 +163,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                 full_model_info = model_info
         weights_ext = sly.fs.get_file_ext(full_model_info["weights_file"])
         config_ext = sly.fs.get_file_ext(full_model_info["config_file"])
-        weights_dst_path = os.path.join(model_dir, f"weights{weights_ext}")
+        weights_dst_path = os.path.join(model_dir, f"{selected_model['Name']}{weights_ext}")
         if not sly.fs.file_exists(weights_dst_path):
             self.download(
                 src_path=full_model_info["weights_file"], 
@@ -175,8 +177,8 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         return weights_dst_path, config_path
 
     def download_custom_files(self, custom_link: str, model_dir: str):
-        weights_ext = sly.fs.get_file_ext(custom_link)
-        weights_dst_path = os.path.join(model_dir, f"weights{weights_ext}")
+        weight_filename = os.path.basename(custom_link)
+        weights_dst_path = os.path.join(model_dir, weight_filename)
         if not sly.fs.file_exists(weights_dst_path):
             self.download(
                 src_path=custom_link,
@@ -189,6 +191,34 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         
         return weights_dst_path, config_path
 
+    def add_content_to_custom_tab(self, gui: GUI.BaseInferenceGUI) -> Widgets.Widget:
+        file_thumbnail = Widgets.FileThumbnail()
+        infobox = Widgets.NotificationBox(
+            """
+            Copy path to model file from Team Files and paste to field below.
+            """
+        )
+        team_files_url = f"{sly.env.server_address()}files/"
+        # TODO: Link widget
+        
+        link = Widgets.Button(f'<a href="{team_files_url}" target="_blank">Open Team Files</a>', button_type="info", plain=True, icon="zmdi zmdi-folder")
+
+        file_api = FileApi(self.api)
+        gui.custom_model_type = "file" # ['file' or 'folder']
+
+        @gui.model_path_input.value_changed
+        def change_folder(value):
+            file_info = None
+            if value != "":
+                file_info = file_api.get_info_by_path(sly.env.team_id(), value)
+            file_thumbnail.set(file_info)
+        
+        return Widgets.Container([
+            link,
+            infobox,
+            file_thumbnail,
+        ])
+
     def predict(
         self, image_path: str, settings: Dict[str, Any]
     ) -> List[sly.nn.PredictionSegmentation]:
@@ -196,6 +226,8 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         segmented_image = inference_segmentor(self.model, image_path)[0]
 
         return [sly.nn.PredictionSegmentation(segmented_image)]
+
+
 
 sly.logger.info("Script arguments", extra={
     "context.teamId": sly.env.team_id(),
@@ -205,7 +237,8 @@ sly.logger.info("Script arguments", extra={
 
 m = MMSegmentationModel(use_gui=True)
 
-if sly.is_production():
+show_gui_for_debug = True
+if sly.is_production() or show_gui_for_debug is True:
     # this code block is running on Supervisely platform in production
     # just ignore it during development
     m.serve()
