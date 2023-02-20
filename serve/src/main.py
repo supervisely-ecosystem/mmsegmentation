@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 import torch
 import supervisely as sly
 import supervisely.app.widgets as Widgets
-from supervisely.api.file_api import FileApi
 import supervisely.nn.inference.gui as GUI
 import pkg_resources
 from collections import OrderedDict
@@ -82,10 +81,15 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             dataset_class_name = cfg.dataset_type
             classes = str_to_class(dataset_class_name).CLASSES
             palette = str_to_class(dataset_class_name).PALETTE
-            self.selected_model_name = list(self.gui.get_model_info().keys())[0]
-            checkpoint_info = self.gui.get_checkpoint_info()
-            self.checkpoint_name = checkpoint_info["Name"]
-            self.dataset_name = checkpoint_info["Dataset"]
+            if self.gui is not None:
+                self.selected_model_name = list(self.gui.get_model_info().keys())[0]
+                checkpoint_info = self.gui.get_checkpoint_info()
+                self.checkpoint_name = checkpoint_info["Name"]
+                self.dataset_name = checkpoint_info["Dataset"]
+            else:
+                self.selected_model_name = selected_model_name
+                self.checkpoint_name = selected_checkpoint["Name"]
+                self.dataset_name = dataset_name
 
         model.CLASSES = classes
         model.PALETTE = palette
@@ -191,34 +195,6 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         
         return weights_dst_path, config_path
 
-    def add_content_to_custom_tab(self, gui: GUI.BaseInferenceGUI) -> Widgets.Widget:
-        file_thumbnail = Widgets.FileThumbnail()
-        infobox = Widgets.NotificationBox(
-            """
-            Copy path to model file from Team Files and paste to field below.
-            """
-        )
-        team_files_url = f"{sly.env.server_address()}files/"
-        # TODO: Link widget
-        
-        link = Widgets.Button(f'<a href="{team_files_url}" target="_blank">Open Team Files</a>', button_type="info", plain=True, icon="zmdi zmdi-folder")
-
-        file_api = FileApi(self.api)
-        gui.custom_model_type = "file" # ['file' or 'folder']
-
-        @gui.model_path_input.value_changed
-        def change_folder(value):
-            file_info = None
-            if value != "":
-                file_info = file_api.get_info_by_path(sly.env.team_id(), value)
-            file_thumbnail.set(file_info)
-        
-        return Widgets.Container([
-            link,
-            infobox,
-            file_thumbnail,
-        ])
-
     def predict(
         self, image_path: str, settings: Dict[str, Any]
     ) -> List[sly.nn.PredictionSegmentation]:
@@ -228,16 +204,16 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         return [sly.nn.PredictionSegmentation(segmented_image)]
 
 
-
-sly.logger.info("Script arguments", extra={
-    "context.teamId": sly.env.team_id(),
-    "context.workspaceId": sly.env.workspace_id(),
-})
+if sly.is_production():
+    sly.logger.info("Script arguments", extra={
+        "context.teamId": sly.env.team_id(),
+        "context.workspaceId": sly.env.workspace_id(),
+    })
 
 
 m = MMSegmentationModel(use_gui=True)
 
-show_gui_for_debug = True
+show_gui_for_debug = False
 if sly.is_production() or show_gui_for_debug is True:
     # this code block is running on Supervisely platform in production
     # just ignore it during development
@@ -246,6 +222,7 @@ else:
     # for local development and debugging without GUI
     models = m.get_models(add_links=True)
     selected_model_name = "MobileNetV2"
+    dataset_name = "Cityscapes"
     selected_checkpoint = models[selected_model_name]["checkpoints"][0]
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Using device:", device)
