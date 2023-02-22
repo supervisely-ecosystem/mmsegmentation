@@ -27,6 +27,9 @@ root_source_path = str(Path(__file__).parents[2])
 app_source_path = str(Path(__file__).parents[1])
 load_dotenv(os.path.join(app_source_path, "local.env"))
 load_dotenv(os.path.expanduser("~/supervisely.env"))
+
+use_gui_for_local_debug = bool(int(os.environ["USE_GUI"]))
+
 models_meta_path = os.path.join(root_source_path, "models", "model_meta.json")
 
 # for local debug
@@ -213,16 +216,15 @@ if sly.is_production():
 
 m = MMSegmentationModel(use_gui=True)
 
-show_gui_for_debug = False
-if sly.is_production() or show_gui_for_debug is True:
+if sly.is_production() or use_gui_for_local_debug is True:
     # this code block is running on Supervisely platform in production
     # just ignore it during development
     m.serve()
 else:
     # for local development and debugging without GUI
     models = m.get_models(add_links=True)
-    selected_model_name = "MobileNetV2"
-    dataset_name = "Cityscapes"
+    selected_model_name = "Segmenter"
+    dataset_name = "ADE20K"
     selected_checkpoint = models[selected_model_name]["checkpoints"][0]
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Using device:", device)
@@ -232,3 +234,4 @@ else:
     vis_path = "./demo_data/image_01_prediction.jpg"
     m.visualize(results, image_path, vis_path, thickness=0)
     print(f"predictions and visualization have been saved: {vis_path}")
+
