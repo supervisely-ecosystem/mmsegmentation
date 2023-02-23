@@ -1,8 +1,9 @@
-configs
 data
 .idea
 cache
 .vscode
+results
+.venv/
 
 train/secret_debug.env
 serve/secret_debug.env
