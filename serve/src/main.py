@@ -28,7 +28,7 @@ app_source_path = str(Path(__file__).parents[1])
 load_dotenv(os.path.join(app_source_path, "local.env"))
 load_dotenv(os.path.expanduser("~/supervisely.env"))
 
-use_gui_for_local_debug = bool(int(os.environ["USE_GUI"]))
+use_gui_for_local_debug = bool(int(os.environ.get("USE_GUI", "1")))
 
 models_meta_path = os.path.join(root_source_path, "models", "model_meta.json")
 
