@@ -1,2 +1,2 @@
-supervisely==6.69.58
+git+https://github.com/supervisely/supervisely.git@app-server-address-bugfix
 ffmpeg-python==0.2.0
