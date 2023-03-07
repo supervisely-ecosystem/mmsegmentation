@@ -116,7 +116,6 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         info["checkpoint_name"] = self.checkpoint_name
         info["pretrained_on_dataset"] = self.dataset_name
         info["device"] = self.device
-        info["tracking_on_videos_support"] = False,
         return info
 
     def get_models(self, add_links=False):
