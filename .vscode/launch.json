@@ -1,0 +1,84 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Local debug without GUI",
+            "type": "python",
+            "request": "launch",
+            "program": "serve/src/main.py",
+            "justMyCode": false,
+            "env": {
+                "LOG_LEVEL": "DEBUG",
+                "PYTHONPATH": "${workspaceFolder}:${PYTHONPATH}",
+                "SLY_APP_DATA_DIR": "${workspaceFolder}/../results",
+                "USE_GUI": "0"
+            }
+        },
+        {
+            "name": "Local debug with GUI (run model)",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "main:m.app",
+                "--app-dir",
+                "./serve/src",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8000",
+                "--ws",
+                "websockets"
+            ],
+            "jinja": true,
+            "justMyCode": false,
+            "env": {
+                "LOG_LEVEL": "DEBUG",
+                "PYTHONPATH": "${workspaceFolder}:${PYTHONPATH}",
+                "SLY_APP_DATA_DIR": "${workspaceFolder}/../results",
+                "USE_GUI": "1"
+            }
+        },
+        {
+            "name": "Local debug with GUI (query)",
+            "type": "python",
+            "request": "launch",
+            "program": "serve/src/run_local.py",
+            "justMyCode": false,
+            "env": {
+                "LOG_LEVEL": "DEBUG",
+                "PYTHONPATH": "${workspaceFolder}:${PYTHONPATH}",
+                "SLY_APP_DATA_DIR": "${workspaceFolder}/../results",
+            }
+        },
+        {
+            "name": "Advanced mode for Supervisely Team",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "main:m.app",
+                "--app-dir",
+                "./serve/src",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8000",
+                "--ws",
+                "websockets"
+            ],
+            "jinja": true,
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${PYTHONPATH}",
+                "LOG_LEVEL": "DEBUG",
+                "ENV": "production",
+                "TEAM_ID": "277",
+                "WORKSPACE_ID": "403",
+                "DEBUG_WITH_SLY_NET": "1",
+                "SLY_APP_DATA_DIR": "${workspaceFolder}/../results",
+                "USE_GUI": "1"
+            }
+        }
+    ]
+}
