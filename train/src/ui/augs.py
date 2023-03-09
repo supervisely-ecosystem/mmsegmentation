@@ -122,7 +122,7 @@ def load_existing_pipeline(api: sly.Api, task_id, context, state, app_logger):
     _custom_pipeline_path = os.path.join(g.my_app.data_dir, sly.fs.get_file_name_with_ext(remote_path))
     api.file.download(g.team_id, remote_path, _custom_pipeline_path)
 
-    custom_pipeline, py_code = _load_template(_custom_pipeline_path)
+    custom_pipeline, py_code, config = _load_template(_custom_pipeline_path)
     api.task.set_field(task_id, "data.customAugsPy", py_code)
 
 
