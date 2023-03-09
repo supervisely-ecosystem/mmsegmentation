@@ -56,7 +56,7 @@ def get_aug_templates_list():
     name_to_py = {}
     for template in _templates:
         json_path = os.path.join(g.root_source_dir, template["config"])
-        _, py_code = _load_template(json_path)
+        _, py_code, _ = _load_template(json_path)
         pipelines_info.append({
             **template,
             "py": py_code
