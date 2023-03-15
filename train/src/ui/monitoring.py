@@ -186,7 +186,8 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         img_dir = "img"
         ann_dir = "seg"
         obj_classes = g.project_meta.obj_classes
-        obj_classes = obj_classes.add(sly.ObjClass(name="__bg__", geometry_type=sly.Bitmap, color=(0,0,0)))
+        if g.project_meta.get_obj_class("__bg__") is None:
+            obj_classes = obj_classes.add(sly.ObjClass(name="__bg__", geometry_type=sly.Bitmap, color=(0,0,0)))
         classes_json = obj_classes.to_json()
         classes_json = [obj for obj in classes_json if obj["title"] in state["selectedClasses"] or obj["title"] == "__bg__"]
         classes = [obj["title"] for obj in classes_json]
