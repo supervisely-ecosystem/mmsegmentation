@@ -52,7 +52,7 @@ class SuperviselyLoggerHook(TextLoggerHook):
         ) / float(self.progress_iter.total)
         if log_dict["mode"] == "train":
             sly.logger.debug(
-                f"mode: {log_dict['mode']}, current epoch: {log_dict['epoch']}, current iter: {log_dict['iter']}"
+                f"mode: {log_dict['mode']}, current epoch: {log_dict['epoch']}, current iter: {log_dict['iter']}, current value: {epoch_float}, learning rate: {log_dict['lr']}"
             )
             fields.extend(
                 [
