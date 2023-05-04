@@ -50,9 +50,12 @@ class SuperviselyLoggerHook(TextLoggerHook):
         epoch_float = float(self.progress_epoch.current) + float(
             self.progress_iter.current
         ) / float(self.progress_iter.total)
+        sly.logger.debug(
+            f"epoch_float ({epoch_float}) = {float(self.progress_epoch.current)} + {float(self.progress_iter.current)} / {float(self.progress_iter.total)}"
+        )
         if log_dict["mode"] == "train":
             sly.logger.debug(
-                f"mode: {log_dict['mode']}, current epoch: {log_dict['epoch']}, current iter: {log_dict['iter']}, current value: {epoch_float}, learning rate: {log_dict['lr']}"
+                f"mode: {log_dict['mode']}, current epoch: {log_dict['epoch']}, current iter: {log_dict['iter']}, current epoch_float: {epoch_float}, learning rate: {log_dict['lr']}"
             )
             fields.extend(
                 [
