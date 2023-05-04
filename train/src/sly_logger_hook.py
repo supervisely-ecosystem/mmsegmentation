@@ -41,7 +41,7 @@ class SuperviselyLoggerHook(TextLoggerHook):
             else:
                 progress_iter_value = log_dict["iter"] % len(runner.data_loader)
 
-            sly.logger.debug(f"progress_iter_value: {progress_iter_value}")
+            # sly.logger.debug(f"progress_iter_value: {progress_iter_value}")
             self.progress_iter.set(progress_iter_value, len(runner.data_loader))
             fields.append({"field": "data.eta", "payload": log_dict["sly_eta"]})
             is_val = log_dict["iter"] % len(runner.data_loader) == 0
