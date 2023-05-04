@@ -36,7 +36,7 @@ class SuperviselyLoggerHook(TextLoggerHook):
         if log_dict["mode"] == "train":
             self.progress_epoch.set_current_value(log_dict["epoch"])
             if log_dict["iter"] % len(runner.data_loader) == 0:
-                progress_iter_value = log_dict["iter"] / len(runner.data_loader)
+                progress_iter_value = log_dict["iter"]  # / len(runner.data_loader)
             else:
                 progress_iter_value = log_dict["iter"] % len(runner.data_loader)
 
