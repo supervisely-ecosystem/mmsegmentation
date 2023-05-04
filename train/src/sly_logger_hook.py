@@ -36,9 +36,8 @@ class SuperviselyLoggerHook(TextLoggerHook):
         if log_dict["mode"] == "train":
             self.progress_epoch.set_current_value(log_dict["epoch"])
             if log_dict["iter"] % len(runner.data_loader) == 0:
-                progress_iter_value = float(
-                    self.progress_iter.total
-                )  # log_dict["iter"] / len(runner.data_loader)
+                progress_iter_value = float(self.progress_iter.total)
+                # log_dict["iter"] / len(runner.data_loader)
             else:
                 progress_iter_value = log_dict["iter"] % len(runner.data_loader)
 
@@ -56,13 +55,7 @@ class SuperviselyLoggerHook(TextLoggerHook):
         epoch_float = float(self.progress_epoch.current) + float(
             self.progress_iter.current
         ) / float(self.progress_iter.total)
-        sly.logger.debug(
-            f"epoch_float ({epoch_float}) = {float(self.progress_epoch.current)} + {float(self.progress_iter.current)} / {float(self.progress_iter.total)}"
-        )
         if log_dict["mode"] == "train":
-            sly.logger.debug(
-                f"mode: {log_dict['mode']}, current epoch: {log_dict['epoch']}, current iter: {log_dict['iter']}, current epoch_float: {epoch_float}, learning rate: {log_dict['lr']}"
-            )
             fields.extend(
                 [
                     {
@@ -120,7 +113,7 @@ class SuperviselyLoggerHook(TextLoggerHook):
                     class_metrics[metric] = {}
                 class_metrics[metric][class_name] = [[log_dict["epoch"], field_val]]
             for metric_name, metrics in class_metrics.items():
-                if "m" + metric_name not in g.evalMetrics:
+                if f"m{metric_name}" not in g.evalMetrics:
                     continue
                 classes = cls.selected_classes + ["__bg__"]
                 for class_ind, class_name in enumerate(classes):
@@ -150,5 +143,5 @@ class SuperviselyLoggerHook(TextLoggerHook):
         try:
             g.api.app.set_fields(g.task_id, fields)
         except Exception as e:
-            print("Unabled to write metrics to chart!")
+            print("Unable to write metrics to chart!")
             print(e)
