@@ -35,9 +35,12 @@ class SuperviselyLoggerHook(TextLoggerHook):
         fields = []
         if log_dict["mode"] == "train":
             self.progress_epoch.set_current_value(log_dict["epoch"])
-            self.progress_iter.set(
-                log_dict["iter"] % len(runner.data_loader), len(runner.data_loader)
-            )
+            if log_dict["iter"] % len(runner.data_loader) == 0:
+                progress_iter_value = log_dict["iter"] / len(runner.data_loader)
+            else:
+                progress_iter_value = log_dict["iter"] % len(runner.data_loader)
+
+            self.progress_iter.set(progress_iter_value, len(runner.data_loader))
             fields.append({"field": "data.eta", "payload": log_dict["sly_eta"]})
             is_val = log_dict["iter"] % len(runner.data_loader) == 0
             fields.append({"field": "state.isValidation", "payload": is_val})
