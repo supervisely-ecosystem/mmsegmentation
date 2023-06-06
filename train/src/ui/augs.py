@@ -166,6 +166,8 @@ def use_augs(api: sly.Api, task_id, context, state, app_logger):
     global custom_config
 
     if state["useAugs"]:
+        augs_config_path = os.path.join(g.my_app.data_dir, "augs_config.json")
+        
         if state["augsType"] == "template":
             _, py_code, config = get_template_by_name(state["augsTemplateName"])
         else:
