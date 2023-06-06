@@ -34,6 +34,7 @@ _templates = [
 
 _custom_pipeline_path = None
 custom_pipeline = None
+custom_config = None
 gallery1: CompareGallery = None
 gallery2: CompareGallery = None
 remote_preview_path = "/temp/preview_augs.jpg"
@@ -114,7 +115,7 @@ def restart(data, state):
 @sly.timeit
 @g.my_app.ignore_errors_and_show_dialog_window()
 def load_existing_pipeline(api: sly.Api, task_id, context, state, app_logger):
-    global _custom_pipeline_path, custom_pipeline
+    global _custom_pipeline_path, custom_pipeline, custom_config
 
     api.task.set_field(task_id, "data.customAugsPy", None)
 
@@ -122,7 +123,7 @@ def load_existing_pipeline(api: sly.Api, task_id, context, state, app_logger):
     _custom_pipeline_path = os.path.join(g.my_app.data_dir, sly.fs.get_file_name_with_ext(remote_path))
     api.file.download(g.team_id, remote_path, _custom_pipeline_path)
 
-    custom_pipeline, py_code, config = _load_template(_custom_pipeline_path)
+    custom_pipeline, py_code, custom_config = _load_template(_custom_pipeline_path)
     api.task.set_field(task_id, "data.customAugsPy", py_code)
 
 
@@ -162,15 +163,26 @@ def use_augs(api: sly.Api, task_id, context, state, app_logger):
     global augs_config_path
     global augs_json_config
     global augs_py_preview
+    global custom_config
 
     if state["useAugs"]:
-        _, py_code, config = get_template_by_name(state["augsTemplateName"])
+        augs_config_path = os.path.join(g.my_app.data_dir, "augs_config.json")
+        
+        if state["augsType"] == "template":
+            _, py_code, config = get_template_by_name(state["augsTemplateName"])
+        else:
+            if custom_config is None:
+                raise Exception("Please, load the augmentations by clicking on the \"LOAD\" button.")
+            config = custom_config
+
         augs_json_config = config
-        augs_py_preview = py_code
-        augs_py_path = os.path.join(g.my_app.data_dir, "augs_preview.py")
         sly.json.dump_json_file(augs_json_config, augs_config_path)
-        with open(augs_py_path, 'w') as f:
-            f.write(augs_py_preview)
+        sly.json.dump_json_file(augs_json_config, os.path.join(g.info_dir, "augs_config.json"))
+        # augs_py_preview = py_code
+        # augs_py_path = os.path.join(g.my_app.data_dir, "augs_preview.py")
+        # with open(augs_py_path, 'w') as f:
+        #     f.write(augs_py_preview)
+        
     else:
         augs_config_path = None
 
