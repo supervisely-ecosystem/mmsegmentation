@@ -27,5 +27,8 @@
     "context_category": "MM Segmentation"
   },
   "poster": "https://user-images.githubusercontent.com/48245050/182847473-9a35f213-c27b-4abd-bd64-c73bf80fb056.jpg",
-  "community_agent": false
+  "community_agent": false,
+  "license": {
+    "type": "Apache-2.0" 
+  }
 }
