@@ -181,3 +181,6 @@ def use_augs(api: sly.Api, task_id, context, state, app_logger):
         {"field": "state.activeStep", "payload": 5},
     ]
     g.api.app.set_fields(g.task_id, fields)
+
+    print(augs_json_config)
+    print(augs_config_path)

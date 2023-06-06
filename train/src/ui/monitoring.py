@@ -197,9 +197,13 @@ def train(api: sly.Api, task_id, context, state, app_logger):
             prepare_segmentation_data(state, img_dir, ann_dir, palette)
 
         cfg = init_cfg(state, img_dir, ann_dir, classes, palette)
-        # print(f'Config:\n{cfg.pretty_text}') # TODO: debug
+        print(f'Config:\n{cfg.pretty_text}') # TODO: debug
         os.makedirs(os.path.join(g.checkpoints_dir, cfg.work_dir.split('/')[-1]), exist_ok=True)
         cfg.dump(os.path.join(g.checkpoints_dir, cfg.work_dir.split('/')[-1], "config.py"))
+        try:
+            print(cfg.data.train.pipeline[2])
+        except Exception as exc:
+            print(exc)
 
         # Build the dataset
         datasets = [build_dataset(cfg.data.train)]
