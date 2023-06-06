@@ -24,5 +24,8 @@
     "deployed_nn"
   ],
   "poster": "https://user-images.githubusercontent.com/48245050/182851208-d8e50d77-686e-470d-a136-428856a60ef5.jpg",
-  "community_agent": false
+  "community_agent": false,
+  "license": {
+    "type": "Apache-2.0" 
+  }
 }
