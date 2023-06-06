@@ -1,2 +1,3 @@
 supervisely==6.69.68
 ffmpeg-python==0.2.0
+imagecorruptions==1.1.2
