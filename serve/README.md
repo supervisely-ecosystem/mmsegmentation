@@ -88,11 +88,11 @@ Supported methods:
 
 **Step 1.** Add [Serve MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/serve) app to your team from Ecosystem
 
-<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/serve" src="https://i.imgur.com/e1SsMJh.png" width="350px" style='padding-bottom: 10px'/>
+<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/serve" src="serve/media/htr1.png" width="350px" style='padding-bottom: 10px'/>
 
 **Step 2.** Run the application from Plugins & Apps page
 
-<img src="https://i.imgur.com/1uAKeeE.png" width="80%" style='padding-top: 10px'>  
+<img src="serve/media/htr2.png" width="80%" style='padding-top: 10px'>  
 
 # How to Use
 
@@ -100,11 +100,11 @@ Supported methods:
 
 **Step 1.** Select architecture, pretrained model and press the **Serve** button
 
-<img src="https://i.imgur.com/yEmmskW.png" style="width: 100%"/>
+<img src="serve/media/htu1.png" style="width: 100%"/>
 
 
 **Step 2.** Wait for the model to deploy
-<img src="https://i.imgur.com/FZeg5gT.png" width="100%">  
+<img src="serve/media/htu2.png" width="100%">  
 
 
 **Custom models**
@@ -119,19 +119,19 @@ You can use served model in next Supervisely Applications ⬇️
 
 - [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) - app allows to play with different inference options, monitor metrics charts in real time, and save training artifacts to Team Files.
    
-    <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="https://i.imgur.com/e2r6ccw.png" width="350px"/>
+    <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="serve/media/ra1.png" width="350px"/>
     
 - [Apply NN to images project ](https://ecosystem.supervise.ly/apps/supervisely-ecosystem%252Fnn-image-labeling%252Fproject-dataset) - app allows to play with different inference options and visualize predictions in real time.  Once you choose inference settings you can apply model to all images in your project to visually analyse predictions and perform automatic data pre-labeling.   
    
-    <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/nn-image-labeling/project-dataset" src="https://i.imgur.com/M2Tp8lE.png" width="350px"/> 
+    <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/nn-image-labeling/project-dataset" src="serve/media/ra2.png" width="350px"/> 
 
 - [Apply NN to Videos Project](https://ecosystem.supervise.ly/apps/apply-nn-to-videos-project) - app allows to label your videos using served Supervisely models.  
-  <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/apply-nn-to-videos-project" src="https://imgur.com/LDo8K1A.png" height="54px" />
+  <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/apply-nn-to-videos-project" src="serve/media/ra3.png" height="54px" />
 
 
 - [NN Image Labeling](https://ecosystem.supervise.ly/apps/supervisely-ecosystem%252Fnn-image-labeling%252Fannotation-tool) - integrate any deployd NN to Supervisely Image Labeling UI. Configure inference settings and model output classes. Press `Apply` button (or use hotkey) and detections with their confidences will immediately appear on the image. 
    
-    <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/nn-image-labeling/annotation-tool" src="https://i.imgur.com/hYEucNt.png" width="350px"/>
+    <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/nn-image-labeling/annotation-tool" src="serve/media/ra4.png" width="350px"/>
     
     
 
