@@ -93,21 +93,21 @@ Supported methods:
 # How to Run
 
 ### 1. Add [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) app to your team from Ecosystem
-<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="https://i.imgur.com/e2r6ccw.png" width="350px" style='padding-bottom: 10px'/>
+<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="train/media/htr1.png" width="350px" style='padding-bottom: 10px'/>
 
 ### 2. Run app from context menu of the project with annotations (polygon and bitmap only) [(example)](https://ecosystem.supervise.ly/projects/lemons-annotated)
-<img src="https://i.imgur.com/XczjaNy.png" width="100%" style='padding-top: 10px'>  
+<img src="train/media/htr2.png" width="100%" style='padding-top: 10px'>  
 
 
 # Demo
 
 <a data-key="sly-embeded-video-link" href="https://youtu.be/R2_8qUw8R_A" data-video-code="R2_8qUw8R_A">
-    <img src="https://i.imgur.com/cBMwAlb.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:80%;">
+    <img src="train/media/demo.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:80%;">
 </a>
 
 # Screenshot
 
-<img src="https://i.imgur.com/zRHgnfQ.png" width="100%" style='padding-top: 10px'>
+<img src="train/media/s1.png" width="100%" style='padding-top: 10px'>
 
 # Acknowledgment
 
