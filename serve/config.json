@@ -17,7 +17,7 @@
   "port": 8000,
   "task_location": "application_sessions",
   "need_gpu": true,
-  "icon": "https://i.imgur.com/GfjrdKI.png",
+  "icon": "media/icon.png",
   "isolate": true,
   "icon_cover": true,
   "session_tags": [
