@@ -5,8 +5,8 @@ RUN pip3 install mmcv-full==1.4.4 -f https://download.openmmlab.com/mmcv/dist/cu
 # RUN pip3 install mmcv-full==1.6.2 -f https://download.openmmlab.com/mmcv/dist/cu116/torch1.12/index.html -U
 
 # RUN pip3 install mmcv-full==1.7.0
-# RUN pip3 install mmsegmentation==0.29.1
-# RUN pip3 install mmcls==0.24.1
+RUN pip3 install mmsegmentation==0.29.1
+RUN pip3 install mmcls==0.24.1
 RUN pip3 install pyyaml==6.0
 
 # RUN pip3 install torch==1.13.0
