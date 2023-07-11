@@ -1,9 +1,0 @@
-torch==1.13.0
-torchvision==0.14.0
-openmim
-mmcv-full==1.7.0
-ffmpeg-python==0.2.0
-supervisely
-pyyaml==6.0
-mmsegmentation==0.29.1
-mmcls==0.24.1
