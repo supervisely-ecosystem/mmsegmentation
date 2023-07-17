@@ -15,7 +15,7 @@
   "main_script": "train/src/main.py",
   "gui_template": "train/src/gui.html",
   "task_location": "workspace_tasks",
-  "need_gpu": true,
+  "need_gpu": false,
   "gpu": "preferred",
   "isolate": true,
   "icon": "https://i.imgur.com/GaEFmkH.png",
