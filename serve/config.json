@@ -17,6 +17,7 @@
   "port": 8000,
   "task_location": "application_sessions",
   "need_gpu": true,
+  "gpu": "preferred",
   "icon": "media/icon.png",
   "isolate": true,
   "icon_cover": true,
