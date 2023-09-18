@@ -18,7 +18,7 @@
   "task_location": "application_sessions",
   "need_gpu": false,
   "gpu": "preferred",
-  "icon": "media/icon.png",
+  "icon": "https://i.imgur.com/GfjrdKI.png",
   "isolate": true,
   "icon_cover": true,
   "session_tags": [
