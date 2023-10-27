@@ -9,6 +9,7 @@
   <a href="#Overview">Overview</a> •
   <a href="#How-To-Run">How To Run</a> •
   <a href="#Demo">Demo</a> •
+  <a href="#How-To-Use-Your-Trained-Model-Outside-Supervisely">How To Use Your Trained Model Outside Supervisely</a> •
   <a href="#Screenshot">Screenshot</a> •
   <a href="#Acknowledgment">Acknowledgment</a>
 </p>
@@ -98,12 +99,17 @@ Supported methods:
 ### 2. Run app from context menu of the project with annotations (polygon and bitmap only) [(example)](https://ecosystem.supervise.ly/projects/lemons-annotated)
 <img src="https://i.imgur.com/XczjaNy.png" width="100%" style='padding-top: 10px'>  
 
-
 # Demo
 
 <a data-key="sly-embeded-video-link" href="https://youtu.be/R2_8qUw8R_A" data-video-code="R2_8qUw8R_A">
     <img src="https://i.imgur.com/cBMwAlb.png" alt="SLY_EMBEDED_VIDEO_LINK"  style="max-width:80%;">
 </a>
+
+
+# How To Use Your Trained Model Outside Supervisely
+
+You can use your trained models outside Supervisely platform without any dependencies on Supervisely SDK. You just need to download config file and model weights (.pth) from Team Files, and then you can build and use the model as a normal model in mmsegmentation. See this [Jupyter Notebook](https://github.com/supervisely-ecosystem/mmsegmentation/blob/main/inference_outside_supervisely.ipynb) for details.
+
 
 # Screenshot
 

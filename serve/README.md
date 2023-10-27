@@ -8,6 +8,7 @@
   <a href="#Overview">Overview</a> •
   <a href="#How-To-Run">How To Run</a> •
   <a href="#How-To-Use">How To Use</a> •
+  <a href="#How-To-Use-Your-Trained-Model-Outside-Supervisely">How To Use Your Trained Model Outside Supervisely</a> •
   <a href="#Related-apps">Related Apps</a> •
   <a href="#Acknowledgment">Acknowledgment</a>
 </p>
@@ -112,6 +113,12 @@ Supported methods:
 Model and directory structure must be acquired via [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) app or manually created with the same directory structure
 
 <img src="https://github.com/supervisely-ecosystem/mmsegmentation/releases/download/v0.0.1/custom_weights_guide-min.gif" style="width: 100%"/>
+
+
+# How To Use Your Trained Model Outside Supervisely
+
+You can use your trained models outside Supervisely platform without any dependencies on Supervisely SDK. You just need to download config file and model weights (.pth) from Team Files, and then you can build and use the model as a normal model in mmsegmentation. See this [Jupyter Notebook](https://github.com/supervisely-ecosystem/mmsegmentation/blob/main/inference_outside_supervisely.ipynb) for details.
+
 
 # Related apps
 

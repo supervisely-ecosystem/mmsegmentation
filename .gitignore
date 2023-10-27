@@ -15,3 +15,4 @@ train/src/.DS_Store
 serve/src/__pycache__
 train/src/__pycache__
 train/src/ui/__pycache__
+my_model
