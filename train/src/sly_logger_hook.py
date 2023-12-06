@@ -115,7 +115,6 @@ class SuperviselyLoggerHook(TextLoggerHook):
 
                 if metric not in class_metrics.keys():
                     class_metrics[metric] = {}
-                field_val = math.nan
                 if not math.isfinite(field_val):
                     sly.logger.warn(f"{metric} for {class_name} class has unserializable value (Nan or inf)!")
                     field_val = 0
