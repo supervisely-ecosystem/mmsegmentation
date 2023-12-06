@@ -5,6 +5,7 @@ import supervisely as sly
 from sly_train_progress import get_progress_cb, set_progress, add_progress_to_request
 import sly_globals as g
 import classes as cls
+import math
 
 
 @HOOKS.register_module()
@@ -56,6 +57,9 @@ class SuperviselyLoggerHook(TextLoggerHook):
             self.progress_iter.current
         ) / float(self.progress_iter.total)
         if log_dict["mode"] == "train":
+            if not math.isfinite(log_dict["loss"]):
+                sly.logger.warn("Loss has unserializable value (NaN of inf)!")
+                log_dict["loss"] = 0
             fields.extend(
                 [
                     {
@@ -111,6 +115,9 @@ class SuperviselyLoggerHook(TextLoggerHook):
 
                 if metric not in class_metrics.keys():
                     class_metrics[metric] = {}
+                if not math.isfinite(field_val):
+                    sly.logger.warn(f"{metric} for {class_name} class has unserializable value (Nan or inf)!")
+                    field_val = 0
                 class_metrics[metric][class_name] = [[log_dict["epoch"], field_val]]
             for metric_name, metrics in class_metrics.items():
                 if f"m{metric_name}" not in g.evalMetrics:
