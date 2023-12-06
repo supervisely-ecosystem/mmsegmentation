@@ -116,6 +116,9 @@ class SuperviselyLoggerHook(TextLoggerHook):
                 if metric not in class_metrics.keys():
                     class_metrics[metric] = {}
                 field_val = math.nan
+                if not math.isfinite(field_val):
+                    sly.logger.warn(f"{metric} for {class_name} class has unserializable value (Nan or inf)!")
+                    field_val = 0
                 class_metrics[metric][class_name] = [[log_dict["epoch"], field_val]]
             for metric_name, metrics in class_metrics.items():
                 if f"m{metric_name}" not in g.evalMetrics:
