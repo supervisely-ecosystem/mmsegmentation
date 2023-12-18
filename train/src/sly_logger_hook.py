@@ -86,6 +86,10 @@ class SuperviselyLoggerHook(TextLoggerHook):
             """
 
             if "time" in log_dict.keys():
+                if "memory" not in log_dict.keys():
+                    raise RuntimeError(
+                        "Not found key 'memory' in log_dict. Make sure your CUDA device is available."
+                    )
                 fields.extend(
                     [
                         {
