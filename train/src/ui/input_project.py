@@ -2,8 +2,10 @@ import os
 import random
 from collections import namedtuple
 import supervisely as sly
+from supervisely.project.download import is_cached
 import sly_globals as g
 from sly_train_progress import get_progress_cb, reset_progress, init_progress
+from sly_project_cached import download_project
 
 progress_index = 1
 _images_infos = None # dataset_name -> image_name -> image_info
@@ -21,6 +23,8 @@ def init(data, state):
     init_progress(progress_index, data)
     data["done1"] = False
     state["collapsed1"] = False
+    data["isCached"] = is_cached(g.project_info.id)
+    state["useCache"] = True
 
 
 @g.my_app.callback("download_project")
@@ -32,10 +36,13 @@ def download(api: sly.Api, task_id, context, state, app_logger):
             pass
         else:
             sly.fs.mkdir(g.project_dir)
-            download_progress = get_progress_cb(progress_index, "Download project", g.project_info.items_count * 2)
-            sly.download_project(g.api, g.project_id, g.project_dir,
-                                 cache=g.my_app.cache, progress_cb=download_progress,
-                                 only_image_tags=False, save_image_info=True)
+            download_project(
+                api=g.api,
+                project_info=g.project_info,
+                project_dir=g.project_dir,
+                use_cache=state["useCache"],
+                progress_index=progress_index,
+            )
             reset_progress(progress_index)
 
         global project_fs
