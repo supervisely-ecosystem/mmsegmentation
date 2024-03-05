@@ -11,14 +11,22 @@
             images)</a>
         <sly-icon slot="icon" :options="{ imageUrl: `${data.projectPreviewUrl}` }"/>
     </sly-field>
-    <el-button
-            type="primary"
-            class="regular"
-            :loading="!!data.progress1"
-            @click="command('download_project')"
-            v-if="!data.done1">
-        Download
-    </el-button>
+    <div>
+        <el-checkbox v-model="state.useCache">
+            <span v-if="data.isCached">Use cached data stored on the agent to optimize project download</span>
+            <span v-else>Cache data on the agent to optimize project download for future trainings</span>
+        </el-checkbox>
+    </div>
+    <div>
+        <el-button
+                type="primary"
+                class="regular"
+                :loading="!!data.progress1"
+                @click="command('download_project')"
+                v-if="!data.done1">
+            Download
+        </el-button>
+    </div>
     <div v-if="data.progress1" class="mt10">
         <div style="color: #20a0ff">{{data.progress1}}: {{data.progressCurrent1}} / {{data.progressTotal1}}</div>
         <el-progress :percentage="data.progressPercent1"></el-progress>
