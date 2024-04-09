@@ -5,7 +5,7 @@ import supervisely as sly
 from supervisely.project.download import is_cached
 import sly_globals as g
 from sly_train_progress import get_progress_cb, reset_progress, init_progress
-from sly_project_cached import download_project
+from sly_project_cached import download_project, validate_project
 
 progress_index = 1
 _images_infos = None # dataset_name -> image_name -> image_info
@@ -35,15 +35,29 @@ def download(api: sly.Api, task_id, context, state, app_logger):
         if sly.fs.dir_exists(g.project_dir):
             pass
         else:
+            use_cache = state["useCache"]
             sly.fs.mkdir(g.project_dir)
             download_project(
                 api=g.api,
                 project_info=g.project_info,
                 project_dir=g.project_dir,
-                use_cache=state["useCache"],
+                use_cache=use_cache,
                 progress_index=progress_index,
             )
             reset_progress(progress_index)
+            if use_cache:
+                try:
+                    validate_project(g.project_dir)
+                except Exception:
+                    app_logger.warning("Cache is corrupted. Downloading project without cache.", exc_info=True)
+                    download_project(
+                        api=g.api,
+                        project_info=g.project_info,
+                        project_dir=g.project_dir,
+                        use_cache=False,
+                        progress_index=progress_index,
+                    )
+                    reset_progress(progress_index)
 
         global project_fs
         project_fs = sly.Project(g.project_dir, sly.OpenMode.READ)
