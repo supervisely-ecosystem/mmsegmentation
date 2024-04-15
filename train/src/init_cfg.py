@@ -94,7 +94,7 @@ def init_cfg_pipelines(cfg):
             train_pipeline.append(dict(type='SlyImgAugs', config_path=augs.augs_config_path))
             return
         elif config_step["type"] == "Resize":
-            if any([x < y for x, y in zip(config_step["size"][:2], cfg.crop_size[:2])]):
+            if any([x < y for x, y in zip(config_step["img_scale"][:2], cfg.crop_size[:2])]):
                 config_step["img_scale"] = cfg.crop_size
         elif config_step["type"] == "Normalize":
             train_pipeline.append(dict(type='Normalize', **cfg.img_norm_cfg))
