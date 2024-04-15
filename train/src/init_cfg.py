@@ -84,28 +84,35 @@ def init_cfg_pipelines(cfg):
     
     train_steps_to_remove = ["RandomFlip", "PhotoMetricDistortion"]
     train_pipeline = []
-    for config_step in cfg.data.train.pipeline:
+
+    def process_step(config_step, train_pipeline):
         if config_step["type"] in train_steps_to_remove:
-            continue
+            return
         elif config_step["type"] == "LoadAnnotations":
             config_step["reduce_zero_label"] = False
             train_pipeline.append(config_step)
             train_pipeline.append(dict(type='SlyImgAugs', config_path=augs.augs_config_path))
-            continue
+            return
         elif config_step["type"] == "Resize":
-            if config_step["img_scale"][0] < cfg.crop_size[0] or config_step["img_scale"][1] < cfg.crop_size[1]:
+            if any([x < y for x, y in zip(config_step["img_scale"][:2], cfg.crop_size[:2])]):
                 config_step["img_scale"] = cfg.crop_size
         elif config_step["type"] == "Normalize":
             train_pipeline.append(dict(type='Normalize', **cfg.img_norm_cfg))
-            continue
-        elif config_step["type"] == "RandomCrop":
-            config_step["crop_size"] = cfg.crop_size
-        elif config_step["type"] == "Pad":
-            config_step["size"] = cfg.crop_size
+            return
+        elif config_step["type"] in ["RandomCrop", "Pad"]:
+            config_step["crop_size" if config_step["type"] == "RandomCrop" else "size"] = cfg.crop_size
         elif config_step["type"] == "Collect":
             config_step["meta_keys"] = ('filename', 'ori_filename', 'ori_shape', 'img_shape', 'scale_factor', 'img_norm_cfg')
 
         train_pipeline.append(config_step)
+
+    if hasattr(cfg.data.train, "dataset") and "pipeline" in cfg.data.train.dataset:
+        for config_step in cfg.data.train.dataset.pipeline:
+            process_step(config_step, train_pipeline)
+    elif "pipeline" in cfg.data.train:
+        for config_step in cfg.data.train.pipeline:
+            process_step(config_step, train_pipeline)
+
     cfg.train_pipeline = train_pipeline
 
     test_pipeline = cfg.data.test.pipeline
