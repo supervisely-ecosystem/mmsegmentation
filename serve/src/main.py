@@ -295,7 +295,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                 model_config[model_meta["model_name"]]["config_url"] = os.path.dirname(model_yml_url)
                 for model in model_info["Models"]:
                     checkpoint_info = OrderedDict()
-                    checkpoint_info["Name"] = model["Name"]
+                    checkpoint_info["Model"] = model["Name"]
                     checkpoint_info["Backbone"] = model["Metadata"]["backbone"]
                     checkpoint_info["Method"] = model["In Collection"]
                     checkpoint_info["Dataset"] = model["Results"][0]["Dataset"]
