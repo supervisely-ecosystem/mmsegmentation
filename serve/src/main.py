@@ -23,10 +23,23 @@ from mmseg.models import build_segmentor
 from mmseg.apis.inference import inference_segmentor
 from mmseg.datasets import *
 
+from supervisely.app.widgets import (
+    Widget,
+    PretrainedModelsSelector,
+    CustomModelsSelector,
+    RadioTabs,
+)
+from supervisely.io.fs import silent_remove
+
+from src import utils
+
 root_source_path = str(Path(__file__).parents[2])
 app_source_path = str(Path(__file__).parents[1])
 load_dotenv(os.path.join(app_source_path, "local.env"))
 load_dotenv(os.path.expanduser("~/supervisely.env"))
+
+api = sly.Api.from_env()
+team_id = sly.env.team_id()
 
 use_gui_for_local_debug = bool(int(os.environ.get("USE_GUI", "1")))
 
@@ -51,6 +64,158 @@ if os.path.isdir(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}"):
 
 
 class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
+    def initialize_custom_gui(self) -> Widget:
+        """Create custom GUI layout for model selection. This method is called once when the application is started."""
+        models = self.get_models()
+        filtered_models = utils.filter_models_structure(models)
+        self.pretrained_models_table = PretrainedModelsSelector(filtered_models)
+        custom_models = sly.nn.checkpoints.mmsegmentation.get_list(api, team_id)
+        self.custom_models_table = CustomModelsSelector(
+            team_id,
+            custom_models,
+            show_custom_checkpoint_path=True,
+            custom_checkpoint_task_types=["semantic segmentation"],
+        )
+
+        self.model_source_tabs = RadioTabs(
+            titles=["Pretrained models", "Custom models"],
+            descriptions=["Publicly available models", "Models trained by you in Supervisely"],
+            contents=[self.pretrained_models_table, self.custom_models_table],
+        )
+        return self.model_source_tabs
+
+    def get_params_from_gui(self) -> dict:
+        model_source = self.model_source_tabs.get_active_tab()
+        self.device = self.gui.get_device()
+        if model_source == "Pretrained models":
+            model_params = self.pretrained_models_table.get_selected_model_params()
+        elif model_source == "Custom models":
+            model_params = self.custom_models_table.get_selected_model_params()
+            if self.custom_models_table.use_custom_checkpoint_path():
+                checkpoint_path = self.custom_models_table.get_custom_checkpoint_path()
+                model_params["config_url"] = (
+                    f"{os.path.dirname(checkpoint_path).rstrip('/')}/config.py"
+                )
+                file_info = api.file.exists(team_id, model_params["config_url"])
+                if file_info is None:
+                    raise FileNotFoundError(
+                        f"Config file not found: {model_params['config_url']}. "
+                        "Config should be placed in the same directory as the checkpoint file."
+                    )
+
+        self.selected_model_name = model_params.get("arch_type")
+        self.checkpoint_name = model_params.get("checkpoint_name")
+        self.task_type = model_params.get("task_type")
+
+        deploy_params = {
+            "device": self.device,
+            **model_params,
+        }
+        return deploy_params
+
+    def load_model_meta(
+        self, model_source: str, cfg: Config, checkpoint_name: str = None, arch_type: str = None
+    ):
+        def set_common_meta(classes, palette):
+            obj_classes = [sly.ObjClass(name, sly.Bitmap, color) for name, color in zip(classes, palette)]
+            self.checkpoint_name = checkpoint_name
+            self.dataset_name = cfg.dataset_type
+            self.class_names = classes
+            self._model_meta = sly.ProjectMeta(obj_classes=sly.ObjClassCollection(obj_classes))
+            self._get_confidence_tag_meta()
+
+        if model_source == "Custom models":
+            self.selected_model_name = cfg.pretrained_model          
+            classes = cfg.checkpoint_config.meta.CLASSES
+            palette = cfg.checkpoint_config.meta.PALETTE   
+            set_common_meta(classes, palette)
+
+        elif model_source == "Pretrained models":
+            self.selected_model_name = arch_type
+            dataset_class_name = cfg.dataset_type
+            classes = str_to_class(dataset_class_name).CLASSES
+            palette = str_to_class(dataset_class_name).PALETTE
+            set_common_meta(classes, palette)
+
+        self.model.CLASSES = classes
+        self.model.PALETTE = palette
+
+        
+    def load_model(
+        self,
+        device: Literal["cpu", "cuda", "cuda:0", "cuda:1", "cuda:2", "cuda:3"],
+        model_source: Literal["Pretrained models", "Custom models"],
+        task_type: Literal["semantic segmentation"],
+        checkpoint_name: str,
+        checkpoint_url: str,
+        config_url: str,
+        arch_type: str = None,
+    ):
+        """
+        Load model method is used to deploy model.
+
+        :param model_source: Specifies whether the model is pretrained or custom.
+        :type model_source: Literal["Pretrained models", "Custom models"]
+        :param device: The device on which the model will be deployed.
+        :type device: Literal["cpu", "cuda", "cuda:0", "cuda:1", "cuda:2", "cuda:3"]
+        :param task_type: The type of task the model is designed for.
+        :type task_type: Literal["semantic segmentation"]
+        :param checkpoint_name: The name of the checkpoint from which the model is loaded.
+        :type checkpoint_name: str
+        :param checkpoint_url: The URL where the model checkpoint can be downloaded.
+        :type checkpoint_url: str
+        :param config_url: The URL where the model config can be downloaded.
+        :type config_url: str
+        :param arch_type: The architecture type of the model.
+        :type arch_type: str
+        """
+        self.device = device
+        self.task_type = task_type
+
+        local_weights_path = os.path.join(self.model_dir, checkpoint_name)
+        if model_source == "Pretrained models":
+            if not sly.fs.file_exists(local_weights_path):
+                self.download(
+                    src_path=checkpoint_url,
+                    dst_path=local_weights_path,
+                )
+            local_config_path = os.path.join(root_source_path, config_url)
+        else:
+            self.download(
+                src_path=checkpoint_url,
+                dst_path=local_weights_path,
+            )
+            local_config_path = os.path.join(configs_dir, "custom", "config.py")
+            if sly.fs.file_exists(local_config_path):
+                silent_remove(local_config_path)
+            self.download(
+                src_path=config_url,
+                dst_path=local_config_path,
+            )
+            if not sly.fs.file_exists(local_config_path):
+                raise FileNotFoundError(
+                    f"Config file not found: {config_url}. "
+                    "Config should be placed in the same directory as the checkpoint file."
+                )
+
+        try:
+            cfg = Config.fromfile(local_config_path)
+            cfg.model.pretrained = None
+            cfg.model.train_cfg = None
+            
+            self.model = build_segmentor(cfg.model, test_cfg=cfg.get('test_cfg'))
+            checkpoint = load_checkpoint(self.model, local_weights_path, map_location='cpu')
+            
+            self.load_model_meta(model_source, cfg, checkpoint_name, arch_type)
+            
+            self.model.cfg = cfg  # save the config in the model for convenience
+            self.model.to(device)
+            self.model.eval()
+            self.model = revert_sync_batchnorm(self.model)
+            
+        except KeyError as e:
+            raise KeyError(f"Error loading config file: {local_config_path}. Error: {e}")
+        
     def load_on_device(
         self,
         model_dir: str, 
@@ -69,6 +234,8 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             # for local debug only
             model_source = "Pretrained models"
             weights_path, config_path = self.download_pretrained_files(selected_checkpoint, model_dir)
+            
+            
         cfg = Config.fromfile(config_path)
         cfg.model.pretrained = None
         cfg.model.train_cfg = None
@@ -107,9 +274,6 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         self._model_meta = sly.ProjectMeta(obj_classes=sly.ObjClassCollection(obj_classes))
         print(f"✅ Model has been successfully loaded on {device.upper()} device")
 
-    def get_classes(self) -> List[str]:
-        return self.class_names  # e.g. ["cat", "dog", ...]
-
     def get_info(self) -> dict:
         info = super().get_info()
         info["model_name"] = self.selected_model_name
@@ -118,7 +282,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         info["device"] = self.device
         return info
 
-    def get_models(self, add_links=False):
+    def get_models(self):
         model_yamls = sly.json.load_json_file(models_meta_path)
         model_config = {}
         for model_meta in model_yamls:
@@ -150,53 +314,19 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                         checkpoint_info["Memory (Training, GB)"] = "-"
                     for metric_name, metric_val in model["Results"][0]["Metrics"].items():
                         checkpoint_info[metric_name] = metric_val
-                    #checkpoint_info["config_file"] = os.path.join(f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}", model["Config"])
-                    if add_links:
-                        checkpoint_info["config_file"] = os.path.join(root_source_path, model["Config"])
-                        checkpoint_info["weights_file"] = model["Weights"]
+                    #checkpoint_info["config_file"] = os.path.join(f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}", model["Config"])               
+                    checkpoint_info["meta"] = {
+                        "task_type": None,
+                        "arch_type": None,
+                        "arch_link": None,
+                        "weights_url": model["Weights"],
+                        "config_url": os.path.join(root_source_path, model["Config"]),
+                    }
                     model_config[model_meta["model_name"]]["checkpoints"].append(checkpoint_info)
         return model_config
 
-    def download_pretrained_files(self, selected_model: Dict[str, str], model_dir: str):
-        models = self.get_models(add_links=True)
-        if self.gui is not None:
-            model_name = list(self.gui.get_model_info().keys())[0]
-        else:
-            # for local debug only
-            model_name = selected_model_name
-        full_model_info = selected_model
-        for model_info in models[model_name]["checkpoints"]:
-            if model_info["Name"] == selected_model["Name"]:
-                full_model_info = model_info
-        weights_ext = sly.fs.get_file_ext(full_model_info["weights_file"])
-        config_ext = sly.fs.get_file_ext(full_model_info["config_file"])
-        weights_dst_path = os.path.join(model_dir, f"{selected_model['Name']}{weights_ext}")
-        if not sly.fs.file_exists(weights_dst_path):
-            self.download(
-                src_path=full_model_info["weights_file"], 
-                dst_path=weights_dst_path
-            )
-        config_path = self.download(
-            src_path=full_model_info["config_file"], 
-            dst_path=os.path.join(model_dir, f"config{config_ext}")
-        )
-        
-        return weights_dst_path, config_path
-
-    def download_custom_files(self, custom_link: str, model_dir: str):
-        weight_filename = os.path.basename(custom_link)
-        weights_dst_path = os.path.join(model_dir, weight_filename)
-        if not sly.fs.file_exists(weights_dst_path):
-            self.download(
-                src_path=custom_link,
-                dst_path=weights_dst_path,
-            )
-        config_path = self.download(
-            src_path=os.path.join(os.path.dirname(custom_link), 'config.py'),
-            dst_path=os.path.join(model_dir, 'config.py'),
-        )
-        
-        return weights_dst_path, config_path
+    def get_classes(self) -> List[str]:
+        return self.class_names  # e.g. ["cat", "dog", ...]
 
     def predict(
         self, image_path: str, settings: Dict[str, Any]
