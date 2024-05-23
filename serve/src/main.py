@@ -1,37 +1,34 @@
 import os
 import shutil
 import sys
+
 try:
     from typing import Literal
 except:
     from typing_extensions import Literal
-from typing import List, Any, Dict
+
+from collections import OrderedDict
 from pathlib import Path
+from typing import Any, Dict, List
+
 import numpy as np
+import pkg_resources
+import torch
 import yaml
 from dotenv import load_dotenv
-import torch
-import supervisely as sly
-import supervisely.app.widgets as Widgets
-import supervisely.nn.inference.gui as GUI
-import pkg_resources
-from collections import OrderedDict
 from mmcv import Config
 from mmcv.cnn.utils import revert_sync_batchnorm
 from mmcv.runner import load_checkpoint
-from mmseg.models import build_segmentor
 from mmseg.apis.inference import inference_segmentor
 from mmseg.datasets import *
+from mmseg.models import build_segmentor
 
-from supervisely.app.widgets import (
-    Widget,
-    PretrainedModelsSelector,
-    CustomModelsSelector,
-    RadioTabs,
-)
+import supervisely as sly
+from serve.src import utils
+from supervisely.app.widgets import (CustomModelsSelector,
+                                     PretrainedModelsSelector, RadioTabs,
+                                     Widget)
 from supervisely.io.fs import silent_remove
-
-from src import utils
 
 root_source_path = str(Path(__file__).parents[2])
 app_source_path = str(Path(__file__).parents[1])
