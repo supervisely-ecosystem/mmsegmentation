@@ -164,7 +164,7 @@ def upload_artifacts_and_log_progress():
 
     # generate metadata file
     checkpoint.generate_sly_metadata(
-        app_name="Train MMSegmentation",
+        app_name=checkpoint.app_name,
         session_id=g.task_id,
         session_path=remote_artifacts_dir,
         weights_dir=remote_weights_dir,
