@@ -169,7 +169,7 @@ def upload_artifacts_and_log_progress():
         session_path=remote_artifacts_dir,
         weights_dir=remote_weights_dir,
         training_project_name=g.project_info.name,
-        task_type="instance segmentation",
+        task_type=checkpoint.task_type,
         config_path=remote_config_path,
     )
 
