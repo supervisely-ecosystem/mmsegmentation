@@ -1,4 +1,5 @@
 import supervisely as sly
+from supervisely.nn.checkpoints.mmsegmentation import MMSegmentationCheckpoint
 from sly_train_progress import init_progress, _update_progress_ui
 import sly_globals as g
 import os
@@ -39,19 +40,13 @@ def init(data, state):
     data["outputUrl"] = None
 
 
-def init_chart(title, names, xs, ys, smoothing=None, yrange=None, decimals=None, xdecimals=None, metric=None):
+def init_chart(
+    title, names, xs, ys, smoothing=None, yrange=None, decimals=None, xdecimals=None, metric=None
+):
     series = []
     for name, x, y in zip(names, xs, ys):
-        series.append({
-            "name": name,
-            "data": [[px, py] for px, py in zip(x, y)]
-        })
-    result = {
-        "options": {
-            "title": title
-        },
-        "series": series
-    }
+        series.append({"name": name, "data": [[px, py] for px, py in zip(x, y)]})
+    result = {"options": {"title": title}, "series": series}
     if len(names) > 0:
         result["series"] = series
     if metric is not None:
@@ -69,20 +64,47 @@ def init_chart(title, names, xs, ys, smoothing=None, yrange=None, decimals=None,
 
 def init_charts(data, state):
     state["smoothing"] = 0.6
-    state["chartLR"] = init_chart("LR", names=["lr"], xs = [[]], ys = [[]], smoothing=None,
-                                 # yrange=[state["lr"] - state["lr"] / 2.0, state["lr"] + state["lr"] / 2.0],
-                                 decimals=6, xdecimals=2)
-    state["chartTrainLoss"] = init_chart("Train Loss", names=["loss"], xs=[[]], ys=[[]], smoothing=state["smoothing"], decimals=6, xdecimals=2)
+    state["chartLR"] = init_chart(
+        "LR",
+        names=["lr"],
+        xs=[[]],
+        ys=[[]],
+        smoothing=None,
+        # yrange=[state["lr"] - state["lr"] / 2.0, state["lr"] + state["lr"] / 2.0],
+        decimals=6,
+        xdecimals=2,
+    )
+    state["chartTrainLoss"] = init_chart(
+        "Train Loss",
+        names=["loss"],
+        xs=[[]],
+        ys=[[]],
+        smoothing=state["smoothing"],
+        decimals=6,
+        xdecimals=2,
+    )
     state["mean_charts"] = {}
     for metric in data["availableMetrics"]:
-        state["mean_charts"][f"chartVal_{metric}"] = init_chart(f"Val {metric}", metric=metric, names=[metric], xs=[[]], ys=[[]], smoothing=state["smoothing"])
+        state["mean_charts"][f"chartVal_{metric}"] = init_chart(
+            f"Val {metric}",
+            metric=metric,
+            names=[metric],
+            xs=[[]],
+            ys=[[]],
+            smoothing=state["smoothing"],
+        )
     state["class_charts"] = {}
     for metric in data["availableMetrics"]:
-        state["class_charts"][f"chartVal_{metric[1:]}"] = init_chart(f"Val {metric[1:]}", names=[], metric=metric, xs=[], ys=[], smoothing=state["smoothing"])
+        state["class_charts"][f"chartVal_{metric[1:]}"] = init_chart(
+            f"Val {metric[1:]}", names=[], metric=metric, xs=[], ys=[], smoothing=state["smoothing"]
+        )
 
     state["chartTime"] = init_chart("Time", names=["time"], xs=[[]], ys=[[]], xdecimals=2)
-    state["chartDataTime"] = init_chart("Data Time", names=["data_time"], xs=[[]], ys=[[]], xdecimals=2)
+    state["chartDataTime"] = init_chart(
+        "Data Time", names=["data_time"], xs=[[]], ys=[[]], xdecimals=2
+    )
     state["chartMemory"] = init_chart("Memory", names=["memory"], xs=[[]], ys=[[]], xdecimals=2)
+
 
 @g.my_app.callback("change_smoothing")
 @sly.timeit
@@ -92,10 +114,18 @@ def change_smoothing(api: sly.Api, task_id, context, state, app_logger):
         {"field": "state.chartTrainLoss.options.smoothingWeight", "payload": state["smoothing"]}
     ]
     for metric in state["evalMetrics"]:
-        fields.extend([
-            {"field": f"state.mean_charts.chartVal_{metric}.options.smoothingWeight", "payload": state["smoothing"]},
-            {"field": f"state.class_charts.chartVal_{metric[1:]}.options.smoothingWeight", "payload": state["smoothing"]}
-        ])
+        fields.extend(
+            [
+                {
+                    "field": f"state.mean_charts.chartVal_{metric}.options.smoothingWeight",
+                    "payload": state["smoothing"],
+                },
+                {
+                    "field": f"state.class_charts.chartVal_{metric[1:]}.options.smoothingWeight",
+                    "payload": state["smoothing"],
+                },
+            ]
+        )
     g.api.app.set_fields(g.task_id, fields)
 
 
@@ -117,35 +147,53 @@ def upload_artifacts_and_log_progress():
             progress.set_current_value(monitor.bytes_read, report=False)
         _update_progress_ui("UploadDir", g.api, g.task_id, progress)
 
-    progress = sly.Progress("Upload directory with training artifacts to Team Files", 0, is_size=True)
+    progress = sly.Progress(
+        "Upload directory with training artifacts to Team Files", 0, is_size=True
+    )
     progress_cb = partial(upload_monitor, api=g.api, task_id=g.task_id, progress=progress)
 
-    remote_dir = f"/mmsegmentation/{g.task_id}_{g.project_info.name}"
-    res_dir = g.api.file.upload_directory(g.team_id, g.artifacts_dir, remote_dir, progress_size_cb=progress_cb)
+    checkpoint = MMSegmentationCheckpoint(g.team_id)
+    model_dir = checkpoint.get_model_dir()
+    remote_artifacts_dir = f"{model_dir}/{g.task_id}_{g.project_info.name}"
+    remote_weights_dir = os.path.join(remote_artifacts_dir, checkpoint.weights_dir)
+    remote_config_path = os.path.join(remote_weights_dir, checkpoint.config_file)
+
+    res_dir = g.api.file.upload_directory(
+        g.team_id, g.artifacts_dir, remote_artifacts_dir, progress_size_cb=progress_cb
+    )
+
+    # generate metadata file
+    checkpoint.generate_sly_metadata(
+        app_name="Train MMSegmentation",
+        session_id=g.task_id,
+        session_path=remote_artifacts_dir,
+        weights_dir=remote_weights_dir,
+        training_project_name=g.project_info.name,
+        task_type="instance segmentation",
+        config_path=remote_config_path,
+    )
+
     return res_dir
+
 
 def init_class_charts_series(state):
     classes = state["selectedClasses"] + ["__bg__"]
     series = []
     for class_name in classes:
-        series.append({
-            "name": class_name,
-            "data": []
-        })
-    fields = [
-        {"field": "state.preparingData", "payload": True}
-    ]
+        series.append({"name": class_name, "data": []})
+    fields = [{"field": "state.preparingData", "payload": True}]
     for metric_name in state["evalMetrics"]:
-        fields.extend([
-            {"field": f"state.class_charts.chartVal_{metric_name[1:]}.series", "payload": series}
-        ])
+        fields.extend(
+            [{"field": f"state.class_charts.chartVal_{metric_name[1:]}.series", "payload": series}]
+        )
     g.api.app.set_fields(g.task_id, fields)
 
 
 def prepare_segmentation_data(state, img_dir, ann_dir, palette):
     temp_project_seg_dir = g.project_seg_dir + "_temp"
-    sly.Project.to_segmentation_task(g.project_dir, temp_project_seg_dir, target_classes=state["selectedClasses"])
-
+    sly.Project.to_segmentation_task(
+        g.project_dir, temp_project_seg_dir, target_classes=state["selectedClasses"]
+    )
 
     datasets = os.listdir(temp_project_seg_dir)
     os.makedirs(os.path.join(g.project_seg_dir, img_dir), exist_ok=True)
@@ -158,7 +206,9 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette):
         # convert masks to required format and save to general ann_dir
         mask_files = os.listdir(os.path.join(temp_project_seg_dir, dataset, ann_dir))
         for mask_file in mask_files:
-            mask = cv2.imread(os.path.join(temp_project_seg_dir, dataset, ann_dir, mask_file))[:, :, ::-1]
+            mask = cv2.imread(os.path.join(temp_project_seg_dir, dataset, ann_dir, mask_file))[
+                :, :, ::-1
+            ]
             result = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.int32)
             # human masks to machine masks
             for color_idx, color in enumerate(palette):
@@ -168,9 +218,11 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette):
 
         imgfiles_to_move = os.listdir(os.path.join(temp_project_seg_dir, dataset, img_dir))
         for filename in imgfiles_to_move:
-            shutil.move(os.path.join(temp_project_seg_dir, dataset, img_dir, filename),
-                        os.path.join(g.project_seg_dir, img_dir))
-    
+            shutil.move(
+                os.path.join(temp_project_seg_dir, dataset, img_dir, filename),
+                os.path.join(g.project_seg_dir, img_dir),
+            )
+
     shutil.rmtree(temp_project_seg_dir)
     g.api.app.set_field(g.task_id, "state.preparingData", False)
 
@@ -187,26 +239,33 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         ann_dir = "seg"
         obj_classes = g.project_meta.obj_classes
         if g.project_meta.get_obj_class("__bg__") is None:
-            obj_classes = obj_classes.add(sly.ObjClass(name="__bg__", geometry_type=sly.Bitmap, color=(0,0,0)))
+            obj_classes = obj_classes.add(
+                sly.ObjClass(name="__bg__", geometry_type=sly.Bitmap, color=(0, 0, 0))
+            )
         classes_json = obj_classes.to_json()
-        classes_json = [obj for obj in classes_json if obj["title"] in state["selectedClasses"] or obj["title"] == "__bg__"]
+        classes_json = [
+            obj
+            for obj in classes_json
+            if obj["title"] in state["selectedClasses"] or obj["title"] == "__bg__"
+        ]
         classes = [obj["title"] for obj in classes_json]
-        palette = [obj["color"].lstrip('#') for obj in classes_json]
-        palette = [[int(color[i:i + 2], 16) for i in (0, 2, 4)] for color in palette]
+        palette = [obj["color"].lstrip("#") for obj in classes_json]
+        palette = [[int(color[i : i + 2], 16) for i in (0, 2, 4)] for color in palette]
         if not os.path.exists(g.project_seg_dir):
             prepare_segmentation_data(state, img_dir, ann_dir, palette)
 
         cfg = init_cfg(state, img_dir, ann_dir, classes, palette)
         # print(f'Config:\n{cfg.pretty_text}') # TODO: debug
-        os.makedirs(os.path.join(g.checkpoints_dir, cfg.work_dir.split('/')[-1]), exist_ok=True)
-        cfg.dump(os.path.join(g.checkpoints_dir, cfg.work_dir.split('/')[-1], "config.py"))
+        os.makedirs(os.path.join(g.checkpoints_dir, cfg.work_dir.split("/")[-1]), exist_ok=True)
+        cfg.dump(os.path.join(g.checkpoints_dir, cfg.work_dir.split("/")[-1], "config.py"))
 
         # Build the dataset
         datasets = [build_dataset(cfg.data.train)]
 
         # Build the detector
         model = build_segmentor(
-            cfg.model, train_cfg=cfg.get('train_cfg'), test_cfg=cfg.get('test_cfg'))
+            cfg.model, train_cfg=cfg.get("train_cfg"), test_cfg=cfg.get("test_cfg")
+        )
         # Add an attribute for visualization convenience
         model.CLASSES = datasets[0].CLASSES
         model = revert_sync_batchnorm(model)

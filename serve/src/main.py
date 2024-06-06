@@ -25,9 +25,13 @@ from mmseg.models import build_segmentor
 
 import supervisely as sly
 from serve.src import utils
-from supervisely.app.widgets import (CustomModelsSelector,
-                                     PretrainedModelsSelector, RadioTabs,
-                                     Widget)
+from supervisely.nn.checkpoints.mmsegmentation import MMSegmentationCheckpoint
+from supervisely.app.widgets import (
+    CustomModelsSelector,
+    PretrainedModelsSelector,
+    RadioTabs,
+    Widget,
+)
 from supervisely.io.fs import silent_remove
 
 root_source_path = str(Path(__file__).parents[2])
@@ -43,11 +47,13 @@ use_gui_for_local_debug = bool(int(os.environ.get("USE_GUI", "1")))
 models_meta_path = os.path.join(root_source_path, "models", "model_meta.json")
 
 # for local debug
-selected_checkpoint = None 
+selected_checkpoint = None
 selected_model_name = None
+
 
 def str_to_class(classname):
     return getattr(sys.modules[__name__], classname)
+
 
 configs_dir = os.path.join(root_source_path, "configs")
 mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
@@ -66,7 +72,8 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         models = self.get_models()
         filtered_models = utils.filter_models_structure(models)
         self.pretrained_models_table = PretrainedModelsSelector(filtered_models)
-        custom_models = sly.nn.checkpoints.mmsegmentation.get_list(api, team_id)
+        checkpoint = MMSegmentationCheckpoint(team_id)
+        custom_models = checkpoint.get_list()
         self.custom_models_table = CustomModelsSelector(
             team_id,
             custom_models,
@@ -114,7 +121,9 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         self, model_source: str, cfg: Config, checkpoint_name: str = None, arch_type: str = None
     ):
         def set_common_meta(classes, palette):
-            obj_classes = [sly.ObjClass(name, sly.Bitmap, color) for name, color in zip(classes, palette)]
+            obj_classes = [
+                sly.ObjClass(name, sly.Bitmap, color) for name, color in zip(classes, palette)
+            ]
             self.checkpoint_name = checkpoint_name
             self.dataset_name = cfg.dataset_type
             self.class_names = classes
@@ -122,9 +131,9 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             self._get_confidence_tag_meta()
 
         if model_source == "Custom models":
-            self.selected_model_name = cfg.pretrained_model          
+            self.selected_model_name = cfg.pretrained_model
             classes = cfg.checkpoint_config.meta.CLASSES
-            palette = cfg.checkpoint_config.meta.PALETTE   
+            palette = cfg.checkpoint_config.meta.PALETTE
             set_common_meta(classes, palette)
 
         elif model_source == "Pretrained models":
@@ -137,7 +146,6 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         self.model.CLASSES = classes
         self.model.PALETTE = palette
 
-        
     def load_model(
         self,
         device: Literal["cpu", "cuda", "cuda:0", "cuda:1", "cuda:2", "cuda:3"],
@@ -199,23 +207,23 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             cfg = Config.fromfile(local_config_path)
             cfg.model.pretrained = None
             cfg.model.train_cfg = None
-            
-            self.model = build_segmentor(cfg.model, test_cfg=cfg.get('test_cfg'))
-            checkpoint = load_checkpoint(self.model, local_weights_path, map_location='cpu')
-            
+
+            self.model = build_segmentor(cfg.model, test_cfg=cfg.get("test_cfg"))
+            checkpoint = load_checkpoint(self.model, local_weights_path, map_location="cpu")
+
             self.load_model_meta(model_source, cfg, checkpoint_name, arch_type)
-            
+
             self.model.cfg = cfg  # save the config in the model for convenience
             self.model.to(device)
             self.model.eval()
             self.model = revert_sync_batchnorm(self.model)
-            
+
         except KeyError as e:
             raise KeyError(f"Error loading config file: {local_config_path}. Error: {e}")
-        
+
     def load_on_device(
         self,
-        model_dir: str, 
+        model_dir: str,
         device: Literal["cpu", "cuda", "cuda:0", "cuda:1", "cuda:2", "cuda:3"] = "cpu",
     ) -> None:
         self.device = device
@@ -223,21 +231,26 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             model_source = self.gui.get_model_source()
             if model_source == "Pretrained models":
                 selected_model = self.gui.get_checkpoint_info()
-                weights_path, config_path = self.download_pretrained_files(selected_model, model_dir)
+                weights_path, config_path = self.download_pretrained_files(
+                    selected_model, model_dir
+                )
             elif model_source == "Custom models":
                 custom_weights_link = self.gui.get_custom_link()
-                weights_path, config_path = self.download_custom_files(custom_weights_link, model_dir)
+                weights_path, config_path = self.download_custom_files(
+                    custom_weights_link, model_dir
+                )
         else:
             # for local debug only
             model_source = "Pretrained models"
-            weights_path, config_path = self.download_pretrained_files(selected_checkpoint, model_dir)
-            
-            
+            weights_path, config_path = self.download_pretrained_files(
+                selected_checkpoint, model_dir
+            )
+
         cfg = Config.fromfile(config_path)
         cfg.model.pretrained = None
         cfg.model.train_cfg = None
-        model = build_segmentor(cfg.model, test_cfg=cfg.get('test_cfg'))
-        checkpoint = load_checkpoint(model, weights_path, map_location='cpu')
+        model = build_segmentor(cfg.model, test_cfg=cfg.get("test_cfg"))
+        checkpoint = load_checkpoint(model, weights_path, map_location="cpu")
         if model_source == "Custom models":
             classes = cfg.checkpoint_config.meta.CLASSES
             palette = cfg.checkpoint_config.meta.PALETTE
@@ -267,7 +280,9 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         self.model = model
         self.class_names = classes
 
-        obj_classes = [sly.ObjClass(name, sly.Bitmap, color) for name, color in zip(classes, palette)]
+        obj_classes = [
+            sly.ObjClass(name, sly.Bitmap, color) for name, color in zip(classes, palette)
+        ]
         self._model_meta = sly.ProjectMeta(obj_classes=sly.ObjClassCollection(obj_classes))
         print(f"✅ Model has been successfully loaded on {device.upper()} device")
 
@@ -285,14 +300,16 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         for model_meta in model_yamls:
             mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
             model_yml_url = f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/{model_meta['yml_file']}"
-            model_yml_local = os.path.join(configs_dir, model_meta['yml_file'])
+            model_yml_local = os.path.join(configs_dir, model_meta["yml_file"])
             with open(model_yml_local, "r") as stream:
                 model_info = yaml.safe_load(stream)
                 model_config[model_meta["model_name"]] = {}
                 model_config[model_meta["model_name"]]["checkpoints"] = []
                 model_config[model_meta["model_name"]]["paper_from"] = model_meta["paper_from"]
                 model_config[model_meta["model_name"]]["year"] = model_meta["year"]
-                model_config[model_meta["model_name"]]["config_url"] = os.path.dirname(model_yml_url)
+                model_config[model_meta["model_name"]]["config_url"] = os.path.dirname(
+                    model_yml_url
+                )
                 for model in model_info["Models"]:
                     checkpoint_info = OrderedDict()
                     checkpoint_info["Model"] = model["Name"]
@@ -300,18 +317,22 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                     checkpoint_info["Method"] = model["In Collection"]
                     checkpoint_info["Dataset"] = model["Results"][0]["Dataset"]
                     try:
-                        checkpoint_info["Inference Time (ms/im)"] = model["Metadata"]["inference time (ms/im)"][0]["value"]
+                        checkpoint_info["Inference Time (ms/im)"] = model["Metadata"][
+                            "inference time (ms/im)"
+                        ][0]["value"]
                     except KeyError:
                         checkpoint_info["Inference Time (ms/im)"] = "-"
                     checkpoint_info["Input Size (H, W)"] = model["Metadata"]["crop size"]
                     checkpoint_info["LR scheduler (steps)"] = model["Metadata"]["lr schd"]
                     try:
-                        checkpoint_info["Memory (Training, GB)"] = model["Metadata"]["Training Memory (GB)"]
+                        checkpoint_info["Memory (Training, GB)"] = model["Metadata"][
+                            "Training Memory (GB)"
+                        ]
                     except KeyError:
                         checkpoint_info["Memory (Training, GB)"] = "-"
                     for metric_name, metric_val in model["Results"][0]["Metrics"].items():
                         checkpoint_info[metric_name] = metric_val
-                    #checkpoint_info["config_file"] = os.path.join(f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}", model["Config"])               
+                    # checkpoint_info["config_file"] = os.path.join(f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}", model["Config"])
                     checkpoint_info["meta"] = {
                         "task_type": None,
                         "arch_type": None,
@@ -335,10 +356,13 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
 
 
 if sly.is_production():
-    sly.logger.info("Script arguments", extra={
-        "context.teamId": sly.env.team_id(),
-        "context.workspaceId": sly.env.workspace_id(),
-    })
+    sly.logger.info(
+        "Script arguments",
+        extra={
+            "context.teamId": sly.env.team_id(),
+            "context.workspaceId": sly.env.workspace_id(),
+        },
+    )
 
 m = MMSegmentationModel(use_gui=True)
 
@@ -360,4 +384,3 @@ else:
     vis_path = "./demo_data/image_01_prediction.jpg"
     m.visualize(results, image_path, vis_path, thickness=0)
     print(f"predictions and visualization have been saved: {vis_path}")
-
