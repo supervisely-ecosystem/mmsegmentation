@@ -3,6 +3,8 @@ from pathlib import Path
 import sys
 import supervisely as sly
 from supervisely.app.v1.app_service import AppService
+from supervisely.nn.artifacts.mmsegmentation import MMSegmentation
+
 import shutil
 import pkg_resources
 
@@ -29,9 +31,9 @@ my_app = AppService()
 api = my_app.public_api
 task_id = my_app.task_id
 
-team_id = int(os.environ['context.teamId'])
-workspace_id = int(os.environ['context.workspaceId'])
-project_id = int(os.environ['modal.state.slyProjectId'])
+team_id = int(os.environ["context.teamId"])
+workspace_id = int(os.environ["context.workspaceId"])
+project_id = int(os.environ["modal.state.slyProjectId"])
 
 project_info = api.project.get_info_by_id(project_id)
 
@@ -48,6 +50,8 @@ info_dir = os.path.join(artifacts_dir, "info")
 sly.fs.mkdir(info_dir)
 checkpoints_dir = os.path.join(artifacts_dir, "checkpoints")
 sly.fs.mkdir(checkpoints_dir)
+
+sly_mmseg = MMSegmentation(team_id)
 
 configs_dir = os.path.join(root_source_dir, "configs")
 mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version

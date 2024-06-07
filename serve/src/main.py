@@ -25,7 +25,7 @@ from mmseg.models import build_segmentor
 
 import supervisely as sly
 from serve.src import utils
-from supervisely.nn.checkpoints.mmsegmentation import MMSegmentationCheckpoint
+from supervisely.nn.artifacts.mmsegmentation import MMSegmentation
 from supervisely.app.widgets import (
     CustomModelsSelector,
     PretrainedModelsSelector,
@@ -72,8 +72,8 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         models = self.get_models()
         filtered_models = utils.filter_models_structure(models)
         self.pretrained_models_table = PretrainedModelsSelector(filtered_models)
-        checkpoint = MMSegmentationCheckpoint(team_id)
-        custom_models = checkpoint.get_list()
+        sly_mmseg = MMSegmentation(team_id)
+        custom_models = sly_mmseg.get_list()
         self.custom_models_table = CustomModelsSelector(
             team_id,
             custom_models,
