@@ -3,3 +3,5 @@ supervisely==6.73.100
 openmim
 ffmpeg-python==0.2.0
 pyyaml==6.0
+
+# yapf==0.40.1
