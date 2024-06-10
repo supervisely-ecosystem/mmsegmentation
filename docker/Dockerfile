@@ -8,10 +8,10 @@ RUN pip3 install mmcv-full==1.4.4 -f https://download.openmmlab.com/mmcv/dist/cu
 RUN pip3 install mmsegmentation==0.23.0
 RUN pip3 install mmcls==0.21.0
 RUN pip3 install pyyaml==6.0
+RUN pip3 install yapf==0.40.1
 
 # RUN pip3 install torch==1.13.0
 # RUN pip3 install torchvision==0.14.0
-RUN pip3 install ffmpeg-python==0.2.0
 
 COPY dev_requirements.txt dev_requirements.txt
 RUN pip3 install -r dev_requirements.txt
