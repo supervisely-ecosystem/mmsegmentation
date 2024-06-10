@@ -1,35 +1,33 @@
 {
-  "name": "Train MMSegmentation",
-  "type": "app",
-  "categories": [
-    "neural network",
-    "images",
-    "videos",
-    "semantic segmentation",
-    "segmentation & tracking",
-    "train"
-  ],
-  "description": "Dashboard to configure, start and monitor training",
-  "docker_image": "supervisely/mmseg:1.3.4",
-  "min_instance_version": "6.8.48",
-  "main_script": "train/src/main.py",
-  "gui_template": "train/src/gui.html",
-  "task_location": "workspace_tasks",
-  "need_gpu": true,
-  "gpu": "required",
-  "isolate": true,
-  "icon": "https://i.imgur.com/GaEFmkH.png",
-  "icon_cover": true,
-  "context_menu": {
-    "target": [
-      "images_project"
-    ],
-    "context_root": "Neural Networks",
-    "context_category": "MM Segmentation"
-  },
-  "poster": "https://user-images.githubusercontent.com/48245050/182847473-9a35f213-c27b-4abd-bd64-c73bf80fb056.jpg",
-  "community_agent": false,
-  "license": {
-    "type": "Apache-2.0" 
-  }
+	"name": "Train MMSegmentation",
+	"type": "app",
+	"categories": [
+		"neural network",
+		"images",
+		"videos",
+		"semantic segmentation",
+		"segmentation & tracking",
+		"train"
+	],
+	"description": "Dashboard to configure, start and monitor training",
+	"docker_image": "supervisely/mmseg:1.3.8",
+	"min_instance_version": "6.8.48",
+	"main_script": "train/src/main.py",
+	"gui_template": "train/src/gui.html",
+	"task_location": "workspace_tasks",
+	"need_gpu": true,
+	"gpu": "required",
+	"isolate": true,
+	"icon": "https://i.imgur.com/GaEFmkH.png",
+	"icon_cover": true,
+	"context_menu": {
+		"target": ["images_project"],
+		"context_root": "Neural Networks",
+		"context_category": "MM Segmentation"
+	},
+	"poster": "https://user-images.githubusercontent.com/48245050/182847473-9a35f213-c27b-4abd-bd64-c73bf80fb056.jpg",
+	"community_agent": false,
+	"license": {
+		"type": "Apache-2.0"
+	}
 }
