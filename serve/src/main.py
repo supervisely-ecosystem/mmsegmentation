@@ -33,6 +33,8 @@ from supervisely.app.widgets import (
     Widget,
 )
 from supervisely.io.fs import silent_remove
+from supervisely.nn.inference import ModelInfo
+
 
 root_source_path = str(Path(__file__).parents[2])
 app_source_path = str(Path(__file__).parents[1])
@@ -220,6 +222,13 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
 
         except KeyError as e:
             raise KeyError(f"Error loading config file: {local_config_path}. Error: {e}")
+        
+        self.model_info = ModelInfo(
+            model_name=self.selected_model_name,
+            architecture=self.selected_model_name,
+            task_type=task_type,
+            model_source=model_source,
+        )
 
     def load_on_device(
         self,
