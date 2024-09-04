@@ -1,4 +1,5 @@
 import supervisely as sly
+from typing import Dict, Optional, Union
 from sly_train_progress import init_progress, _update_progress_ui
 import sly_globals as g
 import os
@@ -27,6 +28,16 @@ def init(data, state):
     data["eta"] = None
     state["isValidation"] = False
 
+    # Device selctor
+    data["multiple"] = False
+    data["placeholder"] = "Select device"
+    data["availableDevices"] = init_devices()
+    state["deviceLoading"] = False
+    if len(data["availableDevices"]) > 0:
+        state["selectedDevice"] = data["availableDevices"][0]["value"]
+    else:
+        state["selectedDevice"] = None
+
     init_charts(data, state)
 
     state["collapsed7"] = True
@@ -37,6 +48,39 @@ def init(data, state):
     state["preparingData"] = False
     data["outputName"] = None
     data["outputUrl"] = None
+
+
+def init_devices():
+    available_agents = g.api.agent.get_list_available(g.team_id, True)
+    agent_info = None
+    for agent in available_agents:
+        if agent.id == g.agent_id:
+            agent_info = agent
+            break
+
+    gpu_info = agent_info.gpu_info
+    device_count = gpu_info["device_count"]
+    if device_count == 0:
+        raise ValueError("No GPU devices available")
+
+    devices_names = gpu_info["device_names"]
+    devices_ids = [f"cuda:{i}" for i in range(device_count)]
+    devices_ids_int = [i for i in range(device_count)]
+    devices_memory = gpu_info["device_memory"]
+
+    devices = []
+    convert_to_gb = lambda number: round(number / 1024**3, 1)
+    for device_name, device_id, device_id_int, device_memory in zip(
+        devices_names, devices_ids, devices_ids_int, devices_memory
+    ):
+        device_info = {
+            "value": device_id_int,
+            "label": f"{device_name} ({device_id})",
+            "right_text": f"{convert_to_gb(device_memory['available'])} / {convert_to_gb(device_memory['total'])} GB",
+            "free": convert_to_gb(device_memory["available"]),
+        }
+        devices.append(device_info)
+    return devices
 
 
 def init_chart(
@@ -103,6 +147,18 @@ def init_charts(data, state):
         "Data Time", names=["data_time"], xs=[[]], ys=[[]], xdecimals=2
     )
     state["chartMemory"] = init_chart("Memory", names=["memory"], xs=[[]], ys=[[]], xdecimals=2)
+
+
+@g.my_app.callback("refresh_devices")
+@sly.timeit
+@g.my_app.ignore_errors_and_show_dialog_window()
+def refresh_devices(api: sly.Api, task_id, context, state, app_logger):
+    fields = [
+        {"field": "data.availableDevices", "payload": init_devices()},
+        {"field": "state.selectedDevice", "payload": state["selectedDevice"]},
+        {"field": "state.deviceLoading", "payload": False},
+    ]
+    g.api.app.set_fields(g.task_id, fields)
 
 
 @g.my_app.callback("change_smoothing")
