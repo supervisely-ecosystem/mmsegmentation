@@ -76,7 +76,7 @@ def init_devices():
         device_info = {
             "value": device_id_int,
             "label": f"{device_name} ({device_id})",
-            "right_text": f"{convert_to_gb(device_memory['available'])} / {convert_to_gb(device_memory['total'])} GB",
+            "right_text": f"{convert_to_gb(device_memory['reserved'])} / {convert_to_gb(device_memory['total'])} GB",
             "free": convert_to_gb(device_memory["available"]),
         }
         devices.append(device_info)
