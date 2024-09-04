@@ -12,6 +12,7 @@
 				v-model="state.selectedDevice"
 				placeholder="Select Device"
 				:loading="state.deviceLoading"
+				:disabled="state.started"
 			>
 				<div v-if="data.availableDevices">
 					<el-option
@@ -36,6 +37,7 @@
 				v-if="!state.done7"
 				type="text"
 				class="regular"
+				:disabled="state.started"
 				@click="state.deviceLoading = true; command('refresh_devices')"
 			>
 				<i class="zmdi zmdi-refresh"></i>
