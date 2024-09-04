@@ -52,6 +52,7 @@
 			class="regular"
 			@click="state.started = true; command('train')"
 			:loading="state.started"
+			:disabled="state.selectedDevice === null"
 		>
 			<i class="zmdi zmdi-play mr5"></i> Train
 		</el-button>
