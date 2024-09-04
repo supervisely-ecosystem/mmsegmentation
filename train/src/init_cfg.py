@@ -6,11 +6,13 @@ import sly_globals as g
 from mmcv import ConfigDict
 from mmseg.apis import set_random_seed
 
-def init_class_weights(state, classes, default_bg_class_weight = 0.3):
+
+def init_class_weights(state, classes, default_bg_class_weight=0.3):
     if state["useClassWeights"]:
         return [float(weight) for weight in state["classWeights"].split(",")]
     else:
         return [1] * (len(classes) - 1) + [default_bg_class_weight]
+
 
 def init_cfg_decode_head(cfg, state, classes, class_weights, ind=0):
     head = dict(
@@ -19,7 +21,7 @@ def init_cfg_decode_head(cfg, state, classes, class_weights, ind=0):
             type=state["decodeHeadLoss"],
             loss_weight=float(state["decodeHeadLossWeight"]),
             class_weight=class_weights,
-        )
+        ),
     )
     if cfg.pretrained_model != "PointRend" or ind == 0:
         head["norm_cfg"] = cfg.norm_cfg
@@ -33,6 +35,7 @@ def init_cfg_decode_head(cfg, state, classes, class_weights, ind=0):
         head["loss_decode"]["reduction"] = "none"
     return head
 
+
 def init_cfg_auxiliary_head(cfg, state, classes, class_weights):
     head = dict(
         norm_cfg=cfg.norm_cfg,
@@ -40,8 +43,8 @@ def init_cfg_auxiliary_head(cfg, state, classes, class_weights):
         loss_decode=dict(
             type=state["auxiliaryHeadLoss"],
             loss_weight=float(state["auxiliaryHeadLossWeight"]),
-            class_weight=class_weights
-        )
+            class_weight=class_weights,
+        ),
     )
     if state["auxiliaryHeadLoss"] == "DiceLoss":
         head["loss_decode"]["smooth"] = state["auxiliarySmoothLoss"]
@@ -53,14 +56,13 @@ def init_cfg_auxiliary_head(cfg, state, classes, class_weights):
         head["loss_decode"]["reduction"] = "none"
     return head
 
+
 def init_cfg_optimizer(cfg, state):
     cfg.optimizer.type = state["optimizer"]
     cfg.optimizer.lr = state["lr"]
     cfg.optimizer.weight_decay = state["weightDecay"]
     if state["gradClipEnabled"]:
-        cfg.optimizer_config = dict(
-            grad_clip=dict(max_norm=state["maxNorm"], norm_type=2)
-        )
+        cfg.optimizer_config = dict(grad_clip=dict(max_norm=state["maxNorm"], norm_type=2))
     if hasattr(cfg.optimizer, "eps"):
         delattr(cfg.optimizer, "eps")
 
@@ -80,8 +82,9 @@ def init_cfg_optimizer(cfg, state):
         if state["optimizer"] == "NAdam":
             cfg.optimizer.momentum_decay = state["momentumDecay"]
 
+
 def init_cfg_pipelines(cfg):
-    
+
     train_steps_to_remove = ["RandomFlip", "PhotoMetricDistortion"]
     train_pipeline = []
 
@@ -91,18 +94,27 @@ def init_cfg_pipelines(cfg):
         elif config_step["type"] == "LoadAnnotations":
             config_step["reduce_zero_label"] = False
             train_pipeline.append(config_step)
-            train_pipeline.append(dict(type='SlyImgAugs', config_path=augs.augs_config_path))
+            train_pipeline.append(dict(type="SlyImgAugs", config_path=augs.augs_config_path))
             return
         elif config_step["type"] == "Resize":
             if any([x < y for x, y in zip(config_step["img_scale"][:2], cfg.crop_size[:2])]):
                 config_step["img_scale"] = cfg.crop_size
         elif config_step["type"] == "Normalize":
-            train_pipeline.append(dict(type='Normalize', **cfg.img_norm_cfg))
+            train_pipeline.append(dict(type="Normalize", **cfg.img_norm_cfg))
             return
         elif config_step["type"] in ["RandomCrop", "Pad"]:
-            config_step["crop_size" if config_step["type"] == "RandomCrop" else "size"] = cfg.crop_size
+            config_step["crop_size" if config_step["type"] == "RandomCrop" else "size"] = (
+                cfg.crop_size
+            )
         elif config_step["type"] == "Collect":
-            config_step["meta_keys"] = ('filename', 'ori_filename', 'ori_shape', 'img_shape', 'scale_factor', 'img_norm_cfg')
+            config_step["meta_keys"] = (
+                "filename",
+                "ori_filename",
+                "ori_shape",
+                "img_shape",
+                "scale_factor",
+                "img_norm_cfg",
+            )
 
         train_pipeline.append(config_step)
 
@@ -118,12 +130,15 @@ def init_cfg_pipelines(cfg):
     test_pipeline = cfg.data.test.pipeline
     for config_step in test_pipeline:
         if config_step["type"] == "MultiScaleFlipAug":
-            if config_step["img_scale"][0] < cfg.crop_size[0] or config_step["img_scale"][1] < cfg.crop_size[1]:
+            if (
+                config_step["img_scale"][0] < cfg.crop_size[0]
+                or config_step["img_scale"][1] < cfg.crop_size[1]
+            ):
                 config_step["img_scale"] = cfg.crop_size
             transform_pipeline = []
             for transform_step in config_step["transforms"]:
                 if transform_step["type"] == "Normalize":
-                    transform_pipeline.append(dict(type='Normalize', **cfg.img_norm_cfg))
+                    transform_pipeline.append(dict(type="Normalize", **cfg.img_norm_cfg))
                     continue
                 elif transform_step["type"] == "Resize":
                     transform_step["keep_ratio"] = False
@@ -132,7 +147,6 @@ def init_cfg_pipelines(cfg):
 
     cfg.val_pipeline = test_pipeline
     cfg.test_pipeline = test_pipeline
-    
 
 
 def init_cfg_splits(cfg, img_dir, ann_dir, classes, palette):
@@ -144,8 +158,8 @@ def init_cfg_splits(cfg, img_dir, ann_dir, classes, palette):
     cfg.data.train.split = splits.train_set_path
     cfg.data.train.classes = classes
     cfg.data.train.palette = palette
-    cfg.data.train.img_suffix = ''
-    cfg.data.train.seg_map_suffix = '.png'
+    cfg.data.train.img_suffix = ""
+    cfg.data.train.seg_map_suffix = ".png"
     if hasattr(cfg.data.train, "times"):
         delattr(cfg.data.train, "times")
     if hasattr(cfg.data.train, "dataset"):
@@ -159,8 +173,8 @@ def init_cfg_splits(cfg, img_dir, ann_dir, classes, palette):
     cfg.data.val.split = splits.val_set_path
     cfg.data.val.classes = classes
     cfg.data.val.palette = palette
-    cfg.data.val.img_suffix = ''
-    cfg.data.val.seg_map_suffix = '.png'
+    cfg.data.val.img_suffix = ""
+    cfg.data.val.seg_map_suffix = ".png"
 
     cfg.data.test.type = cfg.dataset_type
     cfg.data.test.data_root = cfg.data_root
@@ -170,12 +184,12 @@ def init_cfg_splits(cfg, img_dir, ann_dir, classes, palette):
     cfg.data.test.split = None
     cfg.data.test.classes = classes
     cfg.data.test.palette = palette
-    cfg.data.test.img_suffix = ''
-    cfg.data.test.seg_map_suffix = '.png'
+    cfg.data.test.img_suffix = ""
+    cfg.data.test.seg_map_suffix = ".png"
 
 
 def init_cfg_training(cfg, state):
-    cfg.dataset_type = 'SuperviselyDataset'
+    cfg.dataset_type = "SuperviselyDataset"
     cfg.data_root = g.project_seg_dir
 
     cfg.data.samples_per_gpu = state["batchSizePerGPU"]
@@ -183,9 +197,12 @@ def init_cfg_training(cfg, state):
     cfg.data.persistent_workers = True
 
     # TODO: sync with state["gpusId"] if it will be needed
-    cfg.gpu_ids = range(1)
+    cfg.gpu_ids = [state["selectedDevice"]]
+    # cfg.gpu_ids = range(1)
+
     cfg.img_norm_cfg = dict(
-        mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+        mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True
+    )
     cfg.crop_size = (state["input_size"]["value"]["width"], state["input_size"]["value"]["height"])
     cfg.load_from = g.local_weights_path
 
@@ -199,9 +216,8 @@ def init_cfg_training(cfg, state):
         delattr(cfg.runner, "max_iters")
 
     cfg.log_config.interval = state["logConfigInterval"]
-    cfg.log_config.hooks = [
-        dict(type='SuperviselyLoggerHook', by_epoch=False)
-    ]
+    cfg.log_config.hooks = [dict(type="SuperviselyLoggerHook", by_epoch=False)]
+
 
 def init_cfg_eval(cfg, state):
     cfg.evaluation.interval = state["valInterval"]
@@ -211,17 +227,22 @@ def init_cfg_eval(cfg, state):
     cfg.evaluation.out_dir = g.checkpoints_dir
     cfg.evaluation.by_epoch = True
 
+
 def init_cfg_checkpoint(cfg, state, classes, palette):
     cfg.checkpoint_config.interval = state["checkpointInterval"]
     cfg.checkpoint_config.by_epoch = True
-    cfg.checkpoint_config.max_keep_ckpts = state["maxKeepCkpts"] if state["maxKeepCkptsEnabled"] else None
+    cfg.checkpoint_config.max_keep_ckpts = (
+        state["maxKeepCkpts"] if state["maxKeepCkptsEnabled"] else None
+    )
     cfg.checkpoint_config.save_last = state["saveLast"]
     cfg.checkpoint_config.out_dir = g.checkpoints_dir
     cfg.checkpoint_config.meta = dict(
         # mmseg_version=f'{__version__}+{get_git_hash()[:7]}',
         # config=cfg.pretty_text,
         CLASSES=classes,
-        PALETTE=palette)
+        PALETTE=palette,
+    )
+
 
 def init_cfg_lr(cfg, state):
     lr_config = dict(
@@ -230,7 +251,7 @@ def init_cfg_lr(cfg, state):
         warmup=state["warmup"] if state["useWarmup"] else None,
         warmup_by_epoch=state["warmupByEpoch"],
         warmup_iters=state["warmupIters"],
-        warmup_ratio=state["warmupRatio"]
+        warmup_ratio=state["warmupRatio"],
     )
     if state["lrPolicy"] == "Step":
         steps = [int(step) for step in state["lr_step"].split(",")]
@@ -257,7 +278,9 @@ def init_cfg_lr(cfg, state):
         lr_config["min_lr"] = state["minLR"] if state["minLREnabled"] else None
         lr_config["min_lr_ratio"] = state["minLRRatio"] if not state["minLREnabled"] else None
         lr_config["periods"] = [int(period) for period in state["periods"].split(",")]
-        lr_config["restart_weights"] = [float(weight) for weight in state["restartWeights"].split(",")]
+        lr_config["restart_weights"] = [
+            float(weight) for weight in state["restartWeights"].split(",")
+        ]
     elif state["lrPolicy"] == "Cyclic":
         lr_config["target_ratio"] = (state["highestLRRatio"], state["lowestLRRatio"])
         lr_config["cyclic_times"] = state["cyclicTimes"]
@@ -273,6 +296,7 @@ def init_cfg_lr(cfg, state):
         lr_config["final_div_factor"] = state["finalDivFactor"]
         lr_config["three_phase"] = state["threePhase"]
     cfg.lr_config = lr_config
+
 
 def init_cfg_model(cfg, state, classes):
     class_weights = init_class_weights(state, classes)
@@ -304,6 +328,7 @@ def init_cfg_model(cfg, state, classes):
             head = init_cfg_auxiliary_head(cfg, state, classes, class_weights)
             for key in head:
                 cfg.model.auxiliary_head[key] = head[key]
+
 
 def init_cfg(state, img_dir, ann_dir, classes, palette):
     cfg = architectures.cfg

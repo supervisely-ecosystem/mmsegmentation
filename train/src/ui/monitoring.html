@@ -1,134 +1,217 @@
-<sly-card title="Training progress"
-          subtitle="Task progress, detailed logs, metrics charts, and other visualizations"
-          :options="{collapsable: true}"
-          :collapsed.sync="state.collapsed7"
-          :disabled="{disabled: state.disabled7, message: 'Finish previous steps before training the model'}"
-          ref="step7"
+<sly-card
+	title="Training progress"
+	subtitle="Task progress, detailed logs, metrics charts, and other visualizations"
+	:options="{collapsable: true}"
+	:collapsed.sync="state.collapsed7"
+	:disabled="{enabled: state.disabled7, message: 'Finish previous steps before training the model'}"
+	ref="step7"
 >
-    <el-button v-if="!state.done7"
-               type="primary" class="regular"
-               @click="state.started = true; command('train')"
-               :loading="state.started"
-    >
-        <i class="zmdi zmdi-play mr5"></i> Train
-    </el-button>
-    <div v-if="data.outputUrl">
-        <sly-field title="Training artifacts"
-                   description="Training artifacts has been uploaded to Team Files">
-            <a slot="title" target="_blank" :href="`${data.outputUrl}`">{{data.outputName}}</a>
-            <sly-icon slot="icon" :options="{ color: '#33c94c', bgColor: '#d9f7e4', rounded: false }">
-                <i class="zmdi zmdi-folder"></i>
-            </sly-icon>
-        </sly-field>
-        <div>
-            <i class="zmdi zmdi-check-circle mr5" style="color: #13ce66"></i>
-            <span style="color: #5a6772;">Training has been successfully finished</span>
-        </div>
-    </div>
-    <sly-field v-if="state.preparingData" class="mt10">
-        <b style="color: #20a0ff">Preparing segmentation data (it may take a few minutes)...</b>
-    </sly-field>
+	<sly-field title="Select Device">
+		<div>
+			<el-select
+				v-model="state.selectedDevice"
+				placeholder="Select Device"
+				:loading="state.deviceLoading"
+			>
+				<div v-if="data.availableDevices">
+					<el-option
+						v-for="item in data.availableDevices"
+						:key="item"
+						:label="item.label"
+						:value="item.value"
+					>
+						<span v-if="item.right_text !== null" style="float: left"
+							>{{ item.label }}</span
+						>
+						<span
+							v-if="item.right_text !== null"
+							style="float: right; color: #8492a6; font-size: 13px"
+							>{{ item.right_text }}</span
+						>
+					</el-option>
+				</div>
+			</el-select>
 
-    <sly-field v-if="data.eta" class="mt10"
-               title="ETA"
-               description="Gives an estimate of roughly how long the whole training process will take">
-        <b style="color: #20a0ff"><i class="zmdi zmdi-time-countdown mr5"></i>{{data.eta}}</b>
-    </sly-field>
+			<el-button
+				v-if="!state.done7"
+				type="text"
+				class="regular"
+				@click="state.deviceLoading = true; command('refresh_devices')"
+			>
+				<i class="zmdi zmdi-refresh"></i>
+			</el-button>
+		</div>
+	</sly-field>
 
-    <div v-if="data.progressUploadDir && !data.outputUrl" class="mt10">
-        <div style="color: #20a0ff">
-            {{data.progressUploadDir}}: {{data.progressCurrentUploadDir}} / {{data.progressTotalUploadDir}}
-        </div>
-        <el-progress :percentage="data.progressPercentUploadDir"></el-progress>
-    </div>
-    <div v-if="data.progressEpoch" class="mt10">
-        <div style="color: #20a0ff">
-            {{data.progressEpoch}}: {{data.progressCurrentEpoch}} / {{data.progressTotalEpoch}}
-        </div>
-        <el-progress :percentage="data.progressPercentEpoch"></el-progress>
-    </div>
-    <div v-if="data.progressIter" class="mt10">
-        <div v-if="!state.isValidation" style="color: #20a0ff">
-            {{data.progressIter}}: {{data.progressCurrentIter}} / {{data.progressTotalIter}}
-        </div>
-        <div v-else style="color: #20a0ff">
-            Validation...
-        </div>
-        <el-progress :percentage="data.progressPercentIter"></el-progress>
-    </div>
+	<div>
+		<el-button
+			v-if="!state.done7"
+			type="primary"
+			class="regular"
+			@click="state.started = true; command('train')"
+			:loading="state.started"
+		>
+			<i class="zmdi zmdi-play mr5"></i> Train
+		</el-button>
+	</div>
+	<div v-if="data.outputUrl">
+		<sly-field
+			title="Training artifacts"
+			description="Training artifacts has been uploaded to Team Files"
+		>
+			<a slot="title" target="_blank" :href="`${data.outputUrl}`"
+				>{{data.outputName}}</a
+			>
+			<sly-icon
+				slot="icon"
+				:options="{ color: '#33c94c', bgColor: '#d9f7e4', rounded: false }"
+			>
+				<i class="zmdi zmdi-folder"></i>
+			</sly-icon>
+		</sly-field>
+		<div>
+			<i class="zmdi zmdi-check-circle mr5" style="color: #13ce66"></i>
+			<span style="color: #5a6772"
+				>Training has been successfully finished</span
+			>
+		</div>
+	</div>
+	<sly-field v-if="state.preparingData" class="mt10">
+		<b style="color: #20a0ff"
+			>Preparing segmentation data (it may take a few minutes)...</b
+		>
+	</sly-field>
 
-    <div class="mt15" v-if="state.started || state.done7">
-        <hr class="mt10 mb10" style="border: 0; border-top: 1px solid rgba(0,0,0,.12);"/>
-        <sly-field title="Smoothing" description="Change the smoothing of line charts">
-            <sly-icon slot="icon" :options="{ color: '#006ad4', bgColor: '#bbe2ff', rounded: false }">
-                <i class="zmdi zmdi-trending-up"></i>
-            </sly-icon>
-            <el-slider
-                    :value="state.smoothing"
-                    :min="0" :max="0.95" :step="0.05" show-input
-                    style="width: 450px;"
-                    @input="(val)=>{
+	<sly-field
+		v-if="data.eta"
+		class="mt10"
+		title="ETA"
+		description="Gives an estimate of roughly how long the whole training process will take"
+	>
+		<b style="color: #20a0ff"
+			><i class="zmdi zmdi-time-countdown mr5"></i>{{data.eta}}</b
+		>
+	</sly-field>
+
+	<div v-if="data.progressUploadDir && !data.outputUrl" class="mt10">
+		<div style="color: #20a0ff">
+			{{data.progressUploadDir}}: {{data.progressCurrentUploadDir}} /
+			{{data.progressTotalUploadDir}}
+		</div>
+		<el-progress :percentage="data.progressPercentUploadDir"></el-progress>
+	</div>
+	<div v-if="data.progressEpoch" class="mt10">
+		<div style="color: #20a0ff">
+			{{data.progressEpoch}}: {{data.progressCurrentEpoch}} /
+			{{data.progressTotalEpoch}}
+		</div>
+		<el-progress :percentage="data.progressPercentEpoch"></el-progress>
+	</div>
+	<div v-if="data.progressIter" class="mt10">
+		<div v-if="!state.isValidation" style="color: #20a0ff">
+			{{data.progressIter}}: {{data.progressCurrentIter}} /
+			{{data.progressTotalIter}}
+		</div>
+		<div v-else style="color: #20a0ff">Validation...</div>
+		<el-progress :percentage="data.progressPercentIter"></el-progress>
+	</div>
+
+	<div class="mt15" v-if="state.started || state.done7">
+		<hr
+			class="mt10 mb10"
+			style="border: 0; border-top: 1px solid rgba(0, 0, 0, 0.12)"
+		/>
+		<sly-field
+			title="Smoothing"
+			description="Change the smoothing of line charts"
+		>
+			<sly-icon
+				slot="icon"
+				:options="{ color: '#006ad4', bgColor: '#bbe2ff', rounded: false }"
+			>
+				<i class="zmdi zmdi-trending-up"></i>
+			</sly-icon>
+			<el-slider
+				:value="state.smoothing"
+				:min="0"
+				:max="0.95"
+				:step="0.05"
+				show-input
+				style="width: 450px"
+				@input="(val)=>{
                                 state.smoothing = val;
                                 command('change_smoothing')
                             }"
-            >
-            </el-slider>
-        </sly-field>
+			>
+			</el-slider>
+		</sly-field>
 
-        <sly-field title="Main training charts" description="Real-time training metrics">
-            <div class="fflex">
-                <sly-line-chart
-                        style="width: 35%;"
-                        :options.sync="state.chartLR.options"
-                        :content="state.chartLR.series">
-                </sly-line-chart>
+		<sly-field
+			title="Main training charts"
+			description="Real-time training metrics"
+		>
+			<div class="fflex">
+				<sly-line-chart
+					style="width: 35%"
+					:options.sync="state.chartLR.options"
+					:content="state.chartLR.series"
+				>
+				</sly-line-chart>
 
-                <sly-line-chart
-                        style="width: 35%;"
-                        :options.sync="state.chartTrainLoss.options"
-                        :content="state.chartTrainLoss.series">
-                </sly-line-chart>
-            </div>
-        </sly-field>
-        <sly-field v-for="metric in data.availableMetrics"
-                   v-if="state.evalMetrics.includes(metric)"
-                   :title="metric.slice(1)">
-            <div class="fflex">
-                <sly-line-chart
-                    v-for="mean_chart in state.mean_charts"
-                    v-if="metric === mean_chart.metric"
-                    style="width: 35%;"
-                    :options.sync="mean_chart.options"
-                    :content="mean_chart.series">
-                </sly-line-chart>
-                <sly-line-chart
-                    v-for="class_chart in state.class_charts"
-                    v-if="metric === class_chart.metric"
-                    style="width: 35%;"
-                    :options.sync="class_chart.options"
-                    :content="class_chart.series">
-                </sly-line-chart>
-            </div>
-        </sly-field>
+				<sly-line-chart
+					style="width: 35%"
+					:options.sync="state.chartTrainLoss.options"
+					:content="state.chartTrainLoss.series"
+				>
+				</sly-line-chart>
+			</div>
+		</sly-field>
+		<sly-field
+			v-for="metric in data.availableMetrics"
+			v-if="state.evalMetrics.includes(metric)"
+			:title="metric.slice(1)"
+		>
+			<div class="fflex">
+				<sly-line-chart
+					v-for="mean_chart in state.mean_charts"
+					v-if="metric === mean_chart.metric"
+					style="width: 35%"
+					:options.sync="mean_chart.options"
+					:content="mean_chart.series"
+				>
+				</sly-line-chart>
+				<sly-line-chart
+					v-for="class_chart in state.class_charts"
+					v-if="metric === class_chart.metric"
+					style="width: 35%"
+					:options.sync="class_chart.options"
+					:content="class_chart.series"
+				>
+				</sly-line-chart>
+			</div>
+		</sly-field>
 
-        <sly-field title="System metrics" description="Time and memory">
-            <div class="fflex">
-                <sly-line-chart
-                    style="width: 33%;"
-                    :options.sync="state.chartTime.options"
-                    :content="state.chartTime.series">
-                </sly-line-chart>
-                <sly-line-chart
-                        style="width: 33%;"
-                        :options.sync="state.chartDataTime.options"
-                        :content="state.chartDataTime.series">
-                </sly-line-chart>
-                <sly-line-chart
-                        style="width: 33%;"
-                        :options.sync="state.chartMemory.options"
-                        :content="state.chartMemory.series">
-                </sly-line-chart>
-            </div>
-        </sly-field>
-    </div>
+		<sly-field title="System metrics" description="Time and memory">
+			<div class="fflex">
+				<sly-line-chart
+					style="width: 33%"
+					:options.sync="state.chartTime.options"
+					:content="state.chartTime.series"
+				>
+				</sly-line-chart>
+				<sly-line-chart
+					style="width: 33%"
+					:options.sync="state.chartDataTime.options"
+					:content="state.chartDataTime.series"
+				>
+				</sly-line-chart>
+				<sly-line-chart
+					style="width: 33%"
+					:options.sync="state.chartMemory.options"
+					:content="state.chartMemory.series"
+				>
+				</sly-line-chart>
+			</div>
+		</sly-field>
+	</div>
 </sly-card>
