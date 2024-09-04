@@ -61,7 +61,7 @@ def init_devices():
     gpu_info = agent_info.gpu_info
     device_count = gpu_info["device_count"]
     if device_count == 0:
-        raise ValueError("No GPU devices available")
+        return []
 
     devices_names = gpu_info["device_names"]
     devices_ids = [f"cuda:{i}" for i in range(device_count)]
