@@ -34,7 +34,6 @@ task_id = my_app.task_id
 team_id = int(os.environ["context.teamId"])
 workspace_id = int(os.environ["context.workspaceId"])
 project_id = int(os.environ["modal.state.slyProjectId"])
-agent_id = api.task.get_info_by_id(task_id)["agentId"]
 
 project_info = api.project.get_info_by_id(project_id)
 

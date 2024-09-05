@@ -51,33 +51,32 @@ def init(data, state):
 
 
 def init_devices():
-    available_agents = g.api.agent.get_list_available(g.team_id, True)
-    agent_info = None
-    for agent in available_agents:
-        if agent.id == g.agent_id:
-            agent_info = agent
-            break
-
-    gpu_info = agent_info.gpu_info
-    device_count = gpu_info["device_count"]
-    if device_count == 0:
-        return []
-
-    devices_names = gpu_info["device_names"]
-    devices_ids = [f"cuda:{i}" for i in range(device_count)]
-    devices_ids_int = [i for i in range(device_count)]
-    devices_memory = gpu_info["device_memory"]
+    try:
+        from torch import cuda
+    except ImportError as ie:
+        sly.logger.warn(
+            "Unable to import Torch. Please, run 'pip install torch' to resolve the issue.",
+            extra={"error message": str(ie)},
+        )
+        return
 
     devices = []
-    convert_to_gb = lambda number: round(number / 1024**3, 1)
-    for device_name, device_id, device_id_int, device_memory in zip(
-        devices_names, devices_ids, devices_ids_int, devices_memory
-    ):
+    cuda.init()
+    if not cuda.is_available():
+        sly.logger.warn("CUDA is not available")
+        return
+
+    for idx in range(cuda.device_count()):
+        current_device = f"cuda:{idx}"
+        full_device_name = f"{cuda.get_device_name(idx)} ({current_device})"
+        free_mem, total_mem = cuda.mem_get_info(current_device)
+        convert_to_gb = lambda number: round(number / 1024**3, 1)
+        right_text = f"{convert_to_gb(total_mem - free_mem)} GB / {convert_to_gb(total_mem)} GB"
         device_info = {
-            "value": device_id_int,
-            "label": f"{device_name} ({device_id})",
-            "right_text": f"{convert_to_gb(device_memory['reserved'])} / {convert_to_gb(device_memory['total'])} GB",
-            "free": convert_to_gb(device_memory["available"]),
+            "value": idx,
+            "label": full_device_name,
+            "right_text": right_text,
+            "free": free_mem,
         }
         devices.append(device_info)
     return devices
