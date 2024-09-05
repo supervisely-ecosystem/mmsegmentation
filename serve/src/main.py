@@ -33,6 +33,7 @@ from supervisely.app.widgets import (
     Widget,
 )
 from supervisely.io.fs import silent_remove
+import workflow as w
 
 root_source_path = str(Path(__file__).parents[2])
 app_source_path = str(Path(__file__).parents[1])
@@ -285,6 +286,8 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         ]
         self._model_meta = sly.ProjectMeta(obj_classes=sly.ObjClassCollection(obj_classes))
         print(f"✅ Model has been successfully loaded on {device.upper()} device")
+        if model_source == "Custom models":
+             w.workflow_input(self.api, custom_weights_link)
 
     def get_info(self) -> dict:
         info = super().get_info()

@@ -62,3 +62,5 @@ if os.path.isdir(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}"):
     shutil.copytree(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}/configs", configs_dir)
     models_cnt = len(os.listdir(configs_dir)) - 1
     sly.logger.info(f"Found {models_cnt} folders in {configs_dir} directory.")
+
+sly_mmseg_generated_metadata = None # for project Workflow purposes
