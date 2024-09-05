@@ -19,3 +19,5 @@ RUN pip3 install -r dev_requirements.txt
 RUN mkdir -p /tmp/mmseg \
     && wget https://github.com/open-mmlab/mmsegmentation/archive/refs/tags/v0.23.0.tar.gz -P /tmp/mmseg \
     && tar -xvf /tmp/mmseg/v0.23.0.tar.gz -C /tmp/mmseg
+
+LABEL python_sdk_version=6.73.178
