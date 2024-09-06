@@ -257,8 +257,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             palette = cfg.checkpoint_config.meta.PALETTE
             self.selected_model_name = cfg.pretrained_model
             self.checkpoint_name = "custom"
-            self.dataset_name = "custom"            
-            w.workflow_input(self.api, custom_weights_link)
+            self.dataset_name = "custom"
         elif model_source == "Pretrained models":
             dataset_class_name = cfg.dataset_type
             classes = str_to_class(dataset_class_name).CLASSES
@@ -372,6 +371,13 @@ if sly.is_production() or use_gui_for_local_debug is True:
     # this code block is running on Supervisely platform in production
     # just ignore it during development
     m.serve()
+    sly.logger.debug("Workflow: Start processing Input")    
+    if m.gui.get_model_source() == "Custom models":
+        sly.logger.debug("Workflow: Custom model detected")
+        w.workflow_input(api, m.gui.get_custom_link())
+    else:
+        sly.logger.debug("Workflow: Pretrained model detected. No need to set Input")
+    sly.logger.debug("Workflow: Finish processing Input")
 else:
     # for local development and debugging without GUI
     models = m.get_models(add_links=True)
