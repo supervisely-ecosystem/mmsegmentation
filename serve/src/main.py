@@ -203,7 +203,6 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                     f"Config file not found: {config_url}. "
                     "Config should be placed in the same directory as the checkpoint file."
                 )
-
         try:
             cfg = Config.fromfile(local_config_path)
             cfg.model.pretrained = None
@@ -216,6 +215,15 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
 
             self.model.cfg = cfg  # save the config in the model for convenience
             self.model.to(device)
+            # -------------------------------------- Add Workflow Input -------------------------------------- #
+            sly.logger.debug("Workflow: Start processing Input")
+            if model_source == "Custom models":
+                sly.logger.debug("Workflow: Custom model detected")
+                w.workflow_input(api, checkpoint_url)
+            else:
+                sly.logger.debug("Workflow: Pretrained model detected. No need to set Input")
+            sly.logger.debug("Workflow: Finish processing Input")
+            # ----------------------------------------------- - ---------------------------------------------- #
             self.model.eval()
             self.model = revert_sync_batchnorm(self.model)
 
@@ -373,13 +381,6 @@ if sly.is_production() or use_gui_for_local_debug is True:
     # this code block is running on Supervisely platform in production
     # just ignore it during development
     m.serve()
-    sly.logger.debug("Workflow: Start processing Input")    
-    if m.model_source_tabs.get_active_tab() == "Custom models":
-        sly.logger.debug("Workflow: Custom model detected")
-        w.workflow_input(api, m.get_params_from_gui()["checkpoint_url"])
-    else:
-        sly.logger.debug("Workflow: Pretrained model detected. No need to set Input")
-    sly.logger.debug("Workflow: Finish processing Input")
 else:
     # for local development and debugging without GUI
     models = m.get_models(add_links=True)
