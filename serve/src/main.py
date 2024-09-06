@@ -257,7 +257,8 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             palette = cfg.checkpoint_config.meta.PALETTE
             self.selected_model_name = cfg.pretrained_model
             self.checkpoint_name = "custom"
-            self.dataset_name = "custom"
+            self.dataset_name = "custom"            
+            w.workflow_input(self.api, custom_weights_link)
         elif model_source == "Pretrained models":
             dataset_class_name = cfg.dataset_type
             classes = str_to_class(dataset_class_name).CLASSES
@@ -286,8 +287,6 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         ]
         self._model_meta = sly.ProjectMeta(obj_classes=sly.ObjClassCollection(obj_classes))
         print(f"✅ Model has been successfully loaded on {device.upper()} device")
-        if model_source == "Custom models":
-             w.workflow_input(self.api, custom_weights_link)
 
     def get_info(self) -> dict:
         info = super().get_info()
