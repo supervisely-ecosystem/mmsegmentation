@@ -372,9 +372,9 @@ if sly.is_production() or use_gui_for_local_debug is True:
     # just ignore it during development
     m.serve()
     sly.logger.debug("Workflow: Start processing Input")    
-    if m.gui.get_model_source() == "Custom models":
+    if m.model_source_tabs.get_active_tab() == "Custom models":
         sly.logger.debug("Workflow: Custom model detected")
-        w.workflow_input(api, m.gui.get_custom_link())
+        w.workflow_input(api, m.get_params_from_gui()["checkpoint_url"])
     else:
         sly.logger.debug("Workflow: Pretrained model detected. No need to set Input")
     sly.logger.debug("Workflow: Finish processing Input")
