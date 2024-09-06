@@ -240,12 +240,14 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                 weights_path, config_path = self.download_custom_files(
                     custom_weights_link, model_dir
                 )
+            sly.logger.debug(f"Model source if GUI is not None: {model_source}")
         else:
             # for local debug only
             model_source = "Pretrained models"
             weights_path, config_path = self.download_pretrained_files(
                 selected_checkpoint, model_dir
             )
+            sly.logger.debug(f"Model source if GUI is None: {model_source}")
 
         cfg = Config.fromfile(config_path)
         cfg.model.pretrained = None
