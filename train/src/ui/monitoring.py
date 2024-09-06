@@ -12,6 +12,7 @@ from mmseg.apis import train_segmentor
 from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from init_cfg import init_cfg
+import workflow as w
 
 # ! required to be left here despite not being used
 import sly_imgaugs
@@ -216,7 +217,7 @@ def upload_artifacts_and_log_progress():
     )
 
     # generate metadata file
-    g.sly_mmseg.generate_metadata(
+    g.sly_mmseg_generated_metadata = g.sly_mmseg.generate_metadata(
         app_name=g.sly_mmseg.app_name,
         task_id=g.task_id,
         artifacts_folder=remote_artifacts_dir,
@@ -347,7 +348,10 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         ]
         g.api.app.set_fields(g.task_id, fields)
 
-        # stop application
+        w.workflow_input(api, g.project_info, state)
+        w.workflow_output(api, g.sly_mmseg_generated_metadata, state)
+
+        # stop application        
         g.my_app.stop()
     except Exception as e:
         g.api.app.set_field(task_id, "state.started", False)

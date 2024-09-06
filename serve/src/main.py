@@ -33,6 +33,7 @@ from supervisely.app.widgets import (
     Widget,
 )
 from supervisely.io.fs import silent_remove
+import workflow as w
 
 root_source_path = str(Path(__file__).parents[2])
 app_source_path = str(Path(__file__).parents[1])
@@ -202,7 +203,6 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                     f"Config file not found: {config_url}. "
                     "Config should be placed in the same directory as the checkpoint file."
                 )
-
         try:
             cfg = Config.fromfile(local_config_path)
             cfg.model.pretrained = None
@@ -215,6 +215,15 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
 
             self.model.cfg = cfg  # save the config in the model for convenience
             self.model.to(device)
+            # -------------------------------------- Add Workflow Input -------------------------------------- #
+            sly.logger.debug("Workflow: Start processing Input")
+            if model_source == "Custom models":
+                sly.logger.debug("Workflow: Custom model detected")
+                w.workflow_input(api, checkpoint_url)
+            else:
+                sly.logger.debug("Workflow: Pretrained model detected. No need to set Input")
+            sly.logger.debug("Workflow: Finish processing Input")
+            # ----------------------------------------------- - ---------------------------------------------- #
             self.model.eval()
             self.model = revert_sync_batchnorm(self.model)
 
@@ -239,12 +248,14 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                 weights_path, config_path = self.download_custom_files(
                     custom_weights_link, model_dir
                 )
+            sly.logger.debug(f"Model source if GUI is not None: {model_source}")
         else:
             # for local debug only
             model_source = "Pretrained models"
             weights_path, config_path = self.download_pretrained_files(
                 selected_checkpoint, model_dir
             )
+            sly.logger.debug(f"Model source if GUI is None: {model_source}")
 
         cfg = Config.fromfile(config_path)
         cfg.model.pretrained = None
