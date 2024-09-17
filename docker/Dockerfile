@@ -16,7 +16,9 @@ RUN pip3 install yapf==0.40.1
 # COPY dev_requirements.txt dev_requirements.txt
 # RUN pip3 install -r dev_requirements.txt
 
-RUN pip3 install supervisely==6.73.178
+RUN pip3 install supervisely==6.73.189
+RUN pip3 install setuptools==69.5.1
+
 RUN pip3 install openmim
 RUN pip3 install ffmpeg-python==0.2.0
 RUN pip3 install pyyaml==6.0
@@ -25,4 +27,4 @@ RUN mkdir -p /tmp/mmseg \
     && wget https://github.com/open-mmlab/mmsegmentation/archive/refs/tags/v0.23.0.tar.gz -P /tmp/mmseg \
     && tar -xvf /tmp/mmseg/v0.23.0.tar.gz -C /tmp/mmseg
 
-LABEL python_sdk_version=6.73.178
+LABEL python_sdk_version=6.73.189
