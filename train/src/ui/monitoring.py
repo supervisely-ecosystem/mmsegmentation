@@ -195,15 +195,28 @@ def _save_link_to_ui(local_dir, app_url):
 def upload_artifacts_and_log_progress():
     _save_link_to_ui(g.artifacts_dir, g.my_app.app_url)
 
-    def upload_monitor(monitor, api: sly.Api, task_id, progress: sly.Progress):
+    current_progress = 0
+    last_read = 0
+
+    def upload_monitor(monitor, api: sly.Api, task_id, progress: sly.tqdm_sly):
+        nonlocal last_read, current_progress, dir_size
+
+        if monitor.bytes_read < last_read:
+            last_read = 0
+        elif 0 < monitor.bytes_read < 1024 * 16: # if next batch is less than 16 KB
+            last_read = 0
+        diff = monitor.bytes_read - last_read
+        last_read = monitor.bytes_read
+        current_progress += diff
         if progress.total == 0:
-            progress.set(monitor.bytes_read, monitor.len, report=False)
+            progress.set(current_progress, dir_size, report=False)
         else:
-            progress.set_current_value(monitor.bytes_read, report=False)
+            progress.set_current_value(current_progress, report=False)
         _update_progress_ui("UploadDir", g.api, g.task_id, progress)
 
+    dir_size = sly.fs.get_directory_size(g.artifacts_dir)
     progress = sly.Progress(
-        "Upload directory with training artifacts to Team Files", 0, is_size=True
+        "Upload directory with training artifacts to Team Files", dir_size, is_size=True
     )
     progress_cb = partial(upload_monitor, api=g.api, task_id=g.task_id, progress=progress)
 
