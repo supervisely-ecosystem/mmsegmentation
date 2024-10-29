@@ -32,6 +32,7 @@ from supervisely.app.widgets import (
     RadioTabs,
     Widget,
 )
+from supervisely.nn.inference import CheckpointInfo
 from supervisely.io.fs import silent_remove
 import workflow as w
 
@@ -230,6 +231,25 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         except KeyError as e:
             raise KeyError(f"Error loading config file: {local_config_path}. Error: {e}")
 
+        # Set checkpoint info
+        if model_source == "Pretrained models":
+            custom_checkpoint_path = None
+            checkpoint_name = os.path.splitext(checkpoint_name)[0]
+            model_name, architecture = "ConvNeXt", "ConvNeXt" # TODO: get model name and architecture from config
+        else:
+            custom_checkpoint_path = checkpoint_url
+            file_id = self.api.file.get_info_by_path(self.team_id, checkpoint_url).id
+            checkpoint_url = self.api.file.get_url(file_id)
+            model_name, architecture = "ConvNeXt", "ConvNeXt" # TODO: get model name and architecture from config
+        self.checkpoint_info = CheckpointInfo(
+            checkpoint_name=checkpoint_name,
+            model_name=model_name,
+            architecture=architecture,
+            checkpoint_url=checkpoint_url,
+            custom_checkpoint_path=custom_checkpoint_path,
+            model_source=model_source,
+        )
+
     def load_on_device(
         self,
         model_dir: str,
@@ -395,3 +415,13 @@ else:
     vis_path = "./demo_data/image_01_prediction.jpg"
     m.visualize(results, image_path, vis_path, thickness=0)
     print(f"predictions and visualization have been saved: {vis_path}")
+
+def parse_model_name(checkpoint_name: str):
+    # yolov8n
+    p = r"yolov(\d+)(\w)"
+    match = re.match(p, checkpoint_name.lower())
+    version = match.group(1)
+    variant = match.group(2)
+    model_name = f"YOLOv{version}{variant}"
+    architecture = f"YOLOv{version}"
+    return model_name, architecture
