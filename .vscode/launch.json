@@ -73,8 +73,8 @@
                 "PYTHONPATH": "${workspaceFolder}:${PYTHONPATH}",
                 "LOG_LEVEL": "DEBUG",
                 "ENV": "production",
-                "TEAM_ID": "277",
-                "WORKSPACE_ID": "403",
+                "TEAM_ID": "447",
+                "WORKSPACE_ID": "680",
                 "DEBUG_WITH_SLY_NET": "1",
                 "SLY_APP_DATA_DIR": "${workspaceFolder}/../results",
                 "USE_GUI": "1"

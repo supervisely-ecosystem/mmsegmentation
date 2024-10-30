@@ -415,13 +415,3 @@ else:
     vis_path = "./demo_data/image_01_prediction.jpg"
     m.visualize(results, image_path, vis_path, thickness=0)
     print(f"predictions and visualization have been saved: {vis_path}")
-
-def parse_model_name(checkpoint_name: str):
-    # yolov8n
-    p = r"yolov(\d+)(\w)"
-    match = re.match(p, checkpoint_name.lower())
-    version = match.group(1)
-    variant = match.group(2)
-    model_name = f"YOLOv{version}{variant}"
-    architecture = f"YOLOv{version}"
-    return model_name, architecture
