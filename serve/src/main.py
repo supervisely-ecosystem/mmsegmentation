@@ -227,6 +227,15 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             self.model.eval()
             self.model = revert_sync_batchnorm(self.model)
 
+            self.checkpoint_info = sly.nn.inference.CheckpointInfo(
+                checkpoint_name=checkpoint_name,
+                model_name=self.selected_model_name,
+                architecture=arch_type,
+                checkpoint_url=checkpoint_url,
+                custom_checkpoint_path=checkpoint_url,
+                model_source=model_source,
+            )
+
         except KeyError as e:
             raise KeyError(f"Error loading config file: {local_config_path}. Error: {e}")
 
