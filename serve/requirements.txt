@@ -1,2 +1,2 @@
-packaging==21.3
+setuptools==69.0.0
 git+https://github.com/supervisely/supervisely.git@inference-pr-meta-fix
