@@ -80,7 +80,16 @@ def init_devices():
             "free": free_mem,
         }
         devices.append(device_info)
-    return devices
+    # for debug, delete later
+    devices.append(
+        {
+            "value": 1,
+            "label": "DEBUG DEVICE",
+            "right_text": "some GB / some GB",
+            "free": 999999,
+        }
+    )
+    return sorted(devices, key=lambda x: x["free"], reverse=True)
 
 
 def init_chart(
