@@ -86,7 +86,7 @@ def init_devices():
             "value": 1,
             "label": "DEBUG DEVICE",
             "right_text": "some GB / some GB",
-            "free": 25 * 1024 * 3,
+            "free": 25 * 1024**3,
         }
     )
     return sorted(devices, key=lambda x: x["free"], reverse=True)
