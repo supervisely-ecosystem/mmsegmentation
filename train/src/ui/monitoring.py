@@ -12,6 +12,7 @@ from mmseg.apis import train_segmentor
 from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from init_cfg import init_cfg
+from sly_functions import get_bg_class_name
 import workflow as w
 
 # ! required to be left here despite not being used
@@ -245,7 +246,10 @@ def upload_artifacts_and_log_progress():
 
 
 def init_class_charts_series(state):
-    classes = state["selectedClasses"] + ["__bg__"]
+    classes = state["selectedClasses"]
+    bg = get_bg_class_name(classes)
+    if bg is None:
+        classes = classes + ["__bg__"]
     series = []
     for class_name in classes:
         series.append({"name": class_name, "data": []})
@@ -257,10 +261,11 @@ def init_class_charts_series(state):
     g.api.app.set_fields(g.task_id, fields)
 
 
-def prepare_segmentation_data(state, img_dir, ann_dir, palette):
+def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes=None):
+    target_classes = target_classes or state["selectedClasses"]
     temp_project_seg_dir = g.project_seg_dir + "_temp"
     sly.Project.to_segmentation_task(
-        g.project_dir, temp_project_seg_dir, target_classes=state["selectedClasses"]
+        g.project_dir, temp_project_seg_dir, target_classes=target_classes
     )
 
     datasets = os.listdir(temp_project_seg_dir)
@@ -306,21 +311,23 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         img_dir = "img"
         ann_dir = "seg"
         obj_classes = g.project_meta.obj_classes
-        if g.project_meta.get_obj_class("__bg__") is None:
+        cls_names = [obj_class.name for obj_class in obj_classes]
+        bg_name = get_bg_class_name(cls_names) or "__bg__"
+        if g.project_meta.get_obj_class(bg_name) is None:
             obj_classes = obj_classes.add(
-                sly.ObjClass(name="__bg__", geometry_type=sly.Bitmap, color=(0, 0, 0))
+                sly.ObjClass(name=bg_name, geometry_type=sly.Bitmap, color=(0, 0, 0))
             )
         classes_json = obj_classes.to_json()
         classes_json = [
             obj
             for obj in classes_json
-            if obj["title"] in state["selectedClasses"] or obj["title"] == "__bg__"
+            if obj["title"] in state["selectedClasses"] or obj["title"] == bg_name
         ]
         classes = [obj["title"] for obj in classes_json]
         palette = [obj["color"].lstrip("#") for obj in classes_json]
         palette = [[int(color[i : i + 2], 16) for i in (0, 2, 4)] for color in palette]
         if not os.path.exists(g.project_seg_dir):
-            prepare_segmentation_data(state, img_dir, ann_dir, palette)
+            prepare_segmentation_data(state, img_dir, ann_dir, palette, classes)
 
         cfg = init_cfg(state, img_dir, ann_dir, classes, palette)
         # print(f'Config:\n{cfg.pretty_text}') # TODO: debug
@@ -364,7 +371,7 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         w.workflow_input(api, g.project_info, state)
         w.workflow_output(api, g.sly_mmseg_generated_metadata, state)
 
-        # stop application        
+        # stop application
         g.my_app.stop()
     except Exception as e:
         g.api.app.set_field(task_id, "state.started", False)

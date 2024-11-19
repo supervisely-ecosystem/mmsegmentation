@@ -4,6 +4,7 @@ from mmcv.runner.hooks.logger.text import TextLoggerHook
 import supervisely as sly
 from sly_train_progress import get_progress_cb, set_progress, add_progress_to_request
 import sly_globals as g
+from sly_functions import get_bg_class_name
 import classes as cls
 import math
 
@@ -126,7 +127,11 @@ class SuperviselyLoggerHook(TextLoggerHook):
             for metric_name, metrics in class_metrics.items():
                 if f"m{metric_name}" not in g.evalMetrics:
                     continue
-                classes = cls.selected_classes + ["__bg__"]
+                bg = get_bg_class_name(cls.selected_classes)
+                if bg is None:
+                    classes = cls.selected_classes + ["__bg__"]
+                else:
+                    classes = cls.selected_classes
                 for class_ind, class_name in enumerate(classes):
                     fields.extend(
                         [
