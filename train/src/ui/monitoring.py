@@ -14,7 +14,7 @@ from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from init_cfg import init_cfg
 from sly_functions import get_bg_class_name, get_eval_results_dir_name
-from src.ui.splits import train_set, val_set
+from splits import train_set, val_set
 from supervisely.nn.inference import SessionJSON
 from supervisely._utils import abs_url, is_development, is_debug_with_sly_net
 import workflow as w
