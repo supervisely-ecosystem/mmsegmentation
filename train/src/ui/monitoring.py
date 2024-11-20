@@ -49,7 +49,7 @@ def init(data, state):
     init_progress("Epoch", data)
     init_progress("Iter", data)
     init_progress("UploadDir", data)
-    init_progress("progresBenchmark", data)
+    init_progress("Benchmark", data)
     data["eta"] = None
     state["isValidation"] = False
 
@@ -573,7 +573,7 @@ def train(api: sly.Api, task_id, context, state, app_logger):
             lnk = abs_url(lnk) if is_development() or is_debug_with_sly_net() else lnk
 
             fields = [
-                {"field": f"data.progresBenchmark", "payload": False},
+                {"field": f"data.progressBenchmark", "payload": False},
                 {"field": f"data.benchmarkUrl", "payload": lnk},
             ]
             g.api.app.set_fields(g.task_id, fields)
@@ -582,7 +582,7 @@ def train(api: sly.Api, task_id, context, state, app_logger):
             )
         except Exception as e:
             sly.logger.error(f"Model benchmark failed. {repr(e)}", exc_info=True)
-            g.api.app.set_field(task_id, "data.progresBenchmark", False)
+            g.api.app.set_field(task_id, "data.progressBenchmark", False)
             try:
                 if bm.dt_project_info:
                     g.api.project.remove(bm.dt_project_info.id)
