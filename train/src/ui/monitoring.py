@@ -380,30 +380,6 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         ]
         g.api.app.set_fields(g.task_id, fields)
 
-        best_filename = None
-        best_checkpoints = []
-        latest_checkpoint = None
-        other_checkpoints = []
-        for root, dirs, files in os.walk(g.checkpoints_dir):
-            for file_name in files:
-                path = os.path.join(root, file_name)
-                if file_name.endswith(".pth"):
-                    if file_name.startswith("best_"):
-                        best_checkpoints.append(path)
-                    elif file_name == "latest.pth":
-                        latest_checkpoint = path
-                    elif file_name.startswith("epoch_"):
-                        other_checkpoints.append(path)
-
-        if not state["saveBest"] and len(best_checkpoints) > 0:
-            for path in best_checkpoints:
-                sly.fs.silent_remove(path)
-            best_checkpoints = []
-
-        if not state["saveLast"] and latest_checkpoint is not None:
-            sly.fs.silent_remove(latest_checkpoint)
-            latest_checkpoint = None
-
         remote_dir = upload_artifacts_and_log_progress()
         file_info = api.file.get_info_by_path(g.team_id, os.path.join(remote_dir, _open_lnk_name))
         api.task.set_output_directory(task_id, file_info.id, remote_dir)
@@ -429,6 +405,21 @@ def train(api: sly.Api, task_id, context, state, app_logger):
             # creating_report.show()
 
             # 0. Find the best checkpoint
+            best_filename = None
+            best_checkpoints = []
+            latest_checkpoint = None
+            other_checkpoints = []
+            for root, dirs, files in os.walk(g.checkpoints_dir):
+                for file_name in files:
+                    path = os.path.join(root, file_name)
+                    if file_name.endswith(".pth"):
+                        if file_name.startswith("best_"):
+                            best_checkpoints.append(path)
+                        elif file_name == "latest.pth":
+                            latest_checkpoint = path
+                        elif file_name.startswith("epoch_"):
+                            other_checkpoints.append(path)
+
             if len(best_checkpoints) > 1:
                 best_checkpoints = sorted(best_checkpoints, key=lambda x: x, reverse=True)
             elif len(best_checkpoints) == 0:
@@ -476,7 +467,9 @@ def train(api: sly.Api, task_id, context, state, app_logger):
                 arch_type=arch_type,
             )
             m._load_model(deploy_params)
-            asyncio.set_event_loop(asyncio.new_event_loop()) # fix for the issue with the event loop
+            asyncio.set_event_loop(
+                asyncio.new_event_loop()
+            )  # fix for the issue with the event loop
             m.serve()
             session = SessionJSON(g.api, session_url="http://localhost:8000")
             if sly.fs.dir_exists(g.data_dir + "/benchmark"):
