@@ -79,7 +79,7 @@
 			>
 		</div>
 	</div>
-    <div v-if="data.benchmarkUrl">
+    <!-- <div v-if="data.benchmarkUrl">
         <sly-field title="" :description="Open the Model Benchmark evaluation report.">
             <a slot="title" target="_blank" :href="data.benchmarkUrl">Evaluation Report</a>
             <sly-icon
@@ -87,7 +87,7 @@
                 :options="{ color: '#dcb0ff', bgColor: '#faebff', className: 'zmdi zmdi-assignment' }"
             />
         </sly-field>
-    </div>
+    </div> -->
 	<sly-field v-if="state.preparingData" class="mt10">
 		<b style="color: #20a0ff"
 			>Preparing segmentation data (it may take a few minutes)...</b
@@ -112,13 +112,13 @@
 		</div>
 		<el-progress :percentage="data.progressPercentUploadDir"></el-progress>
 	</div>
-    <div v-if="data.progressBenchmark && !data.benchmarkUrl" class="mt10"></div>
+    <!-- <div v-if="data.progressBenchmark && !data.benchmarkUrl" class="mt10"></div>
 		<div style="color: #20a0ff">
 			{{data.progressBenchmark}}: {{data.progressCurrentBenchmark}} /
 			{{data.progressTotalBenchmark}}
 		</div>
 		<el-progress :percentage="data.progressPercentBenchmark"></el-progress>
-	</div>
+	</div> -->
 	<div v-if="data.progressEpoch" class="mt10">
 		<div style="color: #20a0ff">
 			{{data.progressEpoch}}: {{data.progressCurrentEpoch}} /
