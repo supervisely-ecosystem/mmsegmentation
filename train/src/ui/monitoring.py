@@ -399,6 +399,7 @@ def train(api: sly.Api, task_id, context, state, app_logger):
             from sly_mmsegm import MMSegmentationModelBench
             import torch
             from pathlib import Path
+            import asyncio
 
             dataset_infos = g.api.dataset.get_list(g.project_id, recursive=True)
             # creating_report.show()
@@ -466,6 +467,7 @@ def train(api: sly.Api, task_id, context, state, app_logger):
                 arch_type=arch_type,
             )
             m._load_model(deploy_params)
+            asyncio.set_event_loop(asyncio.new_event_loop()) # fix for the issue with the event loop
             m.serve()
             session = SessionJSON(g.api, session_url="http://localhost:8000")
             if sly.fs.dir_exists(g.data_dir + "/benchmark"):
