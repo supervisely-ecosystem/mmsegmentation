@@ -232,7 +232,7 @@ def init_cfg_checkpoint(cfg, state, classes, palette):
     cfg.checkpoint_config.interval = state["checkpointInterval"]
     cfg.checkpoint_config.by_epoch = True
     cfg.checkpoint_config.max_keep_ckpts = (
-        state["maxKeepCkpts"] if state["maxKeepCkptsEnabled"] else None
+        state["maxKeepCkpts"] if state["maxKeepCkptsEnabled"] else 0
     )
     cfg.checkpoint_config.save_last = state["saveLast"]
     cfg.checkpoint_config.out_dir = g.checkpoints_dir
