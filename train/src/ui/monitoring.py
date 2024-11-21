@@ -438,6 +438,7 @@ def train(api: sly.Api, task_id, context, state, app_logger):
             if len(best_checkpoints) == 0:
                 raise ValueError("No checkpoints found for evaluation.")
             best_checkpoint = Path(best_checkpoints[0])
+            sly.logger.info(f"Starting model benchmark with the checkpoint: {best_checkpoint!r}")
             best_filename = best_checkpoint.name
             workdir = best_checkpoint.parent
 

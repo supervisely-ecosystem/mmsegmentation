@@ -37,6 +37,7 @@ api = sly.Api.from_env()
 team_id = sly.env.team_id()
 
 models_meta_path = os.path.join(root_source_path, "models", "model_meta.json")
+configs_dir = os.path.join(root_source_path, "configs")
 
 def str_to_class(classname):
     return getattr(sys.modules[__name__], classname)
