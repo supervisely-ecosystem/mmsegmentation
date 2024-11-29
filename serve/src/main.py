@@ -227,6 +227,25 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             self.model.eval()
             self.model = revert_sync_batchnorm(self.model)
 
+            # Set checkpoint info
+            if model_source == "Pretrained models":
+                custom_checkpoint_path = None
+            else:
+                custom_checkpoint_path = checkpoint_url
+                file_id = self.api.file.get_info_by_path(self.team_id, checkpoint_url).id
+                checkpoint_url = self.api.file.get_url(file_id)
+            if arch_type is None:
+                arch_type = self.parse_arch_type(cfg)
+
+            self.checkpoint_info = sly.nn.inference.CheckpointInfo(
+                checkpoint_name=checkpoint_name,
+                model_name=self.selected_model_name,
+                architecture=arch_type,
+                checkpoint_url=checkpoint_url,
+                custom_checkpoint_path=custom_checkpoint_path,
+                model_source=model_source,
+            )
+
         except KeyError as e:
             raise KeyError(f"Error loading config file: {local_config_path}. Error: {e}")
 
@@ -353,6 +372,17 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                     }
                     model_config[model_meta["model_name"]]["checkpoints"].append(checkpoint_info)
         return model_config
+
+    def parse_arch_type(self, cfg: Config) -> str:
+        try:
+            arch_type = cfg.model.backbone.type
+            try:
+                arch_type += f"_{cfg.model.backbone.arch}"
+            except:
+                pass
+            return arch_type
+        except Exception as e:
+            sly.logger.warning(f"Error parsing model name: {e}")
 
     def get_classes(self) -> List[str]:
         return self.class_names  # e.g. ["cat", "dog", ...]
