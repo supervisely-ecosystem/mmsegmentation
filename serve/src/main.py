@@ -231,8 +231,9 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             if model_source == "Pretrained models":
                 custom_checkpoint_path = None
             else:
+                sly.logger.info(f"Custom checkpoint path: {checkpoint_url}")
                 custom_checkpoint_path = checkpoint_url
-                file_id = self.api.file.get_info_by_path(self.team_id, checkpoint_url).id
+                file_id = self.api.file.get_info_by_path(team_id, checkpoint_url).id
                 checkpoint_url = self.api.file.get_url(file_id)
             if arch_type is None:
                 arch_type = self.parse_arch_type(cfg)
