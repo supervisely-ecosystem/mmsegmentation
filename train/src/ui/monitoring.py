@@ -14,7 +14,7 @@ from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from init_cfg import init_cfg
 from sly_functions import get_bg_class_name, get_eval_results_dir_name
-from splits import train_set, val_set
+from splits import get_train_val_sets
 from supervisely.nn.inference import SessionJSON
 from supervisely._utils import abs_url, is_development, is_debug_with_sly_net
 import workflow as w
@@ -325,7 +325,7 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes=N
 
 
 def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
-    global m, val_set, train_set
+    global m
 
     benchmark_report_template = None
     # if run_model_benchmark_checkbox.is_checked():
@@ -465,6 +465,8 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
                         )
                     )
                 return image_infos
+
+            train_set, val_set = get_train_val_sets(g.project_dir, state)
 
             val_image_infos = get_image_infos_by_split(val_set)
             train_image_infos = get_image_infos_by_split(train_set)
