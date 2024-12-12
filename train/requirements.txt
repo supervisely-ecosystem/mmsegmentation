@@ -1,4 +1,4 @@
-git+https://github.com/supervisely/supervisely.git@sem_seg_benchmark
+git+https://github.com/supervisely/supervisely.git@semsegm-bm-comparison
 pycocotools
 scikit-learn
 plotly==5.22.0

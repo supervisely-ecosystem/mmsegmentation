@@ -325,35 +325,6 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes=N
 
 
 def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
-    #  ------------------------------------- Model Benchmark ------------------------------------- #
-    # this app is just a python script with a jinja2 GUI using asyncio and websockets for real-time updates
-    # so we can't run the model benchmark in the same way
-    # we need to run it as server and then connect to it
-    # example from internet:
-    # import asyncio, socket
-
-    # async def handle_client(client):
-    #     loop = asyncio.get_event_loop()
-    #     request = None
-    #     while request != 'quit':
-    #         request = (await loop.sock_recv(client, 255)).decode('utf8')
-    #         response = str(eval(request)) + '\n'
-    #         await loop.sock_sendall(client, response.encode('utf8'))
-    #     client.close()
-
-    # async def run_server():
-    #     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #     server.bind(('localhost', 15555))
-    #     server.listen(8)
-    #     server.setblocking(False)
-
-    #     loop = asyncio.get_event_loop()
-
-    #     while True:
-    #         client, _ = await loop.sock_accept(server)
-    #         loop.create_task(handle_client(client))
-
-    # asyncio.run(run_server())
     global m
 
     benchmark_report_template = None
