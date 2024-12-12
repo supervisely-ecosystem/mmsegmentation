@@ -325,7 +325,7 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes=N
 
 
 def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
-    global m
+    global m, val_set, train_set
 
     benchmark_report_template = None
     # if run_model_benchmark_checkbox.is_checked():
