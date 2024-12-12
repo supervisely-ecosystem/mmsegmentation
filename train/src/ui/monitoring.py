@@ -43,7 +43,7 @@ class TqdmBenchmark(sly.tqdm_sly):
 
 
 _open_lnk_name = "open_app.lnk"
-
+m = None
 
 def init(data, state):
     init_progress("Epoch", data)
@@ -324,6 +324,249 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes=N
     g.api.app.set_field(g.task_id, "state.preparingData", False)
 
 
+def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
+    #  ------------------------------------- Model Benchmark ------------------------------------- #
+    # this app is just a python script with a jinja2 GUI using asyncio and websockets for real-time updates
+    # so we can't run the model benchmark in the same way
+    # we need to run it as server and then connect to it
+    # example from internet:
+    # import asyncio, socket
+
+    # async def handle_client(client):
+    #     loop = asyncio.get_event_loop()
+    #     request = None
+    #     while request != 'quit':
+    #         request = (await loop.sock_recv(client, 255)).decode('utf8')
+    #         response = str(eval(request)) + '\n'
+    #         await loop.sock_sendall(client, response.encode('utf8'))
+    #     client.close()
+
+    # async def run_server():
+    #     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #     server.bind(('localhost', 15555))
+    #     server.listen(8)
+    #     server.setblocking(False)
+
+    #     loop = asyncio.get_event_loop()
+
+    #     while True:
+    #         client, _ = await loop.sock_accept(server)
+    #         loop.create_task(handle_client(client))
+
+    # asyncio.run(run_server())
+    global m
+
+    benchmark_report_template = None
+    # if run_model_benchmark_checkbox.is_checked():
+    try:
+        from sly_mmsegm import MMSegmentationModelBench
+        import torch
+        from pathlib import Path
+        import asyncio
+
+        dataset_infos = api.dataset.get_list(g.project_id, recursive=True)
+        # creating_report.show()
+
+        # 0. Find the best checkpoint
+        best_filename = None
+        best_checkpoints = []
+        latest_checkpoint = None
+        other_checkpoints = []
+        for root, dirs, files in os.walk(g.checkpoints_dir):
+            for file_name in files:
+                path = os.path.join(root, file_name)
+                if file_name.endswith(".pth"):
+                    if file_name.startswith("best_"):
+                        best_checkpoints.append(path)
+                    elif file_name == "latest.pth":
+                        latest_checkpoint = path
+                    elif file_name.startswith("epoch_"):
+                        other_checkpoints.append(path)
+
+        if len(best_checkpoints) > 1:
+            best_checkpoints = sorted(best_checkpoints, key=lambda x: x, reverse=True)
+        elif len(best_checkpoints) == 0:
+            sly.logger.info("Best model checkpoint not found in the checkpoints directory.")
+            if latest_checkpoint is not None:
+                best_checkpoints = [latest_checkpoint]
+                sly.logger.info(f"Using latest checkpoint for evaluation: {latest_checkpoint!r}")
+            elif len(other_checkpoints) > 0:
+                parse_epoch = lambda x: int(x.split("_")[-1].split(".")[0])
+                best_checkpoints = sorted(other_checkpoints, key=parse_epoch, reverse=True)
+                sly.logger.info(
+                    f"Using the last epoch checkpoint for evaluation: {best_checkpoints[0]!r}"
+                )
+
+        if len(best_checkpoints) == 0:
+            raise ValueError("No checkpoints found for evaluation.")
+        best_checkpoint = Path(best_checkpoints[0])
+        sly.logger.info(f"Starting model benchmark with the checkpoint: {best_checkpoint!r}")
+        best_filename = best_checkpoint.name
+        workdir = best_checkpoint.parent
+
+        # 1. Serve trained model
+        m = MMSegmentationModelBench(model_dir=str(workdir), use_gui=False)
+
+        import uvicorn
+
+        # run the server
+        uvicorn.run(
+            "ui.monitoring:m.app",
+            host="localhost",
+            port=8000,
+            ws="websockets",
+            app_dir="./train/src",
+        )
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        sly.logger.info(f"Using device: {device}")
+
+        checkpoint_path = g.sly_mmseg.get_weights_path(remote_dir)
+        config_path = g.sly_mmseg.get_config_path(remote_dir)
+
+        try:
+            arch_type = cfg.model.backbone.type
+        except Exception as e:
+            arch_type = "unknown"
+
+        deploy_params = dict(
+            device=device,
+            model_source="Custom models",
+            task_type=sly.nn.TaskType.SEMANTIC_SEGMENTATION,
+            checkpoint_name=best_filename,
+            checkpoint_url=checkpoint_path,
+            config_url=config_path,
+            arch_type=arch_type,
+        )
+        m._load_model(deploy_params)
+        # asyncio.set_event_loop(asyncio.new_event_loop())  # fix for the issue with the event loop
+        m.serve()
+
+        session = SessionJSON(api, session_url="http://localhost:8000")
+        if sly.fs.dir_exists(g.data_dir + "/benchmark"):
+            sly.fs.remove_dir(g.data_dir + "/benchmark")
+
+        # 1. Init benchmark (todo: auto-detect task type)
+        benchmark_dataset_ids = None
+        benchmark_images_ids = None
+        train_dataset_ids = None
+        train_images_ids = None
+
+        split_method = state["splitMethod"]
+
+        if split_method == "datasets":
+            train_datasets = state["trainDatasets"]
+            val_datasets = state["valDatasets"]
+            benchmark_dataset_ids = [ds.id for ds in dataset_infos if ds.name in val_datasets]
+            train_dataset_ids = [ds.id for ds in dataset_infos if ds.name in train_datasets]
+        else:
+
+            def get_image_infos_by_split(split: list):
+                ds_infos_dict = {ds_info.name: ds_info for ds_info in dataset_infos}
+                image_names_per_dataset = {}
+                for item in split:
+                    image_names_per_dataset.setdefault(item.dataset_name, []).append(item.name)
+                image_infos = []
+                for dataset_name, image_names in image_names_per_dataset.items():
+                    ds_info = ds_infos_dict[dataset_name]
+                    image_infos.extend(
+                        api.image.get_list(
+                            ds_info.id,
+                            filters=[
+                                {
+                                    "field": "name",
+                                    "operator": "in",
+                                    "value": image_names,
+                                }
+                            ],
+                        )
+                    )
+                return image_infos
+
+            val_image_infos = get_image_infos_by_split(val_set)
+            train_image_infos = get_image_infos_by_split(train_set)
+            benchmark_images_ids = [img_info.id for img_info in val_image_infos]
+            train_images_ids = [img_info.id for img_info in train_image_infos]
+
+        model_benchmark_pbar = TqdmBenchmark
+        bm = sly.nn.benchmark.SemanticSegmentationBenchmark(
+            api,
+            g.project_info.id,
+            output_dir=g.data_dir + "/benchmark",
+            gt_dataset_ids=benchmark_dataset_ids,
+            gt_images_ids=benchmark_images_ids,
+            progress=model_benchmark_pbar,
+            classes_whitelist=classes,
+        )
+
+        train_info = {
+            "app_session_id": sly.env.task_id(),
+            "train_dataset_ids": train_dataset_ids,
+            "train_images_ids": train_images_ids,
+            "images_count": len(train_set),
+        }
+        bm.train_info = train_info
+
+        # 2. Run inference
+        bm.run_inference(session)
+
+        # 3. Pull results from the server
+        gt_project_path, pred_project_path = bm.download_projects(save_images=False)
+
+        # 4. Evaluate
+        bm._evaluate(gt_project_path, pred_project_path)
+        bm._dump_eval_inference_info(bm._eval_inference_info)
+
+        # 5. Upload evaluation results
+        eval_res_dir = get_eval_results_dir_name(api, sly.env.task_id(), g.project_info)
+        bm.upload_eval_results(eval_res_dir + "/evaluation/")
+
+        # # 6. Speed test
+        try:
+            session_info = session.get_session_info()
+            support_batch_inference = session_info.get("batch_inference_support", False)
+            max_batch_size = session_info.get("max_batch_size")
+            batch_sizes = (1, 8, 16)
+            if not support_batch_inference:
+                batch_sizes = (1,)
+            elif max_batch_size is not None:
+                batch_sizes = tuple([bs for bs in batch_sizes if bs <= max_batch_size])
+            bm.run_speedtest(session, g.project_info.id, batch_sizes=batch_sizes)
+            bm.upload_speedtest_results(eval_res_dir + "/speedtest/")
+        except Exception as e:
+            sly.logger.warning(f"Speedtest failed. Skipping. {e}")
+
+        # 7. Prepare visualizations, report and
+        bm.visualize()
+        remote_dir = bm.upload_visualizations(eval_res_dir + "/visualizations/")
+        report = bm.upload_report_link(remote_dir)
+
+        # 8. UI updates
+        benchmark_report_template = api.file.get_info_by_path(
+            sly.env.team_id(), remote_dir + "template.vue"
+        )
+        lnk = f"/model-benchmark?id={benchmark_report_template.id}"
+        lnk = abs_url(lnk) if is_development() or is_debug_with_sly_net() else lnk
+
+        fields = [
+            {"field": f"data.progressBenchmark", "payload": False},
+            {"field": f"data.benchmarkUrl", "payload": lnk},
+        ]
+        api.app.set_fields(g.task_id, fields)
+        sly.logger.info(
+            f"Predictions project name: {bm.dt_project_info.name}. Workspace_id: {bm.dt_project_info.workspace_id}"
+        )
+    except Exception as e:
+        sly.logger.error(f"Model benchmark failed. {repr(e)}", exc_info=True)
+        api.app.set_field(task_id, "data.progressBenchmark", False)
+        try:
+            if bm.dt_project_info:
+                api.project.remove(bm.dt_project_info.id)
+        except Exception as re:
+            pass
+
+    return benchmark_report_template
+
 @g.my_app.callback("train")
 @sly.timeit
 @g.my_app.ignore_errors_and_show_dialog_window()
@@ -392,211 +635,11 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         ]
         g.api.app.set_fields(g.task_id, fields)
 
-        #  ------------------------------------- Model Benchmark ------------------------------------- #
         benchmark_report_template = None
-        # if run_model_benchmark_checkbox.is_checked():
-        try:
-            from sly_mmsegm import MMSegmentationModelBench
-            import torch
-            from pathlib import Path
-            import asyncio
 
-            dataset_infos = g.api.dataset.get_list(g.project_id, recursive=True)
-            # creating_report.show()
-
-            # 0. Find the best checkpoint
-            best_filename = None
-            best_checkpoints = []
-            latest_checkpoint = None
-            other_checkpoints = []
-            for root, dirs, files in os.walk(g.checkpoints_dir):
-                for file_name in files:
-                    path = os.path.join(root, file_name)
-                    if file_name.endswith(".pth"):
-                        if file_name.startswith("best_"):
-                            best_checkpoints.append(path)
-                        elif file_name == "latest.pth":
-                            latest_checkpoint = path
-                        elif file_name.startswith("epoch_"):
-                            other_checkpoints.append(path)
-
-            if len(best_checkpoints) > 1:
-                best_checkpoints = sorted(best_checkpoints, key=lambda x: x, reverse=True)
-            elif len(best_checkpoints) == 0:
-                sly.logger.info("Best model checkpoint not found in the checkpoints directory.")
-                if latest_checkpoint is not None:
-                    best_checkpoints = [latest_checkpoint]
-                    sly.logger.info(
-                        f"Using latest checkpoint for evaluation: {latest_checkpoint!r}"
-                    )
-                elif len(other_checkpoints) > 0:
-                    parse_epoch = lambda x: int(x.split("_")[-1].split(".")[0])
-                    best_checkpoints = sorted(other_checkpoints, key=parse_epoch, reverse=True)
-                    sly.logger.info(
-                        f"Using the last epoch checkpoint for evaluation: {best_checkpoints[0]!r}"
-                    )
-
-            if len(best_checkpoints) == 0:
-                raise ValueError("No checkpoints found for evaluation.")
-            best_checkpoint = Path(best_checkpoints[0])
-            sly.logger.info(f"Starting model benchmark with the checkpoint: {best_checkpoint!r}")
-            best_filename = best_checkpoint.name
-            workdir = best_checkpoint.parent
-
-            # 1. Serve trained model
-            m = MMSegmentationModelBench(model_dir=str(workdir), use_gui=False)
-
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            sly.logger.info(f"Using device: {device}")
-
-            checkpoint_path = g.sly_mmseg.get_weights_path(remote_dir)
-            config_path = g.sly_mmseg.get_config_path(remote_dir)
-
-            try:
-                arch_type = cfg.model.backbone.type
-            except Exception as e:
-                arch_type = "unknown"
-
-            deploy_params = dict(
-                device=device,
-                model_source="Custom models",
-                task_type=sly.nn.TaskType.SEMANTIC_SEGMENTATION,
-                checkpoint_name=best_filename,
-                checkpoint_url=checkpoint_path,
-                config_url=config_path,
-                arch_type=arch_type,
-            )
-            m._load_model(deploy_params)
-            asyncio.set_event_loop(
-                asyncio.new_event_loop()
-            )  # fix for the issue with the event loop
-            m.serve()
-            session = SessionJSON(g.api, session_url="http://localhost:8000")
-            if sly.fs.dir_exists(g.data_dir + "/benchmark"):
-                sly.fs.remove_dir(g.data_dir + "/benchmark")
-
-            # 1. Init benchmark (todo: auto-detect task type)
-            benchmark_dataset_ids = None
-            benchmark_images_ids = None
-            train_dataset_ids = None
-            train_images_ids = None
-
-            split_method = state["splitMethod"]
-
-            if split_method == "datasets":
-                train_datasets = state["trainDatasets"]
-                val_datasets = state["valDatasets"]
-                benchmark_dataset_ids = [ds.id for ds in dataset_infos if ds.name in val_datasets]
-                train_dataset_ids = [ds.id for ds in dataset_infos if ds.name in train_datasets]
-            else:
-
-                def get_image_infos_by_split(split: list):
-                    ds_infos_dict = {ds_info.name: ds_info for ds_info in dataset_infos}
-                    image_names_per_dataset = {}
-                    for item in split:
-                        image_names_per_dataset.setdefault(item.dataset_name, []).append(item.name)
-                    image_infos = []
-                    for dataset_name, image_names in image_names_per_dataset.items():
-                        ds_info = ds_infos_dict[dataset_name]
-                        image_infos.extend(
-                            g.api.image.get_list(
-                                ds_info.id,
-                                filters=[
-                                    {
-                                        "field": "name",
-                                        "operator": "in",
-                                        "value": image_names,
-                                    }
-                                ],
-                            )
-                        )
-                    return image_infos
-
-                val_image_infos = get_image_infos_by_split(val_set)
-                train_image_infos = get_image_infos_by_split(train_set)
-                benchmark_images_ids = [img_info.id for img_info in val_image_infos]
-                train_images_ids = [img_info.id for img_info in train_image_infos]
-
-            model_benchmark_pbar = TqdmBenchmark
-            bm = sly.nn.benchmark.SemanticSegmentationBenchmark(
-                g.api,
-                g.project_info.id,
-                output_dir=g.data_dir + "/benchmark",
-                gt_dataset_ids=benchmark_dataset_ids,
-                gt_images_ids=benchmark_images_ids,
-                progress=model_benchmark_pbar,
-                classes_whitelist=classes,
-            )
-
-            train_info = {
-                "app_session_id": sly.env.task_id(),
-                "train_dataset_ids": train_dataset_ids,
-                "train_images_ids": train_images_ids,
-                "images_count": len(train_set),
-            }
-            bm.train_info = train_info
-
-            # 2. Run inference
-            bm.run_inference(session)
-
-            # 3. Pull results from the server
-            gt_project_path, pred_project_path = bm.download_projects(save_images=False)
-
-            # 4. Evaluate
-            bm._evaluate(gt_project_path, pred_project_path)
-            bm._dump_eval_inference_info(bm._eval_inference_info)
-
-            # 5. Upload evaluation results
-            eval_res_dir = get_eval_results_dir_name(g.api, sly.env.task_id(), g.project_info)
-            bm.upload_eval_results(eval_res_dir + "/evaluation/")
-
-            # # 6. Speed test
-            try:
-                session_info = session.get_session_info()
-                support_batch_inference = session_info.get("batch_inference_support", False)
-                max_batch_size = session_info.get("max_batch_size")
-                batch_sizes = (1, 8, 16)
-                if not support_batch_inference:
-                    batch_sizes = (1,)
-                elif max_batch_size is not None:
-                    batch_sizes = tuple([bs for bs in batch_sizes if bs <= max_batch_size])
-                bm.run_speedtest(session, g.project_info.id, batch_sizes=batch_sizes)
-                bm.upload_speedtest_results(eval_res_dir + "/speedtest/")
-            except Exception as e:
-                sly.logger.warning(f"Speedtest failed. Skipping. {e}")
-
-            # 7. Prepare visualizations, report and
-            bm.visualize()
-            remote_dir = bm.upload_visualizations(eval_res_dir + "/visualizations/")
-            report = bm.upload_report_link(remote_dir)
-
-            # 8. UI updates
-            benchmark_report_template = g.api.file.get_info_by_path(
-                sly.env.team_id(), remote_dir + "template.vue"
-            )
-            lnk = f"/model-benchmark?id={benchmark_report_template.id}"
-            lnk = abs_url(lnk) if is_development() or is_debug_with_sly_net() else lnk
-
-            fields = [
-                {"field": f"data.progressBenchmark", "payload": False},
-                {"field": f"data.benchmarkUrl", "payload": lnk},
-            ]
-            g.api.app.set_fields(g.task_id, fields)
-            sly.logger.info(
-                f"Predictions project name: {bm.dt_project_info.name}. Workspace_id: {bm.dt_project_info.workspace_id}"
-            )
-        except Exception as e:
-            sly.logger.error(f"Model benchmark failed. {repr(e)}", exc_info=True)
-            g.api.app.set_field(task_id, "data.progressBenchmark", False)
-            try:
-                if bm.dt_project_info:
-                    g.api.project.remove(bm.dt_project_info.id)
-                if bm.diff_project_info:
-                    g.api.project.remove(bm.diff_project_info.id)
-            except Exception as re:
-                pass
-
-        # ----------------------------------------------- - ---------------------------------------------- #
+        # run benchmark
+        # if state["runModelBenchmark"]:
+        benchmark_report_template = run_benchmark(api, task_id, classes, cfg, state, remote_dir)
 
         w.workflow_input(api, g.project_info, state)
         w.workflow_output(api, g.sly_mmseg_generated_metadata, state, benchmark_report_template)
