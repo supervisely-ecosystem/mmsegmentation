@@ -381,13 +381,16 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
         device = "cuda" if torch.cuda.is_available() else "cpu"
         sly.logger.info(f"Using device: {device}")
 
-        checkpoint_path = g.sly_mmseg.get_weights_path(remote_dir)
+        checkpoint_path = g.sly_mmseg.get_weights_path(remote_dir) + "/" + best_filename
         config_path = g.sly_mmseg.get_config_path(remote_dir)
+        sly.logger.info(f"Checkpoint path: {checkpoint_path}")
 
         try:
             arch_type = cfg.model.backbone.type
         except Exception as e:
             arch_type = "unknown"
+
+        sly.logger.info(f"Model architecture: {arch_type}")
 
         deploy_params = dict(
             device=device,
