@@ -382,11 +382,10 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
 
         # run the server
         uvicorn.run(
-            "ui.monitoring:m.app",
+            m.app,
             host="localhost",
             port=8000,
             ws="websockets",
-            app_dir="./train/src",
         )
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
