@@ -378,16 +378,6 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
         # 1. Serve trained model
         m = MMSegmentationModelBench(model_dir=str(workdir), use_gui=False)
 
-        import uvicorn
-
-        # run the server
-        uvicorn.run(
-            m.app,
-            host="localhost",
-            port=8000,
-            ws="websockets",
-        )
-
         device = "cuda" if torch.cuda.is_available() else "cpu"
         sly.logger.info(f"Using device: {device}")
 
@@ -411,6 +401,26 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
         m._load_model(deploy_params)
         # asyncio.set_event_loop(asyncio.new_event_loop())  # fix for the issue with the event loop
         m.serve()
+
+        import requests
+        import uvicorn
+        import time
+        from threading import Thread
+
+        def run_app():
+            uvicorn.run(m.app, host="localhost", port=8000)
+
+        thread = Thread(target=run_app, daemon=True)
+        thread.start()
+
+        while True:
+            try:
+                response = requests.get("http://localhost:8000")
+                print("✅ Local server is ready")
+                break
+            except requests.exceptions.ConnectionError:
+                print("Waiting for the server to be ready")
+                time.sleep(0.1)
 
         session = SessionJSON(api, session_url="http://localhost:8000")
         if sly.fs.dir_exists(g.data_dir + "/benchmark"):
