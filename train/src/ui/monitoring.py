@@ -402,7 +402,7 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
             arch_type=arch_type,
         )
         m._load_model(deploy_params)
-        # asyncio.set_event_loop(asyncio.new_event_loop())  # fix for the issue with the event loop
+        asyncio.set_event_loop(asyncio.new_event_loop())  # fix for the issue with the event loop
         m.serve()
 
         import requests
