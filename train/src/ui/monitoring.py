@@ -616,6 +616,12 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         ]
         g.api.app.set_fields(g.task_id, fields)
 
+        if state["saveLast"] is False:
+            for root, _, files in os.walk(cfg.work_dir):
+                for file in files:
+                    if file == "latest.pth":
+                        sly.fs.silent_remove(os.path.join(root, file))
+
         remote_dir = upload_artifacts_and_log_progress()
         file_info = api.file.get_info_by_path(g.team_id, os.path.join(remote_dir, _open_lnk_name))
         api.task.set_output_directory(task_id, file_info.id, remote_dir)
