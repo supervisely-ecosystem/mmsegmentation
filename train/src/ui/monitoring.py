@@ -667,7 +667,7 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         g.api.app.set_fields(g.task_id, fields)
 
         if state["saveLast"] is False:
-            for root, _, files in os.walk(cfg.work_dir):
+            for root, _, files in os.walk(g.checkpoints_dir):
                 for file in files:
                     if file == "latest.pth":
                         sly.fs.silent_remove(os.path.join(root, file))
