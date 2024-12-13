@@ -319,6 +319,13 @@ def init_class_charts_series(state):
 def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes=None):
     target_classes = target_classes or state["selectedClasses"]
     temp_project_seg_dir = g.project_seg_dir + "_temp"
+    bg_name = get_bg_class_name(target_classes) or "__bg__"
+    bg_color = (0, 0, 0)
+    if bg_name in target_classes:
+        try:
+            bg_color = palette[target_classes.index(bg_name)]
+        except:
+            pass
 
     project = sly.Project(g.project_dir, sly.OpenMode.READ)
     with TqdmProgress(
@@ -330,6 +337,8 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes=N
             temp_project_seg_dir,
             target_classes=target_classes,
             progress_cb=p.update,
+            bg_color=bg_color,
+            bg_name=bg_name,
         )
 
     palette_lookup = np.zeros(256**3, dtype=np.int32)

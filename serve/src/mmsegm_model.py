@@ -167,10 +167,11 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                 )
             local_config_path = os.path.join(root_source_path, config_url)
         else:
-            self.download(
-                src_path=checkpoint_url,
-                dst_path=local_weights_path,
-            )
+            if not sly.fs.file_exists(local_weights_path):
+                self.download(
+                    src_path=checkpoint_url,
+                    dst_path=local_weights_path,
+                )
             local_config_path = os.path.join(configs_dir, "custom", "config.py")
             if sly.fs.file_exists(local_config_path):
                 silent_remove(local_config_path)
