@@ -112,7 +112,7 @@
 		</div>
 		<el-progress :percentage="data.progressPercentUploadDir"></el-progress>
 	</div>
-    <div v-if="state.benchmarkInProgress && data.progressBenchmark" class="mt10"></div>
+    <div v-if="state.benchmarkInProgress && data.progressBenchmark" class="mt10">
 		<div style="color: #20a0ff">
 			{{data.progressBenchmark}}: {{data.progressCurrentBenchmark}} /
 			{{data.progressTotalBenchmark}}

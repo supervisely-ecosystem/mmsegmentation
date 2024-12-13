@@ -478,14 +478,15 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
             train_images_ids = [img_info.id for img_info in train_image_infos]
 
         state["benchmarkInProgress"] = True
+        pbar = TqdmBenchmark
         bm = sly.nn.benchmark.SemanticSegmentationBenchmark(
             api,
             g.project_info.id,
             output_dir=g.data_dir + "/benchmark",
             gt_dataset_ids=benchmark_dataset_ids,
             gt_images_ids=benchmark_images_ids,
-            progress=TqdmBenchmark,
-            progress_secondary=TqdmBenchmark,
+            progress=pbar,
+            progress_secondary=pbar,
             classes_whitelist=classes,
         )
 
