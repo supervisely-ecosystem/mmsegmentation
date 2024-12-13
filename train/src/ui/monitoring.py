@@ -79,7 +79,7 @@ def init(data, state):
     data["outputName"] = None
     data["outputUrl"] = None
     data["benchmarkUrl"] = None
-    data["benchmarkInProgress"] = False
+    state["benchmarkInProgress"] = False
 
 
 def init_devices():
@@ -333,6 +333,7 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes=N
 def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
     global m
 
+    api.app.set_field(task_id, "state.benchmarkInProgress", True)
     benchmark_report_template = None
     try:
         from sly_mmsegm import MMSegmentationModelBench
@@ -481,7 +482,6 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
             benchmark_images_ids = [img_info.id for img_info in val_image_infos]
             train_images_ids = [img_info.id for img_info in train_image_infos]
 
-        state["benchmarkInProgress"] = True
         pbar = TqdmBenchmark
         bm = sly.nn.benchmark.SemanticSegmentationBenchmark(
             api,
@@ -541,9 +541,9 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
 
         fields = [
             {"field": f"data.progressBenchmark", "payload": False},
+            {"field": f"state.benchmarkInProgress", "payload": False},
             {"field": f"data.benchmarkUrl", "payload": bm.get_report_link()},
         ]
-        state["benchmarkInProgress"] = False
         api.app.set_fields(g.task_id, fields)
         sly.logger.info(
             f"Predictions project name: {bm.dt_project_info.name}. Workspace_id: {bm.dt_project_info.workspace_id}"

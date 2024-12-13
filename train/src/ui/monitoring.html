@@ -112,6 +112,12 @@
 		</div>
 		<el-progress :percentage="data.progressPercentUploadDir"></el-progress>
 	</div>
+    <div v-if="state.benchmarkInProgress">
+        <i class="zmdi zmdi-check-circle mr5" style="color: #13ce66"></i>
+        <span style="color: #5a6772"
+            >Model Benchmark evaluation is in progress...</span
+        >
+    </div>
     <div v-if="state.benchmarkInProgress && data.progressBenchmark" class="mt10">
 		<div style="color: #20a0ff">
 			{{data.progressBenchmark}}: {{data.progressCurrentBenchmark}} /
