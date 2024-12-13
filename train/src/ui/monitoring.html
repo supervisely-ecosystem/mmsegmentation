@@ -125,6 +125,13 @@
 		</div>
 		<el-progress :percentage="data.progressPercentBenchmark"></el-progress>
 	</div>
+    <div v-if="data.progressTqdm" class="mt10">
+		<div style="color: #20a0ff">
+			{{data.progressTqdm}}: {{data.progressCurrentTqdm}} /
+			{{data.progressTotalTqdm}}
+		</div>
+		<el-progress :percentage="data.progressPercentTqdm"></el-progress>
+	</div>
 	<div v-if="data.progressEpoch" class="mt10">
 		<div style="color: #20a0ff">
 			{{data.progressEpoch}}: {{data.progressCurrentEpoch}} /
