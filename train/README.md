@@ -14,11 +14,11 @@
   <a href="#Acknowledgment">Acknowledgment</a>
 </p>
 
-[![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train)
-[![](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://supervise.ly/slack)
+[![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](https://ecosystem.supervisely.com/apps/supervisely-ecosystem/mmsegmentation/train)
+[![](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://supervisely.com/slack)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/supervisely-ecosystem/mmsegmentation)
-[![views](https://app.supervise.ly/img/badges/views/supervisely-ecosystem/mmsegmentation/train.png)](https://supervise.ly)
-[![runs](https://app.supervise.ly/img/badges/runs/supervisely-ecosystem/mmsegmentation/train.png)](https://supervise.ly)
+[![views](https://app.supervisely.com/img/badges/views/supervisely-ecosystem/mmsegmentation/train.png)](https://supervisely.com)
+[![runs](https://app.supervisely.com/img/badges/runs/supervisely-ecosystem/mmsegmentation/train.png)](https://supervisely.com)
 
 </div>
 
@@ -93,10 +93,10 @@ Supported methods:
 
 # How to Run
 
-### 1. Add [Train MMSegmentation](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/mmsegmentation/train) app to your team from Ecosystem
+### 1. Add [Train MMSegmentation](https://ecosystem.supervisely.com/apps/supervisely-ecosystem/mmsegmentation/train) app to your team from Ecosystem
 <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="https://i.imgur.com/e2r6ccw.png" width="350px" style='padding-bottom: 10px'/>
 
-### 2. Run app from context menu of the project with annotations (polygon and bitmap only) [(example)](https://ecosystem.supervise.ly/projects/lemons-annotated)
+### 2. Run app from context menu of the project with annotations (polygon and bitmap only) [(example)](https://ecosystem.supervisely.com/projects/lemons-annotated)
 <img src="https://i.imgur.com/XczjaNy.png" width="100%" style='padding-top: 10px'>  
 
 # Demo

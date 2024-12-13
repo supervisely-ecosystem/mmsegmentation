@@ -107,7 +107,7 @@ def init_devices():
             "free": free_mem,
         }
         devices.append(device_info)
-    return devices
+    return sorted(devices, key=lambda x: x["free"], reverse=True)
 
 
 def init_chart(
