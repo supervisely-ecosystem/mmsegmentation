@@ -27,8 +27,12 @@ import sly_logger_hook
 
 def external_callback(progress: sly.tqdm_sly):
     percent = math.floor(progress.n / progress.total * 100)
-    fields = [
-        {"field": f"data.progressBenchmark", "payload": progress.desc},
+    fields = []
+    if hasattr(progress, "desc"):
+        fields.append({"field": f"data.progressBenchmark", "payload": progress.desc})
+    elif hasattr(progress, "message"):
+        fields.append({"field": f"data.progressBenchmark", "payload": progress.message})
+    fields += [
         {"field": f"data.progressCurrentBenchmark", "payload": progress.n},
         {"field": f"data.progressTotalBenchmark", "payload": progress.total},
         {"field": f"data.progressPercentBenchmark", "payload": percent},
