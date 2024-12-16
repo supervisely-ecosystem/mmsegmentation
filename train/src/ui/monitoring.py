@@ -507,6 +507,7 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
                 val_datasets = state["valDatasets"]
                 benchmark_dataset_ids = [ds.id for ds in dataset_infos if ds.name in val_datasets]
                 train_dataset_ids = [ds.id for ds in dataset_infos if ds.name in train_datasets]
+                train_set, val_set = get_train_val_sets(g.project_dir, state)
             else:
 
                 def get_image_infos_by_split(split: list):
