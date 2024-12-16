@@ -316,24 +316,6 @@ def init_class_charts_series(state):
     g.api.app.set_fields(g.task_id, fields)
 
 
-# def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes=None):
-#     palette_lookup = np.zeros(256**3, dtype=np.int32)
-#     for idx, color in enumerate(palette, 1):
-#         key = (color[0] << 16) | (color[1] << 8) | color[2]
-#         palette_lookup[key] = idx
-
-#         for dataset in datasets:
-#             for mask_file in mask_files:
-
-#                 mask_keys = (
-#                     (mask[:, :, 0].astype(np.int32) << 16)
-#                     | (mask[:, :, 1].astype(np.int32) << 8)
-#                     | mask[:, :, 2].astype(np.int32)
-#                 )
-#                 result = palette_lookup[mask_keys]
-#                 cv2.imwrite(os.path.join(g.project_seg_dir, ann_dir, mask_file), result)
-
-
 def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes):
     target_classes = target_classes or state["selectedClasses"]
     temp_project_seg_dir = g.project_seg_dir + "_temp"
