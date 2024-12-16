@@ -34,7 +34,9 @@ def workflow_input(api: sly.Api, project_info: sly.ProjectInfo, state: dict = No
         sly.logger.debug(f"Failed to add input to the workflow: {repr(e)}")
 
 
-def workflow_output(api: sly.Api, mmseg_generated_metadata: dict, state:dict):
+def workflow_output(
+    api: sly.Api, mmseg_generated_metadata: dict, state: dict, model_benchmark_report=None
+):
     try:
         checkpoints_list = mmseg_generated_metadata.get("checkpoints", [])
         if len(checkpoints_list) == 0:
@@ -50,9 +52,8 @@ def workflow_output(api: sly.Api, mmseg_generated_metadata: dict, state:dict):
             else:
                 best_filename_info = best_checkpoints[0]
 
-        
         module_id = api.task.get_info_by_id(api.task_id).get("meta", {}).get("app", {}).get("id")
-        
+
         if state.get("weightsInitialization", None) == "custom":
             node_custom_title = "Train Custom Model"
         else:
@@ -77,5 +78,24 @@ def workflow_output(api: sly.Api, mmseg_generated_metadata: dict, state:dict):
             sly.logger.debug(f"Workflow Output: Meta \n    {meta.as_dict}")
         else:
             sly.logger.debug(f"File {best_filename_info} not found in Team Files. Cannot set workflow output.")
+
+        if model_benchmark_report:
+            mb_relation_settings = sly.WorkflowSettings(
+                title="Model Benchmark",
+                icon="assignment",
+                icon_color="#dcb0ff",
+                icon_bg_color="#faebff",
+                url=f"/model-benchmark?id={model_benchmark_report.id}",
+                url_title="Open Benchmark Report",
+            )
+
+            meta = sly.WorkflowMeta(
+                relation_settings=mb_relation_settings, node_settings=node_settings
+            )
+            api.app.workflow.add_output_file(model_benchmark_report, meta=meta)
+        else:
+            sly.logger.debug(
+                f"File with model benchmark report not found in Team Files. Cannot set workflow output."
+            )
     except Exception as e:
         sly.logger.debug(f"Failed to add output to the workflow: {repr(e)}")

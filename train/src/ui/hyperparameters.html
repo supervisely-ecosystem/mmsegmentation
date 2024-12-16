@@ -45,6 +45,18 @@
                     <span class="ml5">iterations</span>
                 </div>
             </sly-field>
+            <sly-field title="Run Model Benchmark evaluation">
+                <el-switch v-model="state.runBenchmark"
+                           on-color="#13ce66" off-color="#B8B8B8"
+                           :disabled="data.done6">
+                </el-switch>
+            </sly-field>
+            <sly-field title="Run Speed test">
+                <el-switch v-model="state.runSpeedTest"
+                           on-color="#13ce66" off-color="#B8B8B8"
+                           :disabled="data.done6">
+                </el-switch>
+            </sly-field>
         </el-tab-pane>
         <el-tab-pane label="Checkpoints" name="checkpoints">
             <sly-field title="Checkpoints interval"

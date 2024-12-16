@@ -9,6 +9,8 @@ def init_general(state):
 
     state["valInterval"] = 1
     state["logConfigInterval"] = 5
+    state["runBenchmark"] = True
+    state["runSpeedTest"] = True
 
 def init_checkpoints(state):
     state["checkpointInterval"] = 1
