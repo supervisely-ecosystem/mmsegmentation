@@ -14,7 +14,7 @@ RUN pip3 install pyyaml==6.0
 
 RUN pip3 install ffmpeg-python==0.2.0
 
-RUN pip3 install supervisely==6.73.60
+RUN pip3 install supervisely[model-benchmark]==6.73.269
 
 RUN mkdir -p /tmp/mmseg \
     && wget https://github.com/open-mmlab/mmsegmentation/archive/refs/tags/v0.23.0.tar.gz -P /tmp/mmseg \
