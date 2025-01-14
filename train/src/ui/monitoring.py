@@ -520,18 +520,18 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
                     image_infos = []
                     for dataset_name, image_names in image_names_per_dataset.items():
                         ds_info = ds_infos_dict[dataset_name]
-                        image_infos.extend(
-                            api.image.get_list(
+                        for batched_names in sly.batched(image_names, 200):
+                            batch_infos = api.image.get_list(
                                 ds_info.id,
                                 filters=[
                                     {
                                         "field": "name",
                                         "operator": "in",
-                                        "value": image_names,
+                                        "value": batched_names,
                                     }
                                 ],
                             )
-                        )
+                            image_infos.extend(batch_infos)
                     return image_infos
 
                 train_set, val_set = get_train_val_sets(g.project_dir, state)
