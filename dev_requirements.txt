@@ -1,4 +1,4 @@
-supervisely==6.73.333
+supervisely==6.73.334
 
 openmim
 ffmpeg-python==0.2.0
