@@ -359,6 +359,8 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes):
                 if dataset == "meta.json":
                     shutil.move(os.path.join(temp_project_seg_dir, "meta.json"), g.project_seg_dir)
                 continue
+            if not sly.fs.dir_exists(os.path.join(temp_project_seg_dir, dataset, ann_dir)):
+                continue
             # convert masks to required format and save to general ann_dir
             mask_files = os.listdir(os.path.join(temp_project_seg_dir, dataset, ann_dir))
             for mask_file in mask_files:
