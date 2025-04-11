@@ -709,6 +709,7 @@ def train(api: sly.Api, task_id, context, state, app_logger):
 
         benchmark_report_template = None
         # run benchmark
+        sly.logger.info(f"Run benchmark: {state['runBenchmark']}")
         if state["runBenchmark"]:
             benchmark_report_template = run_benchmark(api, task_id, classes, cfg, state, remote_dir)
 
