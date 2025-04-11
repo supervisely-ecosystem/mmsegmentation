@@ -346,25 +346,26 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes):
         key = (color[0] << 16) | (color[1] << 8) | color[2]
         palette_lookup[key] = idx
 
-    datasets = os.listdir(temp_project_seg_dir)
+    temp_project_fs = sly.Project(temp_project_seg_dir, sly.OpenMode.READ)
     os.makedirs(os.path.join(g.project_seg_dir, img_dir), exist_ok=True)
     os.makedirs(os.path.join(g.project_seg_dir, ann_dir), exist_ok=True)
-    total_items = sly.Project(g.project_dir, sly.OpenMode.READ).total_items
+    total_items = temp_project_fs.total_items
+
+    meta_path = os.path.join(g.project_seg_dir, "meta.json")
+    sly.json.dump_json_file(temp_project_fs.meta.to_json(), meta_path)
+
     with TqdmProgress(
         message="Converting masks to required format",
         total=total_items,
     ) as p:
-        for dataset in datasets:
-            if not os.path.isdir(os.path.join(temp_project_seg_dir, dataset)):
-                if dataset == "meta.json":
-                    shutil.move(os.path.join(temp_project_seg_dir, "meta.json"), g.project_seg_dir)
-                continue
-            if not sly.fs.dir_exists(os.path.join(temp_project_seg_dir, dataset, ann_dir)):
+        for dataset in temp_project_fs.datasets:
+            dataset: sly.Dataset
+            if not sly.fs.dir_exists(dataset.seg_dir):
                 continue
             # convert masks to required format and save to general ann_dir
-            mask_files = os.listdir(os.path.join(temp_project_seg_dir, dataset, ann_dir))
-            for mask_file in mask_files:
-                path = os.path.join(temp_project_seg_dir, dataset, ann_dir, mask_file)
+            names = dataset.get_items_names()
+            mask_files = [dataset.get_seg_path(name) for name in names]
+            for name, path in zip(names, mask_files):
                 mask = cv2.imread(path)[:, :, ::-1]
                 result = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.int32)
                 # human masks to machine masks
@@ -374,18 +375,18 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes):
                     | mask[:, :, 2].astype(np.int32)
                 )
                 result = palette_lookup[mask_keys]
-                cv2.imwrite(os.path.join(g.project_seg_dir, ann_dir, mask_file), result)
+
+                cv2.imwrite(os.path.join(g.project_seg_dir, ann_dir, name), result)
                 p.update(1)
 
-            imgfiles_to_move = os.listdir(os.path.join(temp_project_seg_dir, dataset, img_dir))
-            for filename in imgfiles_to_move:
-                shutil.move(
-                    os.path.join(temp_project_seg_dir, dataset, img_dir, filename),
-                    os.path.join(g.project_seg_dir, img_dir),
-                )
+            imgfiles_to_move = [dataset.get_img_path(name) for name in names]
+
+            for path in imgfiles_to_move:
+                shutil.move(path, os.path.join(g.project_seg_dir, img_dir))
 
     shutil.rmtree(temp_project_seg_dir)
     g.api.app.set_field(g.task_id, "state.preparingData", False)
+
 
 def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
     global m
