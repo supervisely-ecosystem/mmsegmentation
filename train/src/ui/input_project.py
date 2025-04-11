@@ -94,7 +94,10 @@ def get_paths_by_image_id(image_id):
 def get_random_item():
     global project_fs
     all_ds_names = project_fs.datasets.keys()
-    ds_name = random.choice(all_ds_names)
+    non_empty_ds = [ds for ds in all_ds_names if len(project_fs.datasets[ds]) > 0]
+    if len(non_empty_ds) == 0:
+        raise ValueError("No images in the project")
+    ds_name = random.choice(non_empty_ds)
     ds = project_fs.datasets.get(ds_name)
     items = list(ds)
     item_name = random.choice(items)

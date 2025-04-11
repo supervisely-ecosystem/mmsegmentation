@@ -87,18 +87,19 @@ def verify_train_val_sets(train_set, val_set):
 
 
 def set_dataset_ind_to_items(project_dir):
-    datasets = os.listdir(project_dir)
+    project_fs = sly.Project(project_dir, sly.OpenMode.READ)
     ds_cnt = 0
-    for dataset in datasets:
-        if not os.path.isdir(os.path.join(project_dir, dataset)):
-            continue # meta.json
-
-        img_dir = os.path.join(project_dir, dataset, "img")
-        ann_dir = os.path.join(project_dir, dataset, "ann")
-        for file in os.listdir(img_dir):
-            os.rename(os.path.join(img_dir, file), os.path.join(img_dir, f"{ds_cnt}_{file}"))
-        for file in os.listdir(ann_dir):
-            os.rename(os.path.join(ann_dir, file), os.path.join(ann_dir, f"{ds_cnt}_{file}"))
+    for dataset in project_fs.datasets:
+        dataset: sly.Dataset
+        for name in dataset.get_items_names():
+            new_name = f"{ds_cnt}_{name}"
+            img_path, ann_path = dataset.get_item_paths(name)
+            if sly.fs.file_exists(img_path):
+                os.rename(img_path, img_path.replace(name, new_name))
+            if sly.fs.file_exists(ann_path):
+                ann_name = sly.fs.get_file_name(ann_path)
+                new_ann_name = f"{ds_cnt}_{ann_name}"
+                os.rename(ann_path, ann_path.replace(ann_name, new_ann_name))
         ds_cnt += 1
 
 @g.my_app.callback("create_splits")
