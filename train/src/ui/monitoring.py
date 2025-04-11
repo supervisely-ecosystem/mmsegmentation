@@ -523,6 +523,8 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
                         image_names_per_dataset.setdefault(item.dataset_name, []).append(name)
                     image_infos = []
                     for dataset_name, image_names in image_names_per_dataset.items():
+                        if "/" in dataset_name:
+                            dataset_name = dataset_name.split("/")[-1]
                         ds_info = ds_infos_dict[dataset_name]
                         for batched_names in sly.batched(image_names, 200):
                             batch_infos = api.image.get_list(
