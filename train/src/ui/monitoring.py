@@ -365,7 +365,8 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes):
             # convert masks to required format and save to general ann_dir
             names = dataset.get_items_names()
             mask_files = [dataset.get_seg_path(name) for name in names]
-            for name, path in zip(names, mask_files):
+            for path in mask_files:
+                file_name = os.path.basename(path)
                 mask = cv2.imread(path)[:, :, ::-1]
                 result = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.int32)
                 # human masks to machine masks
@@ -376,7 +377,7 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes):
                 )
                 result = palette_lookup[mask_keys]
 
-                cv2.imwrite(os.path.join(g.project_seg_dir, ann_dir, name), result)
+                cv2.imwrite(os.path.join(g.project_seg_dir, ann_dir, file_name), result)
                 p.update(1)
 
             imgfiles_to_move = [dataset.get_img_path(name) for name in names]
