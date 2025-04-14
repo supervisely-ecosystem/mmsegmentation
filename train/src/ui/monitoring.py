@@ -656,6 +656,7 @@ def create_experiment(
     experiment_info_json = asdict(experiment_info)
     experiment_info_json["project_preview"] = g.project_info.image_preview_url
     experiment_info_json["primary_metric"] = primary_metric_name
+
     g.api.task.set_output_experiment(g.task_id, experiment_info_json)
     experiment_info_json.pop("project_preview")
     experiment_info_json.pop("primary_metric")
@@ -753,8 +754,9 @@ def train(api: sly.Api, task_id, context, state, app_logger):
                 api, task_id, classes, cfg, state, remote_dir
             )
 
+        sly.logger.info("Creating experiment info")
         create_experiment(
-            state["selectedModel"], remote_dir, report_id, eval_metrics, primary_metric_name
+            state["pretrainedModel"], remote_dir, report_id, eval_metrics, primary_metric_name
         )
         w.workflow_input(api, g.project_info, state)
         w.workflow_output(api, g.sly_mmseg_generated_metadata, state, benchmark_report_template)
