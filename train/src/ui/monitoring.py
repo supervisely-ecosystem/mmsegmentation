@@ -655,7 +655,7 @@ def create_experiment(
 
     experiment_info_json = asdict(experiment_info)
     experiment_info_json["project_preview"] = g.project_info.image_preview_url
-    experiment_info["primary_metric"] = primary_metric_name
+    experiment_info_json["primary_metric"] = primary_metric_name
     g.api.task.set_output_experiment(g.task_id, experiment_info_json)
     experiment_info_json.pop("project_preview")
     experiment_info_json.pop("primary_metric")
