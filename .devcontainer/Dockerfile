@@ -14,7 +14,7 @@ RUN pip3 install pyyaml==6.0
 
 RUN pip3 install ffmpeg-python==0.2.0
 
-RUN pip3 install supervisely[model-benchmark]==6.73.334
+RUN pip3 install supervisely[model-benchmark]==6.73.347
 
 RUN mkdir -p /tmp/mmseg \
     && wget https://github.com/open-mmlab/mmsegmentation/archive/refs/tags/v0.23.0.tar.gz -P /tmp/mmseg \
@@ -22,5 +22,5 @@ RUN mkdir -p /tmp/mmseg \
 
 RUN apt-get -y install curl
 
-RUN apt -y install wireguard iproute2
+RUN apt-get update && apt -y install wireguard iproute2
 RUN apt-get -y install wget
