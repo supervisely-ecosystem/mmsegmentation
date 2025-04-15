@@ -620,18 +620,21 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
         sly.logger.info(
             f"Predictions project name: {bm.dt_project_info.name}. Workspace_id: {bm.dt_project_info.workspace_id}"
         )
-
-        # 9. Stop the server
-        try:
-            m.app.stop()
-        except Exception as e:
-            sly.logger.warning(f"Failed to stop the model app: {e}")
-        try:
-            thread.join()
-        except Exception as e:
-            sly.logger.warning(f"Failed to stop the server: {e}")
     except Exception as e:
+        benchmark_report_template, report_id, eval_metrics, primary_metric_name = (
+            None,
+            None,
+            None,
+            None,
+        )
+        api.app.set_field(task_id, "state.benchmarkInProgress", False)
         sly.logger.error(f"Model benchmark failed. {repr(e)}", exc_info=True)
+        benchmark_report_template, report_id, eval_metrics, primary_metric_name = (
+            None,
+            None,
+            None,
+            None,
+        )
         try:
             if bm.dt_project_info:
                 api.project.remove(bm.dt_project_info.id)
