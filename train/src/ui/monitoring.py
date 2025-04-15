@@ -650,7 +650,8 @@ def create_experiment(
     experiment_info.train_size = g.train_size
     experiment_info.val_size = g.val_size
     experiment_info.evaluation_report_id = report_id
-    experiment_info.evaluation_report_link = f"/model-benchmark?id={str(report_id)}"
+    if report_id is not None:
+        experiment_info.evaluation_report_link = f"/model-benchmark?id={str(report_id)}"
     experiment_info.evaluation_metrics = eval_metrics
 
     experiment_info_json = asdict(experiment_info)
