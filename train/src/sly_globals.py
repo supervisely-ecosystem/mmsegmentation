@@ -64,3 +64,5 @@ if os.path.isdir(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}"):
     sly.logger.info(f"Found {models_cnt} folders in {configs_dir} directory.")
 
 sly_mmseg_generated_metadata = None # for project Workflow purposes
+
+train_size, val_size = None, None
