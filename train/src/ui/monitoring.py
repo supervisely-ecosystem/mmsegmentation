@@ -521,6 +521,8 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
                         name = item.name
                         if name[1] == "_":
                             name = name[2:]
+                        elif name[2] == "_":
+                            name = name[3:]
                         image_names_per_dataset.setdefault(item.dataset_name, []).append(name)
                     image_infos = []
                     for dataset_name, image_names in image_names_per_dataset.items():
@@ -548,7 +550,7 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
                 benchmark_images_ids = [img_info.id for img_info in val_image_infos]
                 train_images_ids = [img_info.id for img_info in train_image_infos]
 
-                p.update(1)
+            p.update(1)
 
         pbar = TqdmBenchmark
         bm = sly.nn.benchmark.SemanticSegmentationBenchmark(

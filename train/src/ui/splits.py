@@ -94,12 +94,17 @@ def set_dataset_ind_to_items(project_dir):
         for name in dataset.get_items_names():
             new_name = f"{ds_cnt}_{name}"
             img_path, ann_path = dataset.get_item_paths(name)
+            img_info_path = dataset.get_item_info_path(name)
             if sly.fs.file_exists(img_path):
                 os.rename(img_path, img_path.replace(name, new_name))
             if sly.fs.file_exists(ann_path):
                 ann_name = sly.fs.get_file_name(ann_path)
                 new_ann_name = f"{ds_cnt}_{ann_name}"
                 os.rename(ann_path, ann_path.replace(ann_name, new_ann_name))
+            if sly.fs.file_exists(img_info_path):
+                img_info_name = sly.fs.get_file_name(img_info_path)
+                new_img_info_name = f"{ds_cnt}_{img_info_name}"
+                os.rename(img_info_path, img_info_path.replace(img_info_name, new_img_info_name))
         ds_cnt += 1
 
 @g.my_app.callback("create_splits")
