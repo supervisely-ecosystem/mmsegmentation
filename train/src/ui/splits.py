@@ -87,6 +87,7 @@ def verify_train_val_sets(train_set, val_set):
 
 
 def set_dataset_ind_to_items(project_dir):
+    global project_fs
     project_fs = sly.Project(project_dir, sly.OpenMode.READ)
     ds_cnt = 0
     for dataset in project_fs.datasets:
