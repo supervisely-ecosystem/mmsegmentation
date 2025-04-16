@@ -87,6 +87,7 @@ def verify_train_val_sets(train_set, val_set):
 
 
 def set_dataset_ind_to_items(project_dir):
+    global project_fs
     project_fs = sly.Project(project_dir, sly.OpenMode.READ)
     ds_cnt = 0
     for dataset in project_fs.datasets:
@@ -106,6 +107,7 @@ def set_dataset_ind_to_items(project_dir):
                 new_img_info_name = f"{ds_cnt}_{img_info_name}"
                 os.rename(img_info_path, img_info_path.replace(img_info_name, new_img_info_name))
         ds_cnt += 1
+    project_fs = sly.Project(project_dir, sly.OpenMode.READ)
 
 @g.my_app.callback("create_splits")
 @sly.timeit
