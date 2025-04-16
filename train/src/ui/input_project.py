@@ -93,6 +93,8 @@ def get_paths_by_image_id(image_id):
 
 def get_random_item():
     global project_fs
+    project_fs = sly.Project(g.project_dir, sly.OpenMode.READ)
+
     all_ds_names = project_fs.datasets.keys()
     non_empty_ds = [ds for ds in all_ds_names if len(project_fs.datasets.get(ds)) > 0]
     if len(non_empty_ds) == 0:
