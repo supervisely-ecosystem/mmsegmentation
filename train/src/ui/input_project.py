@@ -14,12 +14,61 @@ _cache_path = _cache_base_filename + ".db"
 project_fs: sly.Project = None
 _image_id_to_paths = {}
 
+def init_selector_state(state: dict):
+    state.update(
+        {
+        "selectWorkspace": {
+            "teamId": g.team_id,
+            "workspaceId": g.workspace_id
+            },
+        "selectProject": {
+            "value": g.project_id
+            },
+        "selectDataset": {
+            "options": {
+                "multiple": True,
+                "fit-input-width": True,
+            },
+            "value": None,
+            },
+        "selectAllDatasets": True,
+        }
+    )
+
+
+def init_selector_data(data):
+    workspace_info = g.workspace_info
+    project_infos = g.api.project.get_list(workspace_info.id, filters=[{ 'field': 'type', 'operator': '=', 'value': 'images' }])
+    project_options = [{"value": info.id, "label": info.name, "disabled": False} for info in project_infos]
+    ds_items = g.generate_selector_items_from_tree(g.dataset_tree)
+    data.update(
+        {
+        "selectWorkspace": {
+            "hide": False,
+            "loading": False,
+            "disabled": True,
+            "options": [
+                {"id": workspace_info.id, "name": workspace_info.name},
+            ]
+            },
+        "selectProject": {
+            "hide": False,
+            "loading": False,
+            "disabled": False,
+            "items": project_options,
+            },
+        "selectDataset": {
+            "disabled": False,
+            "items": ds_items,
+            "width": 350,
+            },
+        }
+    )
 
 def init(data, state):
-    data["projectId"] = g.project_info.id
-    data["projectName"] = g.project_info.name
-    data["projectImagesCount"] = g.project_info.items_count
-    data["projectPreviewUrl"] = g.api.image.preview_url(g.project_info.reference_image_url, 100, 100)
+    init_selector_state(state)
+    init_selector_data(data)
+
     init_progress(progress_index, data)
     data["done1"] = False
     state["collapsed1"] = False
@@ -64,6 +113,7 @@ def download(api: sly.Api, task_id, context, state, app_logger):
     except Exception as e:
         reset_progress(progress_index)
         raise e
+    
 
     fields = [
         {"field": "data.done1", "payload": True},
@@ -72,6 +122,22 @@ def download(api: sly.Api, task_id, context, state, app_logger):
         {"field": "state.activeStep", "payload": 2},
     ]
     g.api.app.set_fields(g.task_id, fields)
+
+
+@g.my_app.callback("change_project")
+def select_project_value_changed(api: sly.Api, task_id, context, state, app_logger):
+    try:
+        project_value = state.get("selectProject", {}).get("value")
+        if project_value is None:
+            sly.logger.warning("Could not update project.")
+        g.update_project(project_value)
+        ds_selector_data = api.app.get_field(task_id, "data.selectDataset")
+        ds_selector_data["items"] = g.generate_selector_items_from_tree(g.dataset_tree)
+        api.app.set_field(task_id, "data.selectDataset", ds_selector_data)
+        init_selector_state(state)
+    except Exception as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 def get_image_info_from_cache(dataset_name, item_name):

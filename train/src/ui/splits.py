@@ -9,6 +9,30 @@ train_set_path = os.path.join(g.my_app.data_dir, "train.txt")
 val_set_path = os.path.join(g.my_app.data_dir, "val.txt")
 
 def init(project_info, project_meta: sly.ProjectMeta, data, state):
+    data['selectTrainDataset'] = {'hide': False, "loading": False}
+    data["selectContainer"] = {"hide": False, "loading": False}
+    data["projectSelector"] = {
+        "hide": False,
+        "loading": False,
+        "with_link": False,
+        "items": [  
+            {            
+            "value": project_info.id,
+            "name": project_info.name,
+            }
+        ]
+    }
+
+    data["datasetSelector"] = {
+            "hide": False,
+            "loading": False,
+            "disabled": False,
+            "width": 350,
+            "items": g.generate_selector_items_from_tree(g.dataset_tree)
+        }
+    state['projectSelector'] = {'value': project_info.id}
+    state['datasetSelector'] = {"options": {"multiple": True}}
+
     data["randomSplit"] = [
         {"name": "train", "type": "success"},
         {"name": "val", "type": "primary"},

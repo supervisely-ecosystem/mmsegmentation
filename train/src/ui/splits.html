@@ -109,12 +109,53 @@
             </sly-field>
             <sly-field title="Train dataset(s)"
                        description="all images in selected dataset(s) are considered as training set">
-                <sly-select-dataset
-                        :disabled="data.done2"
-                        :project-id="data.projectId"
-                        :datasets.sync="state.trainDatasets"
-                        :options="{'multiple': true, 'showLabel': false}">
-                </sly-select-dataset>
+                <!-- select dataset tree -->
+                <div v-if="!data.selectTrainDataset.hide" v-loading="data.selectTrainDataset.loading">
+                    <link href="./sly/css/app/widgets/container/style.css" rel="stylesheet" v-if="!data.selectContainer.hide" v-loading="data.selectContainer.loading"/>
+                    <div class="container" style="flex-direction: column; gap: 10px;" v-if="!data.selectContainer.hide" v-loading="data.selectContainer.loading">
+                        <!-- Project Selector -->
+                        <div style="">
+                            <el-select 
+                                :disabled="true"
+                                :filterable="false"
+                                :fit-input-width="true"
+                                :multiple="false" 
+                                placeholder="Select a project" 
+                                @change="post('/projectSelector/value_changed')" 
+                                v-if="!data.projectSelector.hide" 
+                                v-loading="data.projectSelector.loading" 
+                                v-model="state.projectSelector.value">
+                                <div v-if="data.projectSelector.items">
+                                    <el-option 
+                                        v-for="item in data.projectSelector.items" 
+                                        :key="item.value" 
+                                        :label="item.label" 
+                                        :value="item.value" 
+                                        :disabled="item.disabled">
+                                        <span style="float: left" v-if="item.right_text !== null">{{ item.label }}</span>
+                                        <span style="float: right; color: #8492a6; font-size: 13px" v-if="item.right_text !== null">{{ item.right_text }}</span>
+                                    </el-option>
+                                </div>
+                            </el-select>
+                            <span style="margin-left:10px;" v-if="data.projectSelector.with_link && data.projectSelector.hide === false" v-loading="data.projectSelector.loading">
+                                <a :href="state.projectSelector.links[state.projectSelector.value]" target="_blank">Learn more...</a>
+                            </span>
+                        </div>
+                        <!-- Dataset Selector -->
+                        <div style="margin-top: 10px;">
+                            <div v-if="!data.datasetSelector.hide" v-loading="data.datasetSelector.loading">
+                                <sly-tree-select 
+                                    :disabled="data.datasetSelector.disabled" 
+                                    :items="data.datasetSelector.items" 
+                                    :options="state.datasetSelector.options" 
+                                    :style="{ width: `${data.datasetSelector.width}px` }" 
+                                    :value="state.datasetSelector.value" 
+                                    @input="state.datasetSelector.value = $event">
+                                </sly-tree-select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </sly-field>
             <sly-field title="Validation dataset(s)"
                        description="all images in selected dataset(s) are considered as validation set">
