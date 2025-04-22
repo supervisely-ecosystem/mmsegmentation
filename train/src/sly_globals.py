@@ -96,22 +96,9 @@ team_id = sly.env.team_id()
 team_info = api.team.get_info_by_id(team_id)
 workspace_id = sly.env.workspace_id()
 workspace_info = api.workspace.get_info_by_id(workspace_id)
-project_id = sly.env.project_id(raise_not_found=False)
+project_id = sly.env.project_id()
 dataset_id = sly.env.dataset_id(raise_not_found=False)
 sly.logger.debug("DATASET_ID: %s, PROJECT_ID: %s", dataset_id, project_id)
-
-try:
-    assert bool(project_id) ^ bool(dataset_id)
-except AssertionError as e:
-    error_msg = "Either project_id or dataset_id should be set, but not both"
-    sly.logger.error(error_msg)
-    raise RuntimeError(error_msg) from e
-
-if project_id is None:
-    project_id = api.dataset.get_info_by_id(dataset_id).project_id
-    sly.logger.debug(
-        f"Project ID was not set. Using dataset ID {dataset_id} to get project ID {project_id}"
-    )
 
 project_info = None
 project_meta = None
