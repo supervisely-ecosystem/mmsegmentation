@@ -102,6 +102,9 @@ def download(api: sly.Api, task_id, context, state, app_logger):
         ds_ids = state['selectDataset']['value']
         datasets = g.filter_datasets_aggregated(ds_ids)
 
+    if len(datasets) == 0:
+        raise RuntimeError("No datasets selected. Please select at least one dataset.")
+
     try:
         if sly.fs.dir_exists(g.project_dir):
             pass
