@@ -151,7 +151,11 @@ def init_project(project_id, dataset_ids=[]):
         datasets = filter_datasets_aggregated(dataset_ids)
         dataset_tree = filter_tree_by_ids(dataset_tree, dataset_ids)
 
-dataset_ids = [dataset_id] if dataset_id else []
+select_all_datasets = True
+dataset_ids = []
+if dataset_id is not None:
+    dataset_ids = [dataset_id]
+    select_all_datasets = False
 init_project(project_id, dataset_ids)
 # sly.fs.clean_dir(my_app.data_dir)  # @TODO: for debug
 
