@@ -12,21 +12,23 @@ import pkg_resources
 def filter_tree_by_ids(tree, ids: List[int]):
     """
     Filters a tree structure by a list of IDs.
-    Returns a new tree structure containing only the nodes with IDs in the provided list.
+    If a parent node's ID is in the provided list, all its children are included.
 
     Args:
-        tree (list): A list of dictionaries representing the tree structure.
+        tree (dict): A dictionary representing the tree structure.
         ids (list): A list of IDs to filter the tree by.
 
     Returns:
-        list: A filtered tree structure containing only the nodes with IDs in the provided list.
+        dict: A filtered tree structure containing the nodes with IDs in the provided list and all their children.
     """
     result = {}
     for ds_info, children in tree.items():
         if ds_info.id in ids:
             result[ds_info] = children
-            if children:
-                result[ds_info] = filter_tree_by_ids(children, ids)
+        elif children:
+            filtered_children = filter_tree_by_ids(children, ids)
+            if filtered_children:
+                result[ds_info] = filtered_children
     return result
 
 def generate_selector_items_from_tree(tree):

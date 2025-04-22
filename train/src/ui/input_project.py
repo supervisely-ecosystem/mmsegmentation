@@ -29,7 +29,7 @@ def init_selector_state(state: dict):
                 "multiple": True,
                 "fit-input-width": True,
             },
-            "value": None,
+            "value": None if not g.dataset_id else [ds.id for ds in g.datasets],
             },
         "selectAllDatasets": True,
         }
