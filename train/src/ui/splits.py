@@ -23,7 +23,14 @@ def init(project_info, project_meta: sly.ProjectMeta, data, state):
         ]
     }
 
-    data["datasetSelector"] = {
+    data["trainDatasetSelector"] = {
+            "hide": False,
+            "loading": False,
+            "disabled": False,
+            "width": 350,
+            "items": g.generate_selector_items_from_tree(g.dataset_tree)
+        }
+    data["valDatasetSelector"] = {
             "hide": False,
             "loading": False,
             "disabled": False,
@@ -31,7 +38,8 @@ def init(project_info, project_meta: sly.ProjectMeta, data, state):
             "items": g.generate_selector_items_from_tree(g.dataset_tree)
         }
     state['projectSelector'] = {'value': project_info.id}
-    state['datasetSelector'] = {"options": {"multiple": True}}
+    state['trainDatasetSelector'] = {"options": {"multiple": True}}
+    state['valDatasetSelector'] = {"options": {"multiple": True}}
 
     data["randomSplit"] = [
         {"name": "train", "type": "success"},
@@ -92,9 +100,13 @@ def get_train_val_sets(project_dir, state):
                                                                      add_untagged_to)
         return train_set, val_set
     elif split_method == "datasets":
-        train_datasets = state["trainDatasets"]
-        val_datasets = state["valDatasets"]
-        train_set, val_set = sly.Project.get_train_val_splits_by_dataset(project_dir, train_datasets, val_datasets)
+        train_names, val_names = [], []
+        for ds_info in g.datasets:
+            if ds_info.id in state["trainDatasetSelector"]["value"]:
+                train_names.append(g.id_to_aggregated_name[ds_info.id])
+            if ds_info.id in state["valDatasetSelector"]["value"]:
+                val_names.append(g.id_to_aggregated_name[ds_info.id])
+        train_set, val_set = sly.Project.get_train_val_splits_by_dataset(project_dir, train_names, val_names)
         return train_set, val_set
     else:
         raise ValueError(f"Unknown split method: {split_method}")

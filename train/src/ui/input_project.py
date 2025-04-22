@@ -62,6 +62,9 @@ def init_selector_data(data):
             "items": ds_items,
             "width": 350,
             },
+        "selectAllDatasets": {
+            "disabled": False
+        },
         }
     )
 
@@ -80,6 +83,25 @@ def init(data, state):
 @sly.timeit
 @g.my_app.ignore_errors_and_show_dialog_window()
 def download(api: sly.Api, task_id, context, state, app_logger):
+    fields_to_disable = [
+        "data.selectProject",
+        "data.selectDataset",
+        "data.selectAllDatasets",
+        ]
+    fields_enabled = api.app.get_fields(task_id, fields_to_disable)
+    fields_disabled = fields_enabled.copy()
+    for field in fields_to_disable:
+        fields_disabled[field]['disabled'] = True
+
+    f = [{"field": field, "payload": fields_disabled[field]} for field in fields_to_disable]
+    api.app.set_fields(task_id, f)
+
+    if state['selectAllDatasets']:
+        datasets = g.datasets
+    else:
+        ds_ids = state['selectDataset']['value']
+        datasets = g.filter_datasets_aggregated(ds_ids)
+
     try:
         if sly.fs.dir_exists(g.project_dir):
             pass
@@ -89,6 +111,7 @@ def download(api: sly.Api, task_id, context, state, app_logger):
             download_project(
                 api=g.api,
                 project_info=g.project_info,
+                dataset_infos=datasets,
                 project_dir=g.project_dir,
                 use_cache=use_cache,
                 progress_index=progress_index,
@@ -103,6 +126,7 @@ def download(api: sly.Api, task_id, context, state, app_logger):
                         api=g.api,
                         project_info=g.project_info,
                         project_dir=g.project_dir,
+                        dataset_infos=datasets,
                         use_cache=False,
                         progress_index=progress_index,
                     )
@@ -114,14 +138,24 @@ def download(api: sly.Api, task_id, context, state, app_logger):
         reset_progress(progress_index)
         raise e
     
-
+    available_datasets = g.generate_selector_items_from_list(datasets)
+    ds_selector_data = {
+            "hide": False,
+            "loading": False,
+            "disabled": False,
+            "width": 350,
+            "items": available_datasets
+    }
     fields = [
         {"field": "data.done1", "payload": True},
         {"field": "state.collapsed2", "payload": False},
         {"field": "state.disabled2", "payload": False},
         {"field": "state.activeStep", "payload": 2},
+        {"field": "data.trainDatasetSelector", "payload": ds_selector_data},
+        {"field": "data.valDatasetSelector", "payload": ds_selector_data},
     ]
-    g.api.app.set_fields(g.task_id, fields)
+    # fields.extend([{"field": field, "payload": fields_enabled[field]} for field in fields_to_disable])
+    api.app.set_fields(g.task_id, fields)
 
 
 @g.my_app.callback("change_project")

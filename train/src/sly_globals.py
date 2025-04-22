@@ -51,6 +51,19 @@ def generate_selector_items_from_tree(tree):
         result.append(selector_item)
     return result
 
+def generate_selector_items_from_list(datasets):
+    """
+    Converts a list of dataset information into a list of dictionaries suitable for a selector component.
+    Each dictionary contains an 'id' and 'label' keys.
+
+    Args:
+        datasets (list): A list of dataset information.
+
+    Returns:
+        list: A list of dictionaries formatted for the selector component.
+    """
+    return [{"id": ds.id, "label": ds.name} for ds in datasets]
+
 # from dotenv import load_dotenv
 
 root_source_dir = str(Path(sys.argv[0]).parents[2])
@@ -105,29 +118,49 @@ project_meta = None
 dataset_tree = None
 datasets = []
 
+ds_id_to_info = {}
+parent_to_children = {}
+id_to_aggregated_name = {}
+
+def get_aggregated_name(ds, ds_id_to_info):
+    names = []
+    current = ds
+    while current:
+        names.append(current.name)
+        if current.parent_id and current.parent_id in ds_id_to_info:
+            current = ds_id_to_info[current.parent_id]
+        else:
+            break
+    return "/".join(reversed(names))
+
+
+def filter_datasets_aggregated(dataset_ids):
+    datasets = []
+    for dataset_id in dataset_ids:
+        datasets.extend([ds_id_to_info.get(dataset_id)] + parent_to_children.get(dataset_id, []))
+    if len(datasets) > len(dataset_ids):
+        _ds_names = [ds.name for ds in datasets]
+        sly.logger.debug("Aggregated datasets: %s", _ds_names)
+    return datasets
+
 def init_project(project_id, dataset_ids=[]):
-    global project_info, project_meta, dataset_tree, datasets
+    global project_info, project_meta, dataset_tree, datasets, ds_id_to_info, parent_to_children, id_to_aggregated_name
     project_info = api.project.get_info_by_id(project_id)
     project_meta = sly.ProjectMeta.from_json(api.project.get_meta(project_id))
     dataset_tree = api.dataset.get_tree(project_id)
     datasets = api.dataset.get_list(project_id, recursive=True)
-    if dataset_ids:
-        sly.logger.info("Fetching datasets including all nested datasets")
-        ds_id_to_info = {ds.id: ds for ds in datasets}
-        parent_to_children = {ds.id: [] for ds in datasets}
-        for ds in datasets:
-            current = ds
-            while parent_id := current.parent_id:
-                parent_to_children[parent_id].append(ds)
-                current = ds_id_to_info[parent_id]
+    ds_id_to_info = {ds.id: ds for ds in datasets}
+    id_to_aggregated_name = {ds.id: get_aggregated_name(ds, ds_id_to_info) for ds in ds_id_to_info.values()}
+    parent_to_children = {ds.id: [] for ds in datasets}
+    for ds in datasets:
+        current = ds
+        while parent_id := current.parent_id:
+            parent_to_children[parent_id].append(ds)
+            current = ds_id_to_info[parent_id]
 
-        datasets = []
-        for dataset_id in dataset_ids:
-            datasets.extend([ds_id_to_info.get(dataset_id)] + parent_to_children.get(dataset_id, []))
-        if len(datasets) > 1:
-            _ds_names = [ds.name for ds in datasets]
-            sly.logger.debug("Aggregated datasets: %s", _ds_names)
-    dataset_tree = filter_tree_by_ids(dataset_tree, [ds.id for ds in datasets])
+    if dataset_ids:
+        datasets = filter_datasets_aggregated(dataset_ids)
+        dataset_tree = filter_tree_by_ids(dataset_tree, dataset_ids)
 
 dataset_ids = [dataset_id] if dataset_id else []
 init_project(project_id, dataset_ids)

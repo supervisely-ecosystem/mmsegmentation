@@ -39,8 +39,12 @@
             </el-select>
         </div>
     <div style="margin-top: 10px;" v-if="!data.selectProject.hide" v-loading="data.selectProject.loading">
-        <el-checkbox v-model="state.selectAllDatasets" :true-label="true" :false-label="false">
-        Select all datasets
+        <el-checkbox 
+            v-model="state.selectAllDatasets" 
+            :true-label="true" 
+            :false-label="false" 
+            :disabled="data.selectProject.disabled">
+            Select all datasets
         </el-checkbox>
     </div>
         <div v-if="!state.selectAllDatasets" style="margin-top: 10px;">
