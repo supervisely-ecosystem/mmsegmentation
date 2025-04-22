@@ -8,65 +8,66 @@ from sly_train_progress import get_progress_cb, reset_progress, init_progress
 from sly_project_cached import download_project, validate_project
 
 progress_index = 1
-_images_infos = None # dataset_name -> image_name -> image_info
+_images_infos = None  # dataset_name -> image_name -> image_info
 _cache_base_filename = os.path.join(g.my_app.data_dir, "images_info")
 _cache_path = _cache_base_filename + ".db"
 project_fs: sly.Project = None
 _image_id_to_paths = {}
 
+
 def init_selector_state(state: dict):
     state.update(
         {
-        "selectWorkspace": {
-            "teamId": g.team_id,
-            "workspaceId": g.workspace_id
+            "selectWorkspace": {"teamId": g.team_id, "workspaceId": g.workspace_id},
+            "selectProject": {"value": g.project_id},
+            "selectDataset": {
+                "options": {
+                    "multiple": True,
+                    "fit-input-width": True,
+                },
+                "value": None if not g.dataset_id else [ds.id for ds in g.datasets],
             },
-        "selectProject": {
-            "value": g.project_id
-            },
-        "selectDataset": {
-            "options": {
-                "multiple": True,
-                "fit-input-width": True,
-            },
-            "value": None if not g.dataset_id else [ds.id for ds in g.datasets],
-            },
-        "selectAllDatasets": g.select_all_datasets,
+            "selectAllDatasets": g.select_all_datasets,
         }
     )
 
 
 def init_selector_data(data):
     workspace_info = g.workspace_info
-    project_infos = g.api.project.get_list(workspace_info.id, filters=[{ 'field': 'type', 'operator': '=', 'value': 'images' }])
-    project_options = [{"value": info.id, "label": info.name, "disabled": False} for info in project_infos]
+    project_infos = g.api.project.get_list(
+        workspace_info.id, filters=[{"field": "type", "operator": "=", "value": "images"}]
+    )
+    project_options = [
+        {"value": info.id, "label": info.name, "disabled": False} for info in project_infos
+    ]
     ds_items = g.generate_selector_items_from_tree(g.dataset_tree)
     data.update(
         {
-        "selectWorkspace": {
-            "hide": False,
-            "loading": False,
-            "disabled": True,
-            "options": [
-                {"id": workspace_info.id, "name": workspace_info.name},
-            ]
+            "selectWorkspace": {
+                "hide": False,
+                "loading": False,
+                "disabled": True,
+                "options": [
+                    {"id": workspace_info.id, "name": workspace_info.name},
+                ],
             },
-        "selectProject": {
-            "hide": False,
-            "loading": False,
-            "disabled": False,
-            "items": project_options,
+            "selectProject": {
+                "hide": False,
+                "loading": False,
+                "disabled": False,
+                "items": project_options,
             },
-        "selectDataset": {
-            "disabled": False,
-            "items": ds_items,
-            "width": 350,
+            "selectDataset": {
+                "disabled": False,
+                "items": ds_items,
+                "width": 350,
             },
-        "selectAllDatasets": {
-            "disabled": False,
-        },
+            "selectAllDatasets": {
+                "disabled": False,
+            },
         }
     )
+
 
 def init(data, state):
     init_selector_state(state)
@@ -87,19 +88,19 @@ def download(api: sly.Api, task_id, context, state, app_logger):
         "data.selectProject",
         "data.selectDataset",
         "data.selectAllDatasets",
-        ]
+    ]
     fields_enabled = api.app.get_fields(task_id, fields_to_disable)
     fields_disabled = fields_enabled.copy()
     for field in fields_to_disable:
-        fields_disabled[field]['disabled'] = True
+        fields_disabled[field]["disabled"] = True
 
     f = [{"field": field, "payload": fields_disabled[field]} for field in fields_to_disable]
     api.app.set_fields(task_id, f)
 
-    if state['selectAllDatasets']:
+    if state["selectAllDatasets"]:
         datasets = g.datasets
     else:
-        ds_ids = state['selectDataset']['value']
+        ds_ids = state["selectDataset"]["value"]
         datasets = g.filter_datasets_aggregated(ds_ids)
 
     if len(datasets) == 0:
@@ -124,7 +125,9 @@ def download(api: sly.Api, task_id, context, state, app_logger):
                 try:
                     validate_project(g.project_dir)
                 except Exception:
-                    app_logger.warning("Cache is corrupted. Downloading project without cache.", exc_info=True)
+                    app_logger.warning(
+                        "Cache is corrupted. Downloading project without cache.", exc_info=True
+                    )
                     download_project(
                         api=g.api,
                         project_info=g.project_info,
@@ -140,14 +143,15 @@ def download(api: sly.Api, task_id, context, state, app_logger):
     except Exception as e:
         reset_progress(progress_index)
         raise e
-    
-    available_datasets = g.generate_selector_items_from_list(datasets)
+
+    filtered_tree = g.filter_tree_by_ids(g.dataset_tree, [ds.id for ds in datasets])
+    available_datasets = g.generate_selector_items_from_tree(filtered_tree)
     ds_selector_data = {
-            "hide": False,
-            "loading": False,
-            "disabled": False,
-            "width": 350,
-            "items": available_datasets
+        "hide": False,
+        "loading": False,
+        "disabled": False,
+        "width": 350,
+        "items": available_datasets,
     }
     fields = [
         {"field": "data.done1", "payload": True},
@@ -174,6 +178,7 @@ def select_project_value_changed(api: sly.Api, task_id, context, state, app_logg
         init_selector_state(state)
     except Exception as e:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -181,7 +186,7 @@ def get_image_info_from_cache(dataset_name, item_name):
     dataset_fs = project_fs.datasets.get(dataset_name)
     img_info_path = dataset_fs.get_img_info_path(item_name)
     image_info_dict = sly.json.load_json_file(img_info_path)
-    ImageInfo = namedtuple('ImageInfo', image_info_dict)
+    ImageInfo = namedtuple("ImageInfo", image_info_dict)
     info = ImageInfo(**image_info_dict)
 
     # add additional info - helps to save split paths to txt files

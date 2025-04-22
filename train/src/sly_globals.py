@@ -9,6 +9,7 @@ from typing import List
 import shutil
 import pkg_resources
 
+
 def filter_tree_by_ids(tree, ids: List[int]):
     """
     Filters a tree structure by a list of IDs.
@@ -30,6 +31,7 @@ def filter_tree_by_ids(tree, ids: List[int]):
             if filtered_children:
                 result[ds_info] = filtered_children
     return result
+
 
 def generate_selector_items_from_tree(tree):
     """
@@ -53,18 +55,6 @@ def generate_selector_items_from_tree(tree):
         result.append(selector_item)
     return result
 
-def generate_selector_items_from_list(datasets):
-    """
-    Converts a list of dataset information into a list of dictionaries suitable for a selector component.
-    Each dictionary contains an 'id' and 'label' keys.
-
-    Args:
-        datasets (list): A list of dataset information.
-
-    Returns:
-        list: A list of dictionaries formatted for the selector component.
-    """
-    return [{"id": ds.id, "label": ds.name} for ds in datasets]
 
 # from dotenv import load_dotenv
 
@@ -87,6 +77,7 @@ secret_debug_env_path = os.path.join(root_source_dir, "train", "secret_debug.env
 
 if sly.is_development():
     from dotenv import load_dotenv
+
     load_dotenv(debug_env_path)
     load_dotenv(os.path.expanduser("~/supervisely.env"))
 
@@ -111,6 +102,7 @@ ds_id_to_info = {}
 parent_to_children = {}
 id_to_aggregated_name = {}
 
+
 def get_aggregated_name(ds, ds_id_to_info):
     names = []
     current = ds
@@ -132,6 +124,7 @@ def filter_datasets_aggregated(dataset_ids):
         sly.logger.debug("Aggregated datasets: %s", _ds_names)
     return datasets
 
+
 def init_project(project_id, dataset_ids=[]):
     global project_info, project_meta, dataset_tree, datasets, ds_id_to_info, parent_to_children, id_to_aggregated_name
     project_info = api.project.get_info_by_id(project_id)
@@ -139,7 +132,9 @@ def init_project(project_id, dataset_ids=[]):
     dataset_tree = api.dataset.get_tree(project_id)
     datasets = api.dataset.get_list(project_id, recursive=True)
     ds_id_to_info = {ds.id: ds for ds in datasets}
-    id_to_aggregated_name = {ds.id: get_aggregated_name(ds, ds_id_to_info) for ds in ds_id_to_info.values()}
+    id_to_aggregated_name = {
+        ds.id: get_aggregated_name(ds, ds_id_to_info) for ds in ds_id_to_info.values()
+    }
     parent_to_children = {ds.id: [] for ds in datasets}
     for ds in datasets:
         current = ds
@@ -150,6 +145,7 @@ def init_project(project_id, dataset_ids=[]):
     if dataset_ids:
         datasets = filter_datasets_aggregated(dataset_ids)
         dataset_tree = filter_tree_by_ids(dataset_tree, dataset_ids)
+
 
 select_all_datasets = True
 dataset_ids = []
@@ -181,8 +177,9 @@ if os.path.isdir(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}"):
     models_cnt = len(os.listdir(configs_dir)) - 1
     sly.logger.info(f"Found {models_cnt} folders in {configs_dir} directory.")
 
-sly_mmseg_generated_metadata = None # for project Workflow purposes
+sly_mmseg_generated_metadata = None  # for project Workflow purposes
+
 
 def update_project(project_id: int):
-    init_project(project_id)    
+    init_project(project_id)
     sly.logger.info("Project updated")
