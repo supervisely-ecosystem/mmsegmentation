@@ -161,7 +161,7 @@ def init_project(project_id, dataset_ids=[]):
 select_all_datasets = True
 dataset_ids = []
 if dataset_id is not None:
-    dataset_ids = [dataset_id]
+    # # dataset_ids = [dataset_id]
     select_all_datasets = False
 init_project(project_id, dataset_ids)
 # sly.fs.clean_dir(my_app.data_dir)  # @TODO: for debug
