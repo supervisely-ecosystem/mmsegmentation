@@ -8,13 +8,27 @@ val_set = None
 train_set_path = os.path.join(g.my_app.data_dir, "train.txt")
 val_set_path = os.path.join(g.my_app.data_dir, "val.txt")
 
+def init_split_selector_items(data):
+    ds_selector_data = {
+        "hide": False,
+        "loading": False,
+        "disabled": False,
+        "width": 350,
+        "items": g.generate_selector_items_from_tree(g.filtered_tree),
+    }
+    data.update(
+        {
+            "trainDatasetSelector": ds_selector_data,
+            "valDatasetSelector": ds_selector_data,
+        }
+    )
+
 
 def init(project_info, project_meta: sly.ProjectMeta, data, state):
+    init_split_selector_items(data)
     data["selectTrainDataset"] = {"hide": False, "loading": False}
     data["selectContainer"] = {"hide": False, "loading": False}
 
-    data["trainDatasetSelector"] = {}
-    data["valDatasetSelector"] = {}
     state["trainDatasetSelector"] = {"options": {"multiple": True}}
     state["valDatasetSelector"] = {"options": {"multiple": True}}
 
@@ -61,8 +75,15 @@ def init(project_info, project_meta: sly.ProjectMeta, data, state):
 def get_train_val_sets(project_dir, state):
     split_method = state["splitMethod"]
     if split_method == "random":
-        train_count = state["randomSplit"]["count"]["train"]
-        val_count = state["randomSplit"]["count"]["val"]
+        train_percent = state["randomSplit"]["percent"]["train"]
+        # val_percent = state["randomSplit"]["percent"]["val"]
+        total_count = g.total_cnt
+        train_count = int(total_count / 100 * train_percent)
+        val_count = total_count - train_count
+        if train_count + val_count != total_count:
+            sly.logger.error("Train and val sets count does not add up to total count", extra={"train_count": train_count, "val_count": val_count, "total_count": total_count})
+            g.my_app.show_modal_window("Train and val sets count does not add up to total count. Please change your configuration", level="warning", log_message=False)
+            return None, None
         train_set, val_set = sly.Project.get_train_val_splits_by_count(
             project_dir, train_count, val_count
         )

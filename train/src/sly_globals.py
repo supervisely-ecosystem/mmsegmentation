@@ -39,12 +39,6 @@ def generate_selector_items_from_tree(tree):
     """
     Converts a tree structure into a list of dictionaries suitable for a selector component.
     Each dictionary contains an 'id', 'label', and 'children' keys.
-
-    Args:
-        tree (list): A list of dictionaries representing the tree structure.
-
-    Returns:
-        list: A list of dictionaries formatted for the selector component.
     """
     result = []
     for ds_info, children in tree.items():
@@ -98,7 +92,9 @@ sly.logger.debug("DATASET_ID: %s, PROJECT_ID: %s", dataset_id, project_id)
 project_info = None
 project_meta = None
 dataset_tree = None
+filtered_tree = {}
 datasets = []
+total_cnt = 0
 
 ds_id_to_info = {}
 parent_to_children = {}

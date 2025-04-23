@@ -6,6 +6,7 @@ from supervisely.project.download import is_cached
 import sly_globals as g
 from sly_train_progress import get_progress_cb, reset_progress, init_progress
 from sly_project_cached import download_project, validate_project
+from splits import init_split_selector_items
 
 progress_index = 1
 _images_infos = None  # dataset_name -> image_name -> image_info
@@ -144,24 +145,20 @@ def download(api: sly.Api, task_id, context, state, app_logger):
         reset_progress(progress_index)
         raise e
 
-    filtered_tree = g.filter_tree_by_ids(g.dataset_tree, [ds.id for ds in datasets])
-    available_datasets = g.generate_selector_items_from_tree(filtered_tree)
-    ds_selector_data = {
-        "hide": False,
-        "loading": False,
-        "disabled": False,
-        "width": 350,
-        "items": available_datasets,
-    }
+    g.filtered_tree = g.filter_tree_by_ids(g.dataset_tree, [ds.id for ds in datasets])
+    g.total_cnt = sum([ds.items_count for ds in datasets])
+
+    data = {}
+    init_split_selector_items(data)
+
     fields = [
         {"field": "data.done1", "payload": True},
         {"field": "state.collapsed2", "payload": False},
         {"field": "state.disabled2", "payload": False},
         {"field": "state.activeStep", "payload": 2},
-        {"field": "data.trainDatasetSelector", "payload": ds_selector_data},
-        {"field": "data.valDatasetSelector", "payload": ds_selector_data},
+        {"field": "data.trainDatasetSelector", "payload": data["trainDatasetSelector"]},
+        {"field": "data.valDatasetSelector", "payload": data["valDatasetSelector"]},
     ]
-    # fields.extend([{"field": field, "payload": fields_enabled[field]} for field in fields_to_disable])
     api.app.set_fields(g.task_id, fields)
 
 
