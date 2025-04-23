@@ -13,23 +13,25 @@ import pkg_resources
 def filter_tree_by_ids(tree, ids: List[int]):
     """
     Filters a tree structure by a list of IDs.
-    If a parent node's ID is in the provided list, all its children are included.
-
+    
     Args:
         tree (dict): A dictionary representing the tree structure.
-        ids (list): A list of IDs to filter the tree by.
-
+        ids (list): A list of IDs used for filtering.
+    
     Returns:
-        dict: A filtered tree structure containing the nodes with IDs in the provided list and all their children.
+        dict: A filtered tree containing only the nodes that meet the condition.
     """
     result = {}
     for ds_info, children in tree.items():
+        # Recursively process children even if ds_info is not in ids.
+        filtered_children = filter_tree_by_ids(children, ids) if children else {}
         if ds_info.id in ids:
+            # Include the node but ignore any filtered children.
             result[ds_info] = children
-        elif children:
-            filtered_children = filter_tree_by_ids(children, ids)
-            if filtered_children:
-                result[ds_info] = filtered_children
+        else:
+            # Promote children to the higher level, do not attach them to this node.
+            for child, child_tree in filtered_children.items():
+                result[child] = child_tree
     return result
 
 
@@ -102,23 +104,32 @@ ds_id_to_info = {}
 parent_to_children = {}
 id_to_aggregated_name = {}
 
+def find_path_in_tree(tree, target_id):
+    for node, children in tree.items():
+        if node.id == target_id:
+            return [node.name]
+        child_path = find_path_in_tree(children, target_id)
+        if child_path:
+            return [node.name] + child_path
+    return []
 
-def get_aggregated_name(ds, ds_id_to_info):
-    names = []
-    current = ds
-    while current:
-        names.append(current.name)
-        if current.parent_id and current.parent_id in ds_id_to_info:
-            current = ds_id_to_info[current.parent_id]
-        else:
-            break
-    return "/".join(reversed(names))
+
+def get_aggregated_name(ds, dataset_tree):
+    path = find_path_in_tree(dataset_tree, ds.id)
+    if not path:
+        return ds.name
+    return "/".join(path)
 
 
 def filter_datasets_aggregated(dataset_ids):
     datasets = []
     for dataset_id in dataset_ids:
-        datasets.extend([ds_id_to_info.get(dataset_id)] + parent_to_children.get(dataset_id, []))
+        datasets_to_add = [
+            ds_id_to_info.get(dataset_id)
+        ] + parent_to_children.get(dataset_id, [])
+        for dataset in datasets_to_add:
+            if dataset not in datasets:
+                datasets.append(dataset)
     if len(datasets) > len(dataset_ids):
         _ds_names = [ds.name for ds in datasets]
         sly.logger.debug("Aggregated datasets: %s", _ds_names)
@@ -133,7 +144,7 @@ def init_project(project_id, dataset_ids=[]):
     datasets = api.dataset.get_list(project_id, recursive=True)
     ds_id_to_info = {ds.id: ds for ds in datasets}
     id_to_aggregated_name = {
-        ds.id: get_aggregated_name(ds, ds_id_to_info) for ds in ds_id_to_info.values()
+        ds.id: get_aggregated_name(ds, dataset_tree) for ds in ds_id_to_info.values()
     }
     parent_to_children = {ds.id: [] for ds in datasets}
     for ds in datasets:
