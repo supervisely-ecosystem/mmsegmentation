@@ -77,11 +77,15 @@ def get_train_val_sets(project_dir, state):
         return train_set, val_set
     elif split_method == "datasets":
         train_names, val_names = [], []
-        for ds_info in g.datasets:
-            if ds_info.id in state["trainDatasetSelector"]["value"]:
-                train_names.append(g.id_to_aggregated_name[ds_info.id])
-            if ds_info.id in state["valDatasetSelector"]["value"]:
-                val_names.append(g.id_to_aggregated_name[ds_info.id])
+        for ds_id in state["trainDatasetSelector"]["value"]:
+            ids = [ds_id] + g.parent_to_children.get(ds_id, [])
+            for i in ids:
+                train_names.append(g.id_to_aggregated_name[i])
+
+        for ds_id in state["valDatasetSelector"]["value"]:
+            ids = [ds_id] + g.parent_to_children.get(ds_id, [])
+            for i in ids:
+                val_names.append(g.id_to_aggregated_name[i])
         train_set, val_set = sly.Project.get_train_val_splits_by_dataset(
             project_dir, train_names, val_names
         )
