@@ -5,13 +5,59 @@
         :collapsed.sync="state.collapsed1"
         ref="step1"
 >
-    <sly-field title="" description="Project">
-        <a slot="title" target="_blank"
-           :href="`/projects/${data.projectId}/datasets`">{{data.projectName}} ({{data.projectImagesCount}}
-            images)</a>
-        <sly-icon slot="icon" :options="{ imageUrl: `${data.projectPreviewUrl}` }"/>
-    </sly-field>
-    <div>
+    <div v-if="!data.selectDataset.hide" v-loading="data.selectDataset.loading">
+        <div v-if="!data.selectProject.hide" v-loading="data.selectProject.loading">
+            <div style="margin-bottom: 10px;" v-if="!data.selectWorkspace.hide" v-loading="data.selectWorkspace.loading">
+                <sly-select-team-workspace 
+                    :disabled="data.selectWorkspace.disabled" 
+                    :options="data.selectWorkspace.options" 
+                    :team-id.sync="state.selectWorkspace.teamId" 
+                    :workspace-id.sync="state.selectWorkspace.workspaceId">
+                </sly-select-team-workspace>
+            </div>
+            <el-select 
+                :disabled="data.selectProject.disabled"
+                :filterable="false"
+                :fit-input-width="true"
+                :multiple="false"
+                placeholder="Select a project" 
+                @change="command('change_project')"
+                v-if="!data.selectProject.hide" 
+                v-loading="data.selectProject.loading" 
+                v-model="state.selectProject.value">
+                <div v-if="data.selectProject.items">
+                    <el-option 
+                        v-for="item in data.selectProject.items" 
+                        :key="item.value" 
+                        :label="item.label" 
+                        :value="item.value" 
+                        :disabled="item.disabled">
+                        <span style="float: left" v-if="item.right_text !== null">{{ item.label }}</span>
+                        <span style="float: right; color: #8492a6; font-size: 13px" v-if="item.right_text !== null">{{ item.right_text }}</span>
+                    </el-option>
+                </div>
+            </el-select>
+        </div>
+    <div style="margin-top: 10px;" v-if="!data.selectProject.hide" v-loading="data.selectProject.loading">
+        <el-checkbox 
+            v-model="state.selectAllDatasets" 
+            :true-label="true" 
+            :false-label="false" 
+            :disabled="data.selectProject.disabled">
+            Select all datasets
+        </el-checkbox>
+    </div>
+        <div v-if="!state.selectAllDatasets" style="margin-top: 10px;">
+            <sly-tree-select 
+                :disabled="data.selectDataset.disabled" 
+                :items="data.selectDataset.items" 
+                :options="state.selectDataset.options" 
+                :style="{ width: `${data.selectDataset.width}px` }" 
+                :value="state.selectDataset.value" 
+                @input="state.selectDataset.value = $event">
+            </sly-tree-select>
+        </div>
+    <div style="margin-top: 10px; margin-bottom: 10px;">
         <el-checkbox v-model="state.useCache">
             <span v-if="data.isCached">Use cached data stored on the agent to optimize project download</span>
             <span v-else>Cache data on the agent to optimize project download for future trainings</span>

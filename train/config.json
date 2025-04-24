@@ -21,7 +21,7 @@
 	"icon": "https://i.imgur.com/GaEFmkH.png",
 	"icon_cover": true,
 	"context_menu": {
-		"target": ["images_project"],
+		"target": ["images_project", "images_dataset"],
 		"context_root": "Neural Networks",
 		"context_category": "MM Segmentation"
 	},

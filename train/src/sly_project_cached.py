@@ -11,14 +11,14 @@ from sly_train_progress import get_progress_cb
 import sly_globals as g
 
 
-def _no_cache_download(api: sly.Api, project_info: sly.ProjectInfo, project_dir: str, progress_index: int):
-    total = project_info.items_count
+def _no_cache_download(api: sly.Api, project_info: sly.ProjectInfo, dataset_ids: list, project_dir: str, progress_index: int, total: int = None):
     try:
         download_progress = get_progress_cb(progress_index, "Downloading input data...", total)
         download_async(
             api,
             project_info.id,
             project_dir,
+            dataset_ids=dataset_ids,
             progress_cb=download_progress
         )
     except Exception as e:
@@ -30,7 +30,7 @@ def _no_cache_download(api: sly.Api, project_info: sly.ProjectInfo, project_dir:
             api=api,
             project_id=project_info.id,
             dest_dir=project_dir,
-            dataset_ids=None,
+            dataset_ids=dataset_ids,
             log_progress=True,
             progress_cb=download_progress,
         )
@@ -38,39 +38,54 @@ def _no_cache_download(api: sly.Api, project_info: sly.ProjectInfo, project_dir:
 def download_project(
     api: sly.Api,
     project_info: sly.ProjectInfo,
+    dataset_infos,
     project_dir: str,
     use_cache: bool,
     progress_index: int,
 ):
+    total = project_info.items_count if dataset_infos is None else sum((ds.items_count for ds in dataset_infos))
+    ds_ids = [ds.id for ds in dataset_infos] if dataset_infos else None
+
     if os.path.exists(project_dir):
         sly.fs.clean_dir(project_dir)
     if not use_cache:
-        _no_cache_download(api, project_info, project_dir, progress_index)
+        _no_cache_download(api, project_info, ds_ids, project_dir, progress_index, total)
         return
 
     try:
-        total = project_info.items_count
         # download
         download_progress = get_progress_cb(progress_index, "Downloading input data...", total)
         download_to_cache(
             api=api,
             project_id=project_info.id,
+            dataset_infos=dataset_infos,
             log_progress=True,
             progress_cb=download_progress,
         )
         # copy datasets from cache
         total = get_cache_size(project_info.id)
         download_progress = get_progress_cb(progress_index, "Retreiving data from cache...", total, is_size=True)
+        # ds_names = [ds.name for ds in dataset_infos] if dataset_infos else None
+
+        # fix for nested dataset paths in order for them to be readable by fs.
+        ds_paths = [
+            "/".join([parts[0]] + [x for part in parts[1:] for x in ("datasets", part)])
+            for parts in (g.id_to_aggregated_name[ds.id].split("/") for ds in dataset_infos)
+        ] if dataset_infos else None
+        
         copy_from_cache(
             project_id=project_info.id,
             dest_dir=project_dir,
+            # dataset_names=ds_names,
+            dataset_paths=ds_paths,
             progress_cb=download_progress,
         )
-    except Exception:
+    except Exception as e:
+        sly.logger.debug(e)
         sly.logger.warning(f"Failed to retreive project from cache. Downloading it...", exc_info=True)
         if os.path.exists(project_dir):
             sly.fs.clean_dir(project_dir)
-        _no_cache_download(api, project_info, project_dir, progress_index)
+        _no_cache_download(api, project_info, ds_ids, project_dir, progress_index, total)
 
 
 def validate_project(project_dir):
