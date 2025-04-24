@@ -66,10 +66,17 @@ def download_project(
         total = get_cache_size(project_info.id)
         download_progress = get_progress_cb(progress_index, "Retreiving data from cache...", total, is_size=True)
         # ds_names = [ds.name for ds in dataset_infos] if dataset_infos else None
-        ds_paths = [g.id_to_aggregated_name[ds.id] for ds in dataset_infos] if dataset_infos else None
+
+        # fix for nested dataset paths in order for them to be readable by fs.
+        ds_paths = [
+            "/".join([parts[0]] + [x for part in parts[1:] for x in ("datasets", part)])
+            for parts in (g.id_to_aggregated_name[ds.id].split("/") for ds in dataset_infos)
+        ] if dataset_infos else None
+        
         copy_from_cache(
             project_id=project_info.id,
             dest_dir=project_dir,
+            # dataset_names=ds_names,
             dataset_paths=ds_paths,
             progress_cb=download_progress,
         )
