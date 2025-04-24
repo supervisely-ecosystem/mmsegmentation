@@ -65,11 +65,12 @@ def download_project(
         # copy datasets from cache
         total = get_cache_size(project_info.id)
         download_progress = get_progress_cb(progress_index, "Retreiving data from cache...", total, is_size=True)
-        ds_names = [ds.name for ds in dataset_infos] if dataset_infos else None
+        # ds_names = [ds.name for ds in dataset_infos] if dataset_infos else None
+        ds_paths = [g.id_to_aggregated_name[ds.id] for ds in dataset_infos] if dataset_infos else None
         copy_from_cache(
             project_id=project_info.id,
             dest_dir=project_dir,
-            dataset_names=ds_names,
+            dataset_paths=ds_paths,
             progress_cb=download_progress,
         )
     except Exception as e:
