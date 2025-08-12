@@ -763,13 +763,10 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         sly.logger.info("Creating experiment info")
 
         try:
-            create_experiment(
-                state["pretrainedModel"], remote_dir, report_id, eval_metrics, primary_metric_name
-            )
+            sly.logger.info("Creating experiment info")
+            create_experiment(state["pretrainedModel"], remote_dir, report_id, eval_metrics, primary_metric_name)
         except Exception as e:
-            sly.logger.warning(
-                f"Couldn't create experiment, this training session will not appear in experiments table. Error: {e}"
-            )
+            sly.logger.error(f"Couldn't create experiment, this training session will not appear in the experiments table. Error: {e}")
 
         w.workflow_input(api, g.project_info, state)
         w.workflow_output(api, g.sly_mmseg_generated_metadata, state, benchmark_report_template)
