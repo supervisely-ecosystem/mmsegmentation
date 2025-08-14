@@ -477,21 +477,44 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
             import uvicorn
             import time
             from threading import Thread
+            import socket
+            from queue import Queue
+
+            HOST = "127.0.0.1"
+            PORT = 8000
+
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.settimeout(0.5)
+                if sock.connect_ex((HOST, PORT)) == 0:
+                    raise RuntimeError(
+                        f"Port {PORT} on {HOST} is already in use; cannot start Uvicorn."
+                    )
+
+            exc_queue: Queue = Queue()
 
             def run_app():
-                uvicorn.run(m.app, host="localhost", port=8000)
+                try:
+                    config = uvicorn.Config(m.app, host=HOST, port=PORT, log_level="info")
+                    server = uvicorn.Server(config)
+                    run_app.server = server  # type: ignore[attr-defined]
+                    server.run()
+                except Exception as e:
+                    exc_queue.put(e)
 
             thread = Thread(target=run_app, daemon=True)
             thread.start()
 
             while True:
+                if not thread.is_alive() and not exc_queue.empty():
+                    raise exc_queue.get()
+
                 try:
-                    requests.get("http://localhost:8000")
+                    requests.get(f"http://{HOST}:{PORT}/", timeout=0.3)
                     print("✅ Local server is ready")
                     break
-                except requests.exceptions.ConnectionError:
+                except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
                     print("Waiting for the server to be ready")
-                    time.sleep(0.1)
+                    time.sleep(5)
 
             session = SessionJSON(api, session_url="http://localhost:8000")
             if sly.fs.dir_exists(g.data_dir + "/benchmark"):
@@ -506,10 +529,8 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
             split_method = state["splitMethod"]
 
             if split_method == "datasets":
-                train_datasets = state["trainDatasets"]
-                val_datasets = state["valDatasets"]
-                benchmark_dataset_ids = [ds.id for ds in dataset_infos if ds.name in val_datasets]
-                train_dataset_ids = [ds.id for ds in dataset_infos if ds.name in train_datasets]
+                train_dataset_ids = state["trainDatasetSelector"]["value"]
+                benchmark_dataset_ids = state["valDatasetSelector"]["value"]
                 train_set, val_set = get_train_val_sets(g.project_dir, state)
             else:
 
