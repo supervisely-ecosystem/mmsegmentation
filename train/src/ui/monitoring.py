@@ -476,25 +476,28 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
 
             import requests
             import uvicorn
-            import time
             from threading import Thread
 
             def run_app():
-                uvicorn.run(m.app, host="localhost", port=8000)
+                try:
+                    uvicorn.run(m.app, host="127.0.0.1", port=8000)
+                except Exception as e:
+                    pass
 
             thread = Thread(target=run_app, daemon=True)
             thread.start()
 
             while True:
+                if not thread.is_alive():
+                    raise RuntimeError("Failed to start the local server for model inference.")
                 try:
-                    requests.get("http://localhost:8000")
+                    requests.get("http://127.0.0.1:8000/", timeout=5)
                     print("✅ Local server is ready")
                     break
-                except requests.exceptions.ConnectionError:
+                except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
                     print("Waiting for the server to be ready")
-                    time.sleep(0.1)
 
-            session = SessionJSON(api, session_url="http://localhost:8000")
+            session = SessionJSON(api, session_url="http://127.0.0.1:8000")
             if sly.fs.dir_exists(g.data_dir + "/benchmark"):
                 sly.fs.remove_dir(g.data_dir + "/benchmark")
 
@@ -764,9 +767,13 @@ def train(api: sly.Api, task_id, context, state, app_logger):
 
         try:
             sly.logger.info("Creating experiment info")
-            create_experiment(state["pretrainedModel"], remote_dir, report_id, eval_metrics, primary_metric_name)
+            create_experiment(
+                state["pretrainedModel"], remote_dir, report_id, eval_metrics, primary_metric_name
+            )
         except Exception as e:
-            sly.logger.error(f"Couldn't create experiment, this training session will not appear in the experiments table. Error: {e}")
+            sly.logger.error(
+                f"Couldn't create experiment, this training session will not appear in the experiments table. Error: {e}"
+            )
 
         w.workflow_input(api, g.project_info, state)
         w.workflow_output(api, g.sly_mmseg_generated_metadata, state, benchmark_report_template)
