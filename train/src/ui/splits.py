@@ -8,7 +8,30 @@ val_set = None
 train_set_path = os.path.join(g.my_app.data_dir, "train.txt")
 val_set_path = os.path.join(g.my_app.data_dir, "val.txt")
 
+def init_split_selector_items(data):
+    ds_selector_data = {
+        "hide": False,
+        "loading": False,
+        "disabled": False,
+        "width": 350,
+        "items": g.generate_selector_items_from_tree(g.filtered_tree),
+    }
+    data.update(
+        {
+            "trainDatasetSelector": ds_selector_data,
+            "valDatasetSelector": ds_selector_data,
+        }
+    )
+
+
 def init(project_info, project_meta: sly.ProjectMeta, data, state):
+    init_split_selector_items(data)
+    data["selectTrainDataset"] = {"hide": False, "loading": False}
+    data["selectContainer"] = {"hide": False, "loading": False}
+
+    state["trainDatasetSelector"] = {"options": {"multiple": True}}
+    state["valDatasetSelector"] = {"options": {"multiple": True}}
+
     data["randomSplit"] = [
         {"name": "train", "type": "success"},
         {"name": "val", "type": "primary"},
@@ -22,13 +45,9 @@ def init(project_info, project_meta: sly.ProjectMeta, data, state):
         "count": {
             "total": project_info.items_count,
             "train": train_count,
-            "val": project_info.items_count - train_count
+            "val": project_info.items_count - train_count,
         },
-        "percent": {
-            "total": 100,
-            "train": train_percent,
-            "val": 100 - train_percent
-        },
+        "percent": {"total": 100, "train": train_percent, "val": 100 - train_percent},
         "shareImagesBetweenSplits": False,
         "sliderDisabled": False,
     }
@@ -56,21 +75,45 @@ def init(project_info, project_meta: sly.ProjectMeta, data, state):
 def get_train_val_sets(project_dir, state):
     split_method = state["splitMethod"]
     if split_method == "random":
-        train_count = state["randomSplit"]["count"]["train"]
-        val_count = state["randomSplit"]["count"]["val"]
-        train_set, val_set = sly.Project.get_train_val_splits_by_count(project_dir, train_count, val_count)
+        train_percent = state["randomSplit"]["percent"]["train"]
+        # val_percent = state["randomSplit"]["percent"]["val"]
+        total_count = g.total_cnt
+        train_count = int(total_count / 100 * train_percent)
+        val_count = total_count - train_count
+        if train_count + val_count != total_count:
+            sly.logger.error("Train and val sets count does not add up to total count", extra={"train_count": train_count, "val_count": val_count, "total_count": total_count})
+            g.my_app.show_modal_window("Train and val sets count does not add up to total count. Please change your configuration", level="warning", log_message=False)
+            return None, None
+        train_set, val_set = sly.Project.get_train_val_splits_by_count(
+            project_dir, train_count, val_count
+        )
         return train_set, val_set
     elif split_method == "tags":
         train_tag_name = state["trainTagName"]
         val_tag_name = state["valTagName"]
         add_untagged_to = state["untaggedImages"]
-        train_set, val_set = sly.Project.get_train_val_splits_by_tag(project_dir, train_tag_name, val_tag_name,
-                                                                     add_untagged_to)
+        train_set, val_set = sly.Project.get_train_val_splits_by_tag(
+            project_dir, train_tag_name, val_tag_name, add_untagged_to
+        )
         return train_set, val_set
     elif split_method == "datasets":
-        train_datasets = state["trainDatasets"]
-        val_datasets = state["valDatasets"]
-        train_set, val_set = sly.Project.get_train_val_splits_by_dataset(project_dir, train_datasets, val_datasets)
+        train_names, val_names = [], []
+        for ds_id in state["trainDatasetSelector"]["value"]:
+            ds_info = g.ds_id_to_info[ds_id]
+            ds_ids = [ds_id] if ds_info.items_count > 0 else []
+            ids = ds_ids + [children.id for children in g.parent_to_children.get(ds_id, []) if children.items_count > 0]
+            for i in ids:
+                train_names.append(g.id_to_aggregated_name[i])
+
+        for ds_id in state["valDatasetSelector"]["value"]:
+            ds_info = g.ds_id_to_info[ds_id]
+            ds_ids = [ds_id] if ds_info.items_count > 0 else []
+            ids = ds_ids + [children.id for children in g.parent_to_children.get(ds_id, []) if children.items_count > 0]
+            for i in ids:
+                val_names.append(g.id_to_aggregated_name[i])
+        train_set, val_set = sly.Project.get_train_val_splits_by_dataset(
+            project_dir, train_names, val_names
+        )
         return train_set, val_set
     else:
         raise ValueError(f"Unknown split method: {split_method}")
@@ -78,15 +121,20 @@ def get_train_val_sets(project_dir, state):
 
 def verify_train_val_sets(train_set, val_set):
     if len(train_set) == 0:
-        g.my_app.show_modal_window("Train set is empty, check or change split configuration", level="warning")
+        g.my_app.show_modal_window(
+            "Train set is empty, check or change split configuration", level="warning"
+        )
         return False
     if len(val_set) == 0:
-        g.my_app.show_modal_window("Val set is empty, check or change split configuration", level="warning")
+        g.my_app.show_modal_window(
+            "Val set is empty, check or change split configuration", level="warning"
+        )
         return False
     return True
 
 
 def set_dataset_ind_to_items(project_dir):
+    global project_fs
     project_fs = sly.Project(project_dir, sly.OpenMode.READ)
     ds_cnt = 0
     for dataset in project_fs.datasets:
@@ -106,6 +154,8 @@ def set_dataset_ind_to_items(project_dir):
                 new_img_info_name = f"{ds_cnt}_{img_info_name}"
                 os.rename(img_info_path, img_info_path.replace(img_info_name, new_img_info_name))
         ds_cnt += 1
+    project_fs = sly.Project(project_dir, sly.OpenMode.READ)
+
 
 @g.my_app.callback("create_splits")
 @sly.timeit
@@ -136,21 +186,30 @@ def create_splits(api: sly.Api, task_id, context, state, app_logger):
         fields = [
             {"field": "state.splitInProgress", "payload": False},
             {"field": f"data.done2", "payload": step_done},
-            {"field": f"state.trainImagesCount", "payload": None if train_set is None else len(train_set)},
-            {"field": f"state.valImagesCount", "payload": None if val_set is None else len(val_set)},
+            {
+                "field": f"state.trainImagesCount",
+                "payload": None if train_set is None else len(train_set),
+            },
+            {
+                "field": f"state.valImagesCount",
+                "payload": None if val_set is None else len(val_set),
+            },
         ]
         if step_done is True:
-            fields.extend([
-                {"field": "state.collapsed3", "payload": False},
-                {"field": "state.disabled3", "payload": False},
-                {"field": "state.activeStep", "payload": 3},
-            ])
+            fields.extend(
+                [
+                    {"field": "state.collapsed3", "payload": False},
+                    {"field": "state.disabled3", "payload": False},
+                    {"field": "state.activeStep", "payload": 3},
+                ]
+            )
         g.api.app.set_fields(g.task_id, fields)
     if train_set is not None:
         _save_set(train_set_path, train_set)
     if val_set is not None:
         _save_set(val_set_path, val_set)
 
+
 def _save_set(save_path, items):
-    with open(os.path.join(save_path), 'w') as f:
-        f.writelines(item.name + '\n' for item in items)
+    with open(os.path.join(save_path), "w") as f:
+        f.writelines(item.name + "\n" for item in items)

@@ -109,21 +109,36 @@
             </sly-field>
             <sly-field title="Train dataset(s)"
                        description="all images in selected dataset(s) are considered as training set">
-                <sly-select-dataset
-                        :disabled="data.done2"
-                        :project-id="data.projectId"
-                        :datasets.sync="state.trainDatasets"
-                        :options="{'multiple': true, 'showLabel': false}">
-                </sly-select-dataset>
+                <!-- select dataset tree -->
+                <div v-if="!data.selectTrainDataset.hide" v-loading="data.selectTrainDataset.loading">
+                    <link href="./sly/css/app/widgets/container/style.css" rel="stylesheet" v-if="!data.selectContainer.hide" v-loading="data.selectContainer.loading"/>
+                    <div class="container" style="flex-direction: column; gap: 10px;" v-if="!data.selectContainer.hide" v-loading="data.selectContainer.loading">
+                        <!-- Dataset Selector -->
+                        <div style="margin-top: 10px;">
+                            <div v-if="!data.trainDatasetSelector.hide" v-loading="data.trainDatasetSelector.loading">
+                                <sly-tree-select 
+                                    :disabled="data.trainDatasetSelector.disabled" 
+                                    :items="data.trainDatasetSelector.items" 
+                                    :options="state.trainDatasetSelector.options" 
+                                    :style="{ width: `${data.trainDatasetSelector.width}px` }" 
+                                    :value="state.trainDatasetSelector.value" 
+                                    @input="state.trainDatasetSelector.value = $event">
+                                </sly-tree-select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </sly-field>
             <sly-field title="Validation dataset(s)"
                        description="all images in selected dataset(s) are considered as validation set">
-                <sly-select-dataset
-                        :disabled="data.done2"
-                        :project-id="data.projectId"
-                        :datasets.sync="state.valDatasets"
-                        :options="{'multiple': true, 'showLabel': false}">
-                </sly-select-dataset>
+                <sly-tree-select 
+                    :disabled="data.valDatasetSelector.disabled" 
+                    :items="data.valDatasetSelector.items" 
+                    :options="state.valDatasetSelector.options" 
+                    :style="{ width: `${data.valDatasetSelector.width}px` }" 
+                    :value="state.valDatasetSelector.value" 
+                    @input="state.valDatasetSelector.value = $event">
+                </sly-tree-select>
             </sly-field>
         </el-tab-pane>
     </el-tabs>

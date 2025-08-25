@@ -29,5 +29,14 @@
   "community_agent": false,
   "license": {
     "type": "Apache-2.0"
+  },
+  "framework": {
+    "name": "MMSegmentation",
+    "tags": [],
+    "export": [],
+    "conference": null,
+    "released": "2023",
+    "description": "A collection of popular segmentation models maintained by MMLab.",
+    "github": "https://github.com/open-mmlab/mmsegmentation"
   }
 }
