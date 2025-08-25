@@ -168,6 +168,7 @@ def create_splits(api: sly.Api, task_id, context, state, app_logger):
         # to support duplicates
         set_dataset_ind_to_items(g.project_dir)
         train_set, val_set = get_train_val_sets(g.project_dir, state)
+        g.train_size, g.val_size = len(train_set), len(val_set)
         sly.logger.info(f"Train set: {len(train_set)} images")
         sly.logger.info(f"Val set: {len(val_set)} images")
         success = verify_train_val_sets(train_set, val_set)
@@ -176,8 +177,8 @@ def create_splits(api: sly.Api, task_id, context, state, app_logger):
             return
         step_done = True
     except Exception as e:
-        train_set = None
-        val_set = None
+        train_set, val_set = None, None
+        g.train_size, g.val_size = None, None
         step_done = False
         raise e
     finally:

@@ -1,5 +1,4 @@
 import supervisely as sly
-from typing import Dict, Optional, Union
 from sly_train_progress import init_progress, _update_progress_ui
 import sly_globals as g
 import os
@@ -16,7 +15,9 @@ from init_cfg import init_cfg
 from sly_functions import get_bg_class_name, get_eval_results_dir_name
 from splits import get_train_val_sets
 from supervisely.nn.inference import SessionJSON
-from supervisely._utils import abs_url, is_development, is_debug_with_sly_net
+from supervisely.nn.artifacts.artifacts import TrainInfo
+from supervisely.io.json import dump_json_file
+from dataclasses import asdict
 import workflow as w
 
 # ! required to be left here despite not being used
@@ -393,7 +394,7 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
     global m
 
     api.app.set_field(task_id, "state.benchmarkInProgress", True)
-    benchmark_report_template = None
+    benchmark_report_template, report_id, eval_metrics, primary_metric_name = None, None, None, None
     try:
         from sly_mmsegm import MMSegmentationModelBench
         import torch
@@ -475,25 +476,28 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
 
             import requests
             import uvicorn
-            import time
             from threading import Thread
 
             def run_app():
-                uvicorn.run(m.app, host="localhost", port=8000)
+                try:
+                    uvicorn.run(m.app, host="127.0.0.1", port=8000)
+                except Exception as e:
+                    pass
 
             thread = Thread(target=run_app, daemon=True)
             thread.start()
 
             while True:
+                if not thread.is_alive():
+                    raise RuntimeError("Failed to start the local server for model inference.")
                 try:
-                    requests.get("http://localhost:8000")
+                    requests.get("http://127.0.0.1:8000/", timeout=5)
                     print("✅ Local server is ready")
                     break
-                except requests.exceptions.ConnectionError:
+                except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
                     print("Waiting for the server to be ready")
-                    time.sleep(0.1)
 
-            session = SessionJSON(api, session_url="http://localhost:8000")
+            session = SessionJSON(api, session_url="http://127.0.0.1:8000")
             if sly.fs.dir_exists(g.data_dir + "/benchmark"):
                 sly.fs.remove_dir(g.data_dir + "/benchmark")
 
@@ -604,6 +608,9 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
         # 7. Prepare visualizations, report and
         bm.visualize()
         remote_dir = bm.upload_visualizations(eval_res_dir + "/visualizations/")
+        report_id = bm.report.id
+        eval_metrics = bm.key_metrics
+        primary_metric_name = bm.primary_metric_name
 
         # 8. UI updates
         benchmark_report_template = bm.report
@@ -616,25 +623,58 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
         sly.logger.info(
             f"Predictions project name: {bm.dt_project_info.name}. Workspace_id: {bm.dt_project_info.workspace_id}"
         )
-
-        # 9. Stop the server
-        try:
-            m.app.stop()
-        except Exception as e:
-            sly.logger.warning(f"Failed to stop the model app: {e}")
-        try:
-            thread.join()
-        except Exception as e:
-            sly.logger.warning(f"Failed to stop the server: {e}")
     except Exception as e:
+        benchmark_report_template, report_id, eval_metrics, primary_metric_name = (
+            None,
+            None,
+            None,
+            None,
+        )
+        api.app.set_field(task_id, "state.benchmarkInProgress", False)
         sly.logger.error(f"Model benchmark failed. {repr(e)}", exc_info=True)
+        benchmark_report_template, report_id, eval_metrics, primary_metric_name = (
+            None,
+            None,
+            None,
+            None,
+        )
         try:
             if bm.dt_project_info:
                 api.project.remove(bm.dt_project_info.id)
         except Exception as re:
             pass
 
-    return benchmark_report_template
+    return benchmark_report_template, report_id, eval_metrics, primary_metric_name
+
+
+def create_experiment(
+    model_name, remote_dir, report_id=None, eval_metrics=None, primary_metric_name=None
+):
+    train_info = TrainInfo(**g.sly_mmseg_generated_metadata)
+    experiment_info = g.sly_mmseg.convert_train_to_experiment_info(train_info)
+    experiment_info.experiment_name = f"{g.task_id} {g.project_info.name} {model_name}"
+    experiment_info.model_name = model_name
+    experiment_info.framework_name = f"{g.sly_mmseg.framework_name}"
+    experiment_info.train_size = g.train_size
+    experiment_info.val_size = g.val_size
+    experiment_info.evaluation_report_id = report_id
+    experiment_info.experiment_report_id = None
+    if report_id is not None:
+        experiment_info.evaluation_report_link = f"/model-benchmark?id={str(report_id)}"
+    experiment_info.evaluation_metrics = eval_metrics
+
+    experiment_info_json = asdict(experiment_info)
+    experiment_info_json["project_preview"] = g.project_info.image_preview_url
+    experiment_info_json["primary_metric"] = primary_metric_name
+
+    g.api.task.set_output_experiment(g.task_id, experiment_info_json)
+    experiment_info_json.pop("project_preview")
+    experiment_info_json.pop("primary_metric")
+
+    experiment_info_path = os.path.join(g.artifacts_dir, "experiment_info.json")
+    remote_experiment_info_path = os.path.join(remote_dir, "experiment_info.json")
+    dump_json_file(experiment_info_json, experiment_info_path)
+    g.api.file.upload(g.team_id, experiment_info_path, remote_experiment_info_path)
 
 
 @g.my_app.callback("train")
@@ -711,11 +751,29 @@ def train(api: sly.Api, task_id, context, state, app_logger):
         ]
         g.api.app.set_fields(g.task_id, fields)
 
-        benchmark_report_template = None
+        benchmark_report_template, report_id, eval_metrics, primary_metric_name = (
+            None,
+            None,
+            None,
+            None,
+        )
         # run benchmark
         sly.logger.info(f"Run benchmark: {state['runBenchmark']}")
         if state["runBenchmark"]:
-            benchmark_report_template = run_benchmark(api, task_id, classes, cfg, state, remote_dir)
+            benchmark_report_template, report_id, eval_metrics, primary_metric_name = run_benchmark(
+                api, task_id, classes, cfg, state, remote_dir
+            )
+        sly.logger.info("Creating experiment info")
+
+        try:
+            sly.logger.info("Creating experiment info")
+            create_experiment(
+                state["pretrainedModel"], remote_dir, report_id, eval_metrics, primary_metric_name
+            )
+        except Exception as e:
+            sly.logger.error(
+                f"Couldn't create experiment, this training session will not appear in the experiments table. Error: {e}"
+            )
 
         w.workflow_input(api, g.project_info, state)
         w.workflow_output(api, g.sly_mmseg_generated_metadata, state, benchmark_report_template)
