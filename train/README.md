@@ -14,7 +14,7 @@
   <a href="#Acknowledgment">Acknowledgment</a>
 </p>
 
-[![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](../../../../supervisely-ecosystem/mmsegmentation/train)
+[![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](../../../../../supervisely-ecosystem/mmsegmentation/train)
 [![](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://supervisely.com/slack)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/supervisely-ecosystem/mmsegmentation)
 [![views](https://app.supervisely.com/img/badges/views/supervisely-ecosystem/mmsegmentation/train.png)](https://supervisely.com)
@@ -93,7 +93,7 @@ Supported methods:
 
 # How to Run
 
-### 1. Add [Train MMSegmentation](../../../../supervisely-ecosystem/mmsegmentation/train) app to your team from Ecosystem
+### 1. Add [Train MMSegmentation](../../../../../supervisely-ecosystem/mmsegmentation/train) app to your team from Ecosystem
 <img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/mmsegmentation/train" src="https://i.imgur.com/e2r6ccw.png" width="350px" style='padding-bottom: 10px'/>
 
 ### 2. Run app from context menu of the project with annotations (polygon and bitmap only) [(example)](https://ecosystem.supervisely.com/projects/lemons-annotated)
