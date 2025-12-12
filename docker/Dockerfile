@@ -26,5 +26,5 @@ RUN mkdir -p /tmp/mmseg \
     && wget https://github.com/open-mmlab/mmsegmentation/archive/refs/tags/v0.23.0.tar.gz -P /tmp/mmseg \
     && tar -xvf /tmp/mmseg/v0.23.0.tar.gz -C /tmp/mmseg
 
-RUN pip3 install supervisely[model-benchmark]==6.73.448
-LABEL python_sdk_version=6.73.448
+RUN pip3 install supervisely[model-benchmark]==6.73.485
+LABEL python_sdk_version="6.73.485"
