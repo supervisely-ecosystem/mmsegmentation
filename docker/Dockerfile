@@ -58,7 +58,7 @@ ENV PIP_CONSTRAINT=/tmp/pip-constraints.txt
 RUN pip install --no-cache-dir numpy==2.0.0 scipy==1.14.1
 
 RUN pip install --upgrade \
-  "jinja2>=3.1.6" \
+  "jinja2==3.1.6" \
   "protobuf==6.33.5" \
   "jaraco.context>=6.1.0" \
   wheel==0.46.2 \
