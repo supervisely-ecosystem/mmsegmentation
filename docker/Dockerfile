@@ -57,15 +57,6 @@ RUN printf "numpy==2.0.0\nscipy==1.14.1\nonnxruntime-gpu==1.19.2\nprotobuf==6.33
 ENV PIP_CONSTRAINT=/tmp/pip-constraints.txt
 RUN pip install --no-cache-dir numpy==2.0.0 scipy==1.14.1
 
-RUN pip install --upgrade \
-  "jinja2==3.1.6" \
-  "protobuf==6.33.5" \
-  "jaraco.context>=6.1.0" \
-  wheel==0.46.2 \
-  && rm -rf \
-  /opt/venv/lib/python3.10/site-packages/setuptools/_vendor/jaraco.context* \
-  /opt/venv/lib/python3.10/site-packages/setuptools/_vendor/wheel*
-
 RUN pip install networkx==2.8.8
 
 RUN pip install torch==2.7.1+cu128 torchvision==0.22.1+cu128 \
@@ -91,6 +82,17 @@ RUN mkdir -p /tmp/mmseg \
   && wget https://github.com/open-mmlab/mmsegmentation/archive/refs/tags/v0.23.0.tar.gz \
     -P /tmp/mmseg \
   && tar -xvf /tmp/mmseg/v0.23.0.tar.gz -C /tmp/mmseg
+
+RUN pip install --upgrade \
+  "jinja2==3.1.6" \
+  "protobuf==6.33.5" \
+  "jaraco.context>=6.1.0" \
+  wheel==0.46.2 \
+  setuptools==78.1.1 \
+  tqdm==4.66.3 \
+  && rm -rf \
+  /opt/venv/lib/python3.10/site-packages/setuptools/_vendor/jaraco.context* \
+  /opt/venv/lib/python3.10/site-packages/setuptools/_vendor/wheel*
 
 # todo: remove when hardened docker images are released
 # RUN pip install supervisely[tracking,model-benchmark]==$tag_ref_name
