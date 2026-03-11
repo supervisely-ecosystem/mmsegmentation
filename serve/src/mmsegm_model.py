@@ -7,10 +7,10 @@ except:
     from typing_extensions import Literal
 
 from collections import OrderedDict
+from importlib.metadata import version
 from pathlib import Path
 from typing import Any, Dict, List
 
-import pkg_resources
 import yaml
 from mmengine.config import Config
 from mmengine.model import revert_sync_batchnorm
@@ -315,7 +315,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         model_yamls = sly.json.load_json_file(models_meta_path)
         model_config = {}
         for model_meta in model_yamls:
-            mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
+            mmseg_ver = version("mmsegmentation")
             model_yml_url = f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/{model_meta['yml_file']}"
             model_yml_local = os.path.join(configs_dir, model_meta["yml_file"])
             with open(model_yml_local, "r") as stream:

@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path
-import pkg_resources
+from importlib.metadata import version
 import torch
 from dotenv import load_dotenv
 
@@ -17,7 +17,7 @@ from mmsegm_model import MMSegmentationModel
 use_gui_for_local_debug = bool(int(os.environ.get("USE_GUI", "1")))
 
 configs_dir = os.path.join(root_source_path, "configs")
-mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
+mmseg_ver = version("mmsegmentation")
 if os.path.isdir(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}"):
     if os.path.isdir(configs_dir):
         shutil.rmtree(configs_dir)

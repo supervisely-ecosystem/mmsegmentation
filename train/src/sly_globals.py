@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from importlib.metadata import version
 import sys
 import supervisely as sly
 from supervisely.app.v1.app_service import AppService
@@ -7,7 +8,6 @@ from supervisely.nn.artifacts.mmsegmentation import MMSegmentation
 from typing import List
 
 import shutil
-import pkg_resources
 
 
 def filter_tree_by_ids(tree, ids: List[int]):
@@ -175,7 +175,7 @@ sly.fs.mkdir(checkpoints_dir)
 sly_mmseg = MMSegmentation(team_id)
 
 configs_dir = os.path.join(root_source_dir, "configs")
-mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
+mmseg_ver = version("mmsegmentation")
 if os.path.isdir(f"/tmp/mmseg/mmsegmentation-{mmseg_ver}"):
     if os.path.isdir(configs_dir):
         shutil.rmtree(configs_dir)

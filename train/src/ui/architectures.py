@@ -1,8 +1,8 @@
 import errno
+from importlib.metadata import version
 import os
 import requests
 import yaml
-import pkg_resources
 import sly_globals as g
 import supervisely as sly
 from supervisely.app.v1.widgets.progress_bar import ProgressBar
@@ -60,7 +60,7 @@ def get_pretrained_models(return_metrics=False):
             model_config[model_meta["model_name"]]["checkpoints"] = []
             model_config[model_meta["model_name"]]["paper_from"] = model_meta["paper_from"]
             model_config[model_meta["model_name"]]["year"] = model_meta["year"]
-            mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
+            mmseg_ver = version("mmsegmentation")
             model_config[model_meta["model_name"]]["config_url"] = (
                 f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/"
                 + model_meta["yml_file"].split("/")[0]
