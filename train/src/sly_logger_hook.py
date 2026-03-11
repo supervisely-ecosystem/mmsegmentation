@@ -1,6 +1,11 @@
 import datetime
-from mmcv.runner.hooks import HOOKS
-from mmcv.runner.hooks.logger.text import TextLoggerHook
+
+try:
+    from mmcv.runner.hooks import HOOKS
+    from mmcv.runner.hooks.logger.text import TextLoggerHook
+except ImportError:
+    from mmengine.hooks import LoggerHook as TextLoggerHook
+    from mmseg.registry import HOOKS
 import supervisely as sly
 from sly_train_progress import get_progress_cb, set_progress, add_progress_to_request
 import sly_globals as g
@@ -121,7 +126,9 @@ class SuperviselyLoggerHook(TextLoggerHook):
                 if metric not in class_metrics.keys():
                     class_metrics[metric] = {}
                 if not math.isfinite(field_val):
-                    sly.logger.warn(f"{metric} for {class_name} class has unserializable value (Nan or inf)!")
+                    sly.logger.warn(
+                        f"{metric} for {class_name} class has unserializable value (Nan or inf)!"
+                    )
                     field_val = 0
                 class_metrics[metric][class_name] = [[log_dict["epoch"], field_val]]
             for metric_name, metrics in class_metrics.items():
