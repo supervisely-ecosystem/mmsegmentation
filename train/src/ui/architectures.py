@@ -7,27 +7,30 @@ import sly_globals as g
 import supervisely as sly
 from supervisely.app.v1.widgets.progress_bar import ProgressBar
 import init_default_cfg as init_dc
-from mmcv import Config
+from mmengine.config import Config
 
 cfg = None
 
+
 def init(data, state):
-    state['pretrainedModel'] = 'ConvNeXt'
+    state["pretrainedModel"] = "ConvNeXt"
     data["pretrainedModels"], metrics = get_pretrained_models(return_metrics=True)
     model_select_info = []
     for model_name, params in data["pretrainedModels"].items():
-        model_select_info.append({
-            "name": model_name,
-            "paper_from": params["paper_from"],
-            "year": params["year"]
-        })
+        model_select_info.append(
+            {"name": model_name, "paper_from": params["paper_from"], "year": params["year"]}
+        )
     data["pretrainedModelsInfo"] = model_select_info
-    data["configLinks"] = {model_name: params["config_url"] for model_name, params in data["pretrainedModels"].items()}
+    data["configLinks"] = {
+        model_name: params["config_url"] for model_name, params in data["pretrainedModels"].items()
+    }
 
     data["modelColumns"] = get_table_columns(metrics)
 
-    state["selectedModel"] = {pretrained_model: data["pretrainedModels"][pretrained_model]["checkpoints"][0]['name']
-                              for pretrained_model in data["pretrainedModels"].keys()}
+    state["selectedModel"] = {
+        pretrained_model: data["pretrainedModels"][pretrained_model]["checkpoints"][0]["name"]
+        for pretrained_model in data["pretrainedModels"].keys()
+    }
     state["useAuxiliaryHead"] = True
     state["weightsInitialization"] = "pretrained"  # "custom"
     state["collapsed5"] = True
@@ -39,12 +42,15 @@ def init(data, state):
     # default hyperparams that may be reassigned from model default params
     init_dc.init_default_cfg_params(state)
 
-    ProgressBar(g.task_id, g.api, "data.progress6", "Download weights", is_size=True,
-                                min_report_percent=5).init_data(data)
+    ProgressBar(
+        g.task_id, g.api, "data.progress6", "Download weights", is_size=True, min_report_percent=5
+    ).init_data(data)
 
 
 def get_pretrained_models(return_metrics=False):
-    model_yamls = sly.json.load_json_file(os.path.join(g.root_source_dir, "models", "model_meta.json"))
+    model_yamls = sly.json.load_json_file(
+        os.path.join(g.root_source_dir, "models", "model_meta.json")
+    )
     model_config = {}
     all_metrics = []
     for model_meta in model_yamls:
@@ -55,7 +61,10 @@ def get_pretrained_models(return_metrics=False):
             model_config[model_meta["model_name"]]["paper_from"] = model_meta["paper_from"]
             model_config[model_meta["model_name"]]["year"] = model_meta["year"]
             mmseg_ver = pkg_resources.get_distribution("mmsegmentation").version
-            model_config[model_meta["model_name"]]["config_url"] = f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/" + model_meta["yml_file"].split("/")[0]
+            model_config[model_meta["model_name"]]["config_url"] = (
+                f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/"
+                + model_meta["yml_file"].split("/")[0]
+            )
             checkpoint_keys = []
             for model in model_info["Models"]:
                 checkpoint_info = {}
@@ -63,7 +72,9 @@ def get_pretrained_models(return_metrics=False):
                 checkpoint_info["method"] = model["In Collection"]
                 checkpoint_info["backbone"] = model["Metadata"]["backbone"]
                 try:
-                    checkpoint_info["inference_time"] = model["Metadata"]["inference time (ms/im)"][0]["value"]
+                    checkpoint_info["inference_time"] = model["Metadata"]["inference time (ms/im)"][
+                        0
+                    ]["value"]
                 except KeyError:
                     checkpoint_info["inference_time"] = "-"
                 checkpoint_info["crop_size"] = model["Metadata"]["crop size"]
@@ -109,22 +120,25 @@ def download_sly_file(remote_path, local_path, progress):
     if file_info is None:
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), remote_path)
     progress.set_total(file_info.sizeb)
-    g.api.file.download(g.team_id, remote_path, local_path, g.my_app.cache,
-                        progress.increment)
+    g.api.file.download(g.team_id, remote_path, local_path, g.my_app.cache, progress.increment)
     progress.reset_and_update()
 
-    sly.logger.info(f"{remote_path} has been successfully downloaded",
-                    extra={"weights": local_path})
+    sly.logger.info(
+        f"{remote_path} has been successfully downloaded", extra={"weights": local_path}
+    )
 
 
 def download_custom_config(state):
-    progress = ProgressBar(g.task_id, g.api, "data.progress6", "Download config", is_size=True,
-                                           min_report_percent=5)
+    progress = ProgressBar(
+        g.task_id, g.api, "data.progress6", "Download config", is_size=True, min_report_percent=5
+    )
 
     weights_remote_dir = os.path.dirname(state["weightsPath"])
-    g.model_config_local_path = os.path.join(g.checkpoints_dir, g.my_app.data_dir.split('/')[-1], 'custom_loaded_config.py')
+    g.model_config_local_path = os.path.join(
+        g.checkpoints_dir, g.my_app.data_dir.split("/")[-1], "custom_loaded_config.py"
+    )
 
-    config_remote_dir = os.path.join(weights_remote_dir, f'config.py')
+    config_remote_dir = os.path.join(weights_remote_dir, f"config.py")
     if g.api.file.exists(g.team_id, config_remote_dir):
         download_sly_file(config_remote_dir, g.model_config_local_path, progress)
 
@@ -133,16 +147,21 @@ def download_custom_config(state):
 @sly.timeit
 @g.my_app.ignore_errors_and_show_dialog_window()
 def download_weights(api: sly.Api, task_id, context, state, app_logger):
-    progress = ProgressBar(g.task_id, g.api, "data.progress6", "Download weights", is_size=True,
-                                           min_report_percent=5)
+    progress = ProgressBar(
+        g.task_id, g.api, "data.progress6", "Download weights", is_size=True, min_report_percent=5
+    )
     try:
         if state["weightsInitialization"] == "custom":
             weights_path_remote = state["weightsPath"]
             if not weights_path_remote.endswith(".pth"):
-                raise ValueError(f"Weights file has unsupported extension {sly.fs.get_file_ext(weights_path_remote)}. "
-                                 f"Supported: '.pth'")
+                raise ValueError(
+                    f"Weights file has unsupported extension {sly.fs.get_file_ext(weights_path_remote)}. "
+                    f"Supported: '.pth'"
+                )
 
-            g.local_weights_path = os.path.join(g.my_app.data_dir, sly.fs.get_file_name_with_ext(weights_path_remote))
+            g.local_weights_path = os.path.join(
+                g.my_app.data_dir, sly.fs.get_file_name_with_ext(weights_path_remote)
+            )
             if sly.fs.file_exists(g.local_weights_path):
                 os.remove(g.local_weights_path)
 
@@ -151,25 +170,32 @@ def download_weights(api: sly.Api, task_id, context, state, app_logger):
 
         else:
             checkpoints_by_model = get_pretrained_models()[state["pretrainedModel"]]["checkpoints"]
-            selected_model = next(item for item in checkpoints_by_model
-                                  if item["name"] == state["selectedModel"][state["pretrainedModel"]])
+            selected_model = next(
+                item
+                for item in checkpoints_by_model
+                if item["name"] == state["selectedModel"][state["pretrainedModel"]]
+            )
 
-            weights_url = selected_model.get('weights')
-            config_file = selected_model.get('config_file')
+            weights_url = selected_model.get("weights")
+            config_file = selected_model.get("config_file")
             if weights_url is not None:
-                g.local_weights_path = os.path.join(g.my_app.data_dir, sly.fs.get_file_name_with_ext(weights_url))
+                g.local_weights_path = os.path.join(
+                    g.my_app.data_dir, sly.fs.get_file_name_with_ext(weights_url)
+                )
                 g.model_config_local_path = os.path.join(g.root_source_dir, config_file)
                 if sly.fs.file_exists(g.local_weights_path) is False:
                     response = requests.head(weights_url, allow_redirects=True)
-                    sizeb = int(response.headers.get('content-length', 0))
+                    sizeb = int(response.headers.get("content-length", 0))
                     progress.set_total(sizeb)
                     os.makedirs(os.path.dirname(g.local_weights_path), exist_ok=True)
-                    sly.fs.download(weights_url, g.local_weights_path, g.my_app.cache, progress.increment)
+                    sly.fs.download(
+                        weights_url, g.local_weights_path, g.my_app.cache, progress.increment
+                    )
                     progress.reset_and_update()
-                sly.logger.info("Pretrained weights has been successfully downloaded",
-                                extra={"weights": g.local_weights_path})
-
-
+                sly.logger.info(
+                    "Pretrained weights has been successfully downloaded",
+                    extra={"weights": g.local_weights_path},
+                )
 
     except Exception as e:
         progress.reset_and_update()
@@ -191,11 +217,10 @@ def download_weights(api: sly.Api, task_id, context, state, app_logger):
     params = init_dc.init_default_cfg_args(cfg)
     fields.extend(params)
     if not hasattr(cfg.model, "auxiliary_head") or cfg.model.auxiliary_head is None:
-        fields.extend([
-            {"field": "state.useAuxiliaryHead", "payload": False}
-        ])
+        fields.extend([{"field": "state.useAuxiliaryHead", "payload": False}])
 
     g.api.app.set_fields(g.task_id, fields)
+
 
 def restart(data, state):
     data["done5"] = False

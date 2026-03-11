@@ -3,7 +3,7 @@ import augs
 import splits
 import os
 import sly_globals as g
-from mmcv import ConfigDict
+from mmengine.config import ConfigDict
 from mmseg.apis import set_random_seed
 
 

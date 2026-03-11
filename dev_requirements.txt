@@ -1,14 +1,13 @@
-# git+https://github.com/supervisely/supervisely.git@some-test-branch
+git+https://github.com/supervisely/supervisely.git@upgrade-protobuf
 
-supervisely==6.73.486
-supervisely[model-benchmark]==6.73.486
+# supervisely==6.73.486
+# supervisely[model-benchmark]==6.73.542
 ffmpeg-python==0.2.0
-pyyaml==6.0
+pyyaml==6.0.3
 
-torch==1.13.0
-torchvision==0.14.0
+torch==2.10.0
+torchvision==0.25.0
  
-openmim
-mmcv-full==1.7.0
-mmsegmentation==0.29.1
-mmcls==0.24.1
+openmim==0.3.9
+mmcv==2.2.0
+mmsegmentation==1.2.2

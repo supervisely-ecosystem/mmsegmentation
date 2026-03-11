@@ -12,9 +12,9 @@ from typing import Any, Dict, List
 
 import pkg_resources
 import yaml
-from mmcv import Config
-from mmcv.cnn.utils import revert_sync_batchnorm
-from mmcv.runner import load_checkpoint
+from mmengine.config import Config
+from mmengine.model import revert_sync_batchnorm
+from mmengine.runner import load_checkpoint
 from mmseg.apis.inference import inference_segmentor
 from mmseg.datasets import *
 from mmseg.models import build_segmentor

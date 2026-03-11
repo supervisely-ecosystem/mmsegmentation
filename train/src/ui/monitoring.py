@@ -7,7 +7,7 @@ import cv2
 import math
 import numpy as np
 from functools import partial
-from mmcv.cnn.utils import revert_sync_batchnorm
+from mmengine.model import revert_sync_batchnorm
 from mmseg.apis import train_segmentor
 from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
