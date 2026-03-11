@@ -13,6 +13,6 @@ jobs:
     with:
       image_name: "${{ github.event.repository.name }}"
       tag_version: "${{ github.event.inputs.tag_version }}"
-      base_runtime_image: "base-py-cuda-hardened"
+      runtime_base_image: "base-py-cuda-hardened"
       config_file: "train/config.json"
       cve_checks: true
