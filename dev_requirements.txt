@@ -7,7 +7,7 @@ torch==2.10.0
 torchvision==0.25.0
  
 openmim==0.3.9
-mmcv-lite==2.1.0
+mmcv==2.1.0
 mmsegmentation==1.2.2
 ftfy==6.3.1
 regex==2025.9.18
