@@ -35,6 +35,7 @@ RUN set -eux; \
   python -m venv /opt/venv; \
   /opt/venv/bin/python -m ensurepip --upgrade; \
   /opt/venv/bin/python -m pip install --no-cache-dir --upgrade pip wheel setuptools; \
+  /opt/venv/bin/python -m pip install --no-cache-dir requests; \
   /opt/venv/bin/python -m pip install --no-cache-dir numpy; \
   if [ -s /tmp/requirements.txt ]; then \
     /opt/venv/bin/python -m pip wheel --no-cache-dir --no-build-isolation -r /tmp/requirements.txt -w /tmp/wheels; \
