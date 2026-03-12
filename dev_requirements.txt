@@ -1,7 +1,7 @@
 git+https://github.com/supervisely/supervisely.git@upgrade-protobuf
 
-# supervisely==6.73.486
-# supervisely[model-benchmark]==6.73.542
+supervisely==6.73.545
+supervisely[model-benchmark]==6.73.545
 ffmpeg-python==0.2.0
 pyyaml==6.0.3
 
@@ -11,3 +11,5 @@ torchvision==0.25.0
 openmim==0.3.9
 mmcv-lite==2.1.0
 mmsegmentation==1.2.2
+# ftfy==6.3.1
+# regex==2025.9.18
