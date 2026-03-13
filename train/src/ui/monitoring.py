@@ -8,7 +8,17 @@ import math
 import numpy as np
 from functools import partial
 from mmengine.model import revert_sync_batchnorm
-from mmseg.apis import train_segmentor
+
+try:
+    from mmseg.apis import train_segmentor
+except ImportError:
+    from mmengine.runner import Runner
+
+    def train_segmentor(model, datasets, cfg, distributed=False, validate=True, meta=None):
+        runner = Runner.from_cfg(cfg)
+        runner.train()
+
+
 from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from init_cfg import init_cfg

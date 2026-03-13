@@ -15,7 +15,7 @@ import yaml
 from mmengine.config import Config
 from mmengine.model import revert_sync_batchnorm
 from mmengine.runner import load_checkpoint
-from mmseg.apis.inference import inference_segmentor
+from mmseg.apis.inference import inference_model
 from mmseg.datasets import *
 from mmseg.models import build_segmentor
 
@@ -378,6 +378,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         self, image_path: str, settings: Dict[str, Any]
     ) -> List[sly.nn.PredictionSegmentation]:
 
-        segmented_image = inference_segmentor(self.model, image_path)[0]
+        result = inference_model(self.model, image_path)
+        segmented_image = result.pred_sem_seg.data.squeeze().detach().cpu().numpy()
 
         return [sly.nn.PredictionSegmentation(segmented_image)]
