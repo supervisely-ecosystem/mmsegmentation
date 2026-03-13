@@ -8,6 +8,7 @@ except:
 
 from collections import OrderedDict
 from importlib.metadata import version
+from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -38,6 +39,31 @@ team_id = sly.env.team_id()
 
 models_meta_path = os.path.join(root_source_path, "models", "model_meta.json")
 configs_dir = os.path.join(root_source_path, "configs")
+has_mmcls_models = find_spec("mmcls.models") is not None
+
+
+def normalize_test_pipeline(cfg: Config) -> None:
+    def patch_transforms(transforms):
+        if transforms is None:
+            return
+        for transform in transforms:
+            if not isinstance(transform, dict):
+                continue
+            if transform.get("type") == "MultiScaleFlipAug":
+                if "img_scale" in transform and "scales" not in transform:
+                    transform["scales"] = transform.pop("img_scale")
+                if "flip" in transform and "allow_flip" not in transform:
+                    transform["allow_flip"] = transform.pop("flip")
+            elif "img_scale" in transform and "scale" not in transform:
+                transform["scale"] = transform.pop("img_scale")
+
+            patch_transforms(transform.get("transforms"))
+
+    if hasattr(cfg, "test_pipeline"):
+        patch_transforms(cfg.test_pipeline)
+
+    if hasattr(cfg, "data") and hasattr(cfg.data, "test") and hasattr(cfg.data.test, "pipeline"):
+        patch_transforms(cfg.data.test.pipeline)
 
 
 def str_to_class(classname):
@@ -186,6 +212,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                 )
         try:
             cfg = Config.fromfile(local_config_path)
+            normalize_test_pipeline(cfg)
             cfg.model.pretrained = None
             cfg.model.train_cfg = None
 
@@ -264,6 +291,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             sly.logger.debug(f"Model source if GUI is None: {model_source}")
 
         cfg = Config.fromfile(config_path)
+        normalize_test_pipeline(cfg)
         cfg.model.pretrained = None
         cfg.model.train_cfg = None
         model = build_segmentor(cfg.model, test_cfg=cfg.get("test_cfg"))
@@ -315,6 +343,8 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         model_yamls = sly.json.load_json_file(models_meta_path)
         model_config = {}
         for model_meta in model_yamls:
+            if not has_mmcls_models and model_meta["yml_file"].startswith("convnext/"):
+                continue
             mmseg_ver = version("mmsegmentation")
             model_yml_url = f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/{model_meta['yml_file']}"
             model_yml_local = os.path.join(configs_dir, model_meta["yml_file"])

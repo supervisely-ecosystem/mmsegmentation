@@ -3,9 +3,13 @@ import datetime
 try:
     from mmcv.runner.hooks import HOOKS
     from mmcv.runner.hooks.logger.text import TextLoggerHook
+
+    _USING_MMCV_HOOKS = True
 except ImportError:
     from mmengine.hooks import LoggerHook as TextLoggerHook
     from mmseg.registry import HOOKS
+
+    _USING_MMCV_HOOKS = False
 import supervisely as sly
 from sly_train_progress import get_progress_cb, set_progress, add_progress_to_request
 import sly_globals as g
@@ -19,9 +23,17 @@ class SuperviselyLoggerHook(TextLoggerHook):
     def __init__(
         self, by_epoch=True, interval=10, ignore_last=True, reset_flag=False, interval_exp_name=1000
     ):
-        super(SuperviselyLoggerHook, self).__init__(
-            by_epoch, interval, ignore_last, reset_flag, interval_exp_name
-        )
+        if _USING_MMCV_HOOKS:
+            super(SuperviselyLoggerHook, self).__init__(
+                by_epoch, interval, ignore_last, reset_flag, interval_exp_name
+            )
+        else:
+            super(SuperviselyLoggerHook, self).__init__(
+                interval=interval,
+                ignore_last=ignore_last,
+                interval_exp_name=interval_exp_name,
+                log_metric_by_epoch=by_epoch,
+            )
         self.progress_epoch = None
         self.progress_iter = None
         self._lrs = []

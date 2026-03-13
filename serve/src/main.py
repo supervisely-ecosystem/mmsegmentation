@@ -12,7 +12,10 @@ app_source_path = str(Path(__file__).parents[1])
 load_dotenv(os.path.join(app_source_path, "local.env"))
 load_dotenv(os.path.expanduser("~/supervisely.env"))
 
-from mmsegm_model import MMSegmentationModel
+try:
+    from mmsegm_model import MMSegmentationModel
+except ImportError:
+    from .mmsegm_model import MMSegmentationModel
 
 use_gui_for_local_debug = bool(int(os.environ.get("USE_GUI", "1")))
 
