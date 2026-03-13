@@ -10,7 +10,7 @@
     "train"
   ],
   "description": "Dashboard to configure, start and monitor training",
-  "docker_image": "supervisely/mmsegmentation:6.73.545",
+  "docker_image": "supervisely/mmsegmentation:6.73.546",
   "min_instance_version": "6.15.40",
   "main_script": "train/src/main.py",
   "gui_template": "train/src/gui.html",
