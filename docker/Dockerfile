@@ -21,6 +21,8 @@ RUN pip3 install setuptools==69.5.1
 RUN pip3 install openmim
 RUN pip3 install ffmpeg-python==0.2.0
 RUN pip3 install pyyaml==6.0
+RUN pip3 install ftfy==6.3.1
+RUN pip3 install regex==2026.4.4
 
 RUN mkdir -p /tmp/mmseg \
     && wget https://github.com/open-mmlab/mmsegmentation/archive/refs/tags/v0.23.0.tar.gz -P /tmp/mmseg \
