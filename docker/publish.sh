@@ -1,2 +1,2 @@
-docker build -t supervisely/mmseg:1.3.27 . && \
-docker push supervisely/mmseg:1.3.27
+docker build -t supervisely/mmsegmentation:6.73.544 . && \
+docker push supervisely/mmsegmentation:6.73.544
