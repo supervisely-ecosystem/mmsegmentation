@@ -21,10 +21,14 @@ RUN pip3 install setuptools==69.5.1
 RUN pip3 install openmim
 RUN pip3 install ffmpeg-python==0.2.0
 RUN pip3 install pyyaml==6.0
+RUN pip3 install ftfy==6.2.3
+RUN pip3 install regex==2024.11.6
 
 RUN mkdir -p /tmp/mmseg \
     && wget https://github.com/open-mmlab/mmsegmentation/archive/refs/tags/v0.23.0.tar.gz -P /tmp/mmseg \
     && tar -xvf /tmp/mmseg/v0.23.0.tar.gz -C /tmp/mmseg
 
-RUN pip3 install supervisely[model-benchmark]==6.73.486
-LABEL python_sdk_version="6.73.486"
+RUN pip3 install supervisely[model-benchmark]==6.73.545
+RUN pip3 install mmengine==0.10.7
+RUN pip3 install "urllib3<2"
+LABEL python_sdk_version="6.73.545"
