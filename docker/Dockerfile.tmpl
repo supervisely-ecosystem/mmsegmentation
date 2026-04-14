@@ -5,7 +5,7 @@ ARG EXTRA_BUILDER_LIBS=""
 
 FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04 AS cuda
 
-FROM python:3.12-slim-bookworm AS requirements-builder
+FROM python:3.8.10-slim-buster AS requirements-builder
 
 ENV LANG=C.UTF-8 \
   PYTHONDONTWRITEBYTECODE=1 \
@@ -38,14 +38,14 @@ RUN set -eux; \
   /opt/venv/bin/python -m pip install --no-cache-dir setuptools==69.5.1; \
   /opt/venv/bin/python -m pip install --no-cache-dir requests; \
   /opt/venv/bin/python -m pip install --no-cache-dir numpy; \
-  /opt/venv/bin/python -m pip install --no-cache-dir torch==2.10.0 torchvision==0.25.0; \
+  /opt/venv/bin/python -m pip install --no-cache-dir torch==1.10.0 torchvision==0.11.3; \
   if [ -s /tmp/requirements.txt ]; then \
     MMCV_WITH_OPS=1 /opt/venv/bin/python -m pip wheel --no-cache-dir --no-build-isolation -r /tmp/requirements.txt -w /tmp/wheels; \
   else \
     mkdir -p /tmp/wheels; \
   fi
 
-FROM python:3.12-slim-bookworm AS runtime
+FROM --platform=linux/amd64 python:3.8.10-slim-buster AS runtime
 
 ENV LANG=C.UTF-8 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -107,12 +107,12 @@ RUN --mount=from=requirements-builder,source=/tmp/wheels,target=/tmp/wheels,ro \
     /usr/bin/git \
     /usr/bin/curl \
     /usr/bin/wget \
-    /usr/local/lib/python3.12/site-packages/pip* \
-    /usr/local/lib/python3.12/site-packages/setuptools* \
-    /usr/local/lib/python3.12/site-packages/wheel* \
-    /usr/local/lib/python3.12/site-packages/pkg_resources* \
-    /usr/local/lib/python3.12/site-packages/_distutils* \
-    /usr/local/lib/python3.12/site-packages/distutils-precedence.pth; \
+    /usr/local/lib/python3.8/site-packages/pip* \
+    /usr/local/lib/python3.8/site-packages/setuptools* \
+    /usr/local/lib/python3.8/site-packages/wheel* \
+    /usr/local/lib/python3.8/site-packages/pkg_resources* \
+    /usr/local/lib/python3.8/site-packages/_distutils* \
+    /usr/local/lib/python3.8/site-packages/distutils-precedence.pth; \
   find /opt/venv -type d -name '__pycache__' -prune -exec rm -rf {} +; \
   find /opt/venv -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete; \
   find /opt/venv/lib/python*/site-packages -type d \( -name 'tests' -o -name 'test' \) -prune -exec rm -rf {} +; \
