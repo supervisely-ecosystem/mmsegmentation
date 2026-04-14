@@ -51,7 +51,7 @@ RUN set -eux; \
     mkdir -p /tmp/wheels; \
   fi
 
-FROM --platform=${APP_PLATFORM} python:3.8.10-slim-buster AS runtime
+FROM python:3.8.10-slim-buster AS runtime
 
 ENV LANG=C.UTF-8 \
     PYTHONDONTWRITEBYTECODE=1 \
