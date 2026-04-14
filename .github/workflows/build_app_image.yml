@@ -18,8 +18,8 @@ jobs:
     with:
       image_name: "${{ github.event.repository.name }}"
       dockerfile_template_path: "docker/Dockerfile.tmpl"
-      tag_version: "${{ github.event.inputs.tag_version }}"
+      tag_version: "${{ inputs.tag_version }}"
       runtime_base_image: "base-py-cuda-hardened"
       config_file: "train/config.json"
-      cve_checks: ${{ github.event.inputs.cve_checks }}
+      cve_checks: ${{ inputs.cve_checks }}
       skip_tag_check: true
