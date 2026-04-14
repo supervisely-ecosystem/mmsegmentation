@@ -11,5 +11,5 @@ mmcv-full==1.4.4
 mmsegmentation==0.23.0
 mmcls==0.21.0
 imgaug==0.4.0
-ftfy==6.3.1
-regex==2025.9.18
+ftfy==6.2.3
+regex==2024.11.6
