@@ -3,7 +3,7 @@ supervisely[agent, model-benchmark] @ git+https://github.com/supervisely/supervi
 ffmpeg-python==0.2.0
 pyyaml==6.0.3
 
-torch==1.10.0
+torch==1.10.2
 torchvision==0.11.3
  
 openmim==0.3.9

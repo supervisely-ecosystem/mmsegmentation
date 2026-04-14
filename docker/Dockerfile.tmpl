@@ -17,6 +17,12 @@ ENV LANG=C.UTF-8 \
 ARG REQUIREMENTS_FILE
 ARG EXTRA_BUILDER_LIBS
 RUN set -eux; \
+  sed -i \
+    -e 's|deb.debian.org/debian|archive.debian.org/debian|g' \
+    -e 's|security.debian.org/debian-security|archive.debian.org/debian-security|g' \
+    -e '/buster-updates/d' \
+    /etc/apt/sources.list; \
+  printf 'Acquire::Check-Valid-Until "false";\n' > /etc/apt/apt.conf.d/99no-check-valid-until; \
   apt-get update; \
   apt-get install -y --no-install-recommends \
     build-essential \
@@ -38,7 +44,7 @@ RUN set -eux; \
   /opt/venv/bin/python -m pip install --no-cache-dir setuptools==69.5.1; \
   /opt/venv/bin/python -m pip install --no-cache-dir requests; \
   /opt/venv/bin/python -m pip install --no-cache-dir numpy; \
-  /opt/venv/bin/python -m pip install --no-cache-dir torch==1.10.0 torchvision==0.11.3; \
+  /opt/venv/bin/python -m pip install --no-cache-dir torch==1.10.2 torchvision==0.11.3; \
   if [ -s /tmp/requirements.txt ]; then \
     MMCV_WITH_OPS=1 /opt/venv/bin/python -m pip wheel --no-cache-dir --no-build-isolation -r /tmp/requirements.txt -w /tmp/wheels; \
   else \
@@ -59,6 +65,12 @@ RUN --mount=from=requirements-builder,source=/tmp/wheels,target=/tmp/wheels,ro \
   set -eux; \
   ln -sf /usr/local/bin/python3 /usr/local/bin/python; \
   ln -sf /usr/local/bin/python3 /usr/bin/python; \
+  sed -i \
+    -e 's|deb.debian.org/debian|archive.debian.org/debian|g' \
+    -e 's|security.debian.org/debian-security|archive.debian.org/debian-security|g' \
+    -e '/buster-updates/d' \
+    /etc/apt/sources.list; \
+  printf 'Acquire::Check-Valid-Until "false";\n' > /etc/apt/apt.conf.d/99no-check-valid-until; \
   apt-get update; \
   apt-get install -y --no-install-recommends \
     libglib2.0-0 \
