@@ -1,5 +1,6 @@
 
-supervisely[agent, model-benchmark] @ git+https://github.com/supervisely/supervisely.git@upgrade-protobuf
+# supervisely[agent, model-benchmark] @ git+https://github.com/supervisely/supervisely.git@upgrade-protobuf
+supervisely[agent, model-benchmark]==6.73.546
 ffmpeg-python==0.2.0
 pyyaml==6.0.3
 
