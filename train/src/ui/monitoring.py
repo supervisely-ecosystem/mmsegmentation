@@ -7,7 +7,34 @@ import cv2
 import math
 import numpy as np
 from functools import partial
-from mmengine.model import revert_sync_batchnorm
+from importlib.util import find_spec
+try:
+    from mmengine.model import revert_sync_batchnorm
+except ImportError:
+    from mmcv.cnn.utils import revert_sync_batchnorm
+
+def _patch_missing_mmcv_ext_for_local_imports() -> None:
+    if find_spec("mmcv._ext") is not None:
+        return
+    try:
+        from mmcv.utils import ext_loader
+    except ImportError:
+        return
+
+    def _missing_op(*args, **kwargs):
+        raise RuntimeError(
+            "This MMSegmentation operation requires mmcv-full with compiled ops. "
+            "Install mmcv-full in a matching Python/Torch environment to train this model."
+        )
+
+    class _MissingExt:
+        def __getattr__(self, _name):
+            return _missing_op
+
+    ext_loader.load_ext = lambda *args, **kwargs: _MissingExt()
+
+
+_patch_missing_mmcv_ext_for_local_imports()
 
 try:
     from mmseg.apis import train_segmentor
@@ -129,7 +156,12 @@ def init_devices():
         return
 
     devices = []
-    cuda.init()
+    try:
+        cuda.init()
+    except (AssertionError, RuntimeError) as e:
+        sly.logger.warning(f"CUDA is not available: {e}")
+        return devices
+
     if not cuda.is_available():
         sly.logger.warning("CUDA is not available")
         return devices

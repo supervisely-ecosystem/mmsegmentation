@@ -1,5 +1,6 @@
 import errno
 from importlib.metadata import version
+from importlib.util import find_spec
 import os
 import requests
 import yaml
@@ -7,14 +8,27 @@ import sly_globals as g
 import supervisely as sly
 from supervisely.app.v1.widgets.progress_bar import ProgressBar
 import init_default_cfg as init_dc
-from mmengine.config import Config
+try:
+    from mmengine.config import Config
+except ImportError:
+    from mmcv import Config
 
 cfg = None
 
 
+def has_mmcls_models_available() -> bool:
+    try:
+        return find_spec("mmcls.models") is not None
+    except ModuleNotFoundError:
+        return False
+
+
+has_mmcls_models = has_mmcls_models_available()
+
+
 def init(data, state):
-    state["pretrainedModel"] = "ConvNeXt"
     data["pretrainedModels"], metrics = get_pretrained_models(return_metrics=True)
+    state["pretrainedModel"] = list(data["pretrainedModels"].keys())[0]
     model_select_info = []
     for model_name, params in data["pretrainedModels"].items():
         model_select_info.append(
@@ -54,6 +68,8 @@ def get_pretrained_models(return_metrics=False):
     model_config = {}
     all_metrics = []
     for model_meta in model_yamls:
+        if not has_mmcls_models and model_meta["yml_file"].startswith("convnext/"):
+            continue
         with open(os.path.join(g.configs_dir, model_meta["yml_file"]), "r") as stream:
             model_info = yaml.safe_load(stream)
             model_config[model_meta["model_name"]] = {}
