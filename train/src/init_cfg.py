@@ -3,8 +3,15 @@ import augs
 import splits
 import os
 import sly_globals as g
-from mmengine.config import ConfigDict
-from mmseg.apis import set_random_seed
+try:
+    from mmengine.config import ConfigDict
+except ImportError:
+    from mmcv import ConfigDict
+
+try:
+    from mmengine.runner import set_random_seed
+except ImportError:
+    from mmcv.runner import set_random_seed
 
 
 def init_class_weights(state, classes, default_bg_class_weight=0.3):

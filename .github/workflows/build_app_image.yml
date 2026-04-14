@@ -7,13 +7,19 @@ on:
       tag_version:
         description: "Tag version to build image for"
         required: false
+      cve_checks:
+        description: "Whether to perform CVE checks during the build"
+        type: boolean
+        required: false
+        default: true
 jobs:
   build-image:
     uses: supervisely-ecosystem/workflows/.github/workflows/build_image_from_template.yml@master
     with:
       image_name: "${{ github.event.repository.name }}"
-      tag_version: "${{ github.event.inputs.tag_version }}"
+      dockerfile_template_path: "docker/Dockerfile.tmpl"
+      tag_version: "${{ inputs.tag_version }}"
       runtime_base_image: "base-py-cuda-hardened"
       config_file: "train/config.json"
-      cve_checks: true
+      cve_checks: ${{ inputs.cve_checks }}
       skip_tag_check: true

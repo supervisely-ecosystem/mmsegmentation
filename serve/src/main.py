@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 from pathlib import Path
 from importlib.metadata import version
 import torch
@@ -9,8 +10,11 @@ import supervisely as sly
 
 root_source_path = str(Path(__file__).parents[2])
 app_source_path = str(Path(__file__).parents[1])
+if app_source_path not in sys.path:
+    sys.path.insert(0, app_source_path)
 load_dotenv(os.path.join(app_source_path, "local.env"))
 load_dotenv(os.path.expanduser("~/supervisely.env"))
+os.environ.setdefault("WORKSPACE_ID", "0")
 
 from mmsegm_model import MMSegmentationModel
 

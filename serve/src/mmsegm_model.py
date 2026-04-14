@@ -8,14 +8,60 @@ except:
 
 from collections import OrderedDict
 from importlib.metadata import version
+from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Dict, List
 
 import yaml
-from mmengine.config import Config
-from mmengine.model import revert_sync_batchnorm
-from mmengine.runner import load_checkpoint
-from mmseg.apis.inference import inference_segmentor
+
+try:
+    from mmengine.config import Config
+except ImportError:
+    from mmcv import Config
+
+try:
+    from mmengine.model import revert_sync_batchnorm
+except ImportError:
+    from mmcv.cnn.utils import revert_sync_batchnorm
+
+try:
+    from mmengine.runner import load_checkpoint
+except ImportError:
+    from mmcv.runner import load_checkpoint
+
+
+def _patch_missing_mmcv_ext_for_local_imports() -> None:
+    if find_spec("mmcv._ext") is not None:
+        return
+
+    try:
+        from mmcv.utils import ext_loader
+    except ImportError:
+        return
+
+    def _missing_op(*args, **kwargs):
+        raise RuntimeError(
+            "This MMSegmentation operation requires mmcv-full with compiled ops. "
+            "Install mmcv-full in a matching Python/Torch environment to run this model."
+        )
+
+    class _MissingExt:
+        def __getattr__(self, _name):
+            return _missing_op
+
+    ext_loader.load_ext = lambda *args, **kwargs: _MissingExt()
+
+
+_patch_missing_mmcv_ext_for_local_imports()
+
+try:
+    from mmseg.apis.inference import inference_model
+except ImportError:
+    from mmseg.apis import inference_segmentor
+
+    def inference_model(model, image_path):
+        return inference_segmentor(model, image_path)
+
 from mmseg.datasets import *
 from mmseg.models import build_segmentor
 
@@ -34,10 +80,50 @@ import workflow as w
 root_source_path = str(Path(__file__).parents[2])
 
 api = sly.Api.from_env()
-team_id = sly.env.team_id()
+if os.environ.get("LOCAL_DEBUG_WITHOUT_TEAM") == "1":
+    team_id = None
+else:
+    try:
+        team_id = sly.env.team_id()
+    except KeyError:
+        team_id = None
 
 models_meta_path = os.path.join(root_source_path, "models", "model_meta.json")
 configs_dir = os.path.join(root_source_path, "configs")
+
+
+def has_mmcls_models_available() -> bool:
+    try:
+        return find_spec("mmcls.models") is not None
+    except ModuleNotFoundError:
+        return False
+
+
+has_mmcls_models = has_mmcls_models_available()
+
+
+def normalize_test_pipeline(cfg: Config) -> None:
+    def patch_transforms(transforms):
+        if transforms is None:
+            return
+        for transform in transforms:
+            if not isinstance(transform, dict):
+                continue
+            if transform.get("type") == "MultiScaleFlipAug":
+                if "img_scale" in transform and "scales" not in transform:
+                    transform["scales"] = transform.pop("img_scale")
+                if "flip" in transform and "allow_flip" not in transform:
+                    transform["allow_flip"] = transform.pop("flip")
+            elif "img_scale" in transform and "scale" not in transform:
+                transform["scale"] = transform.pop("img_scale")
+
+            patch_transforms(transform.get("transforms"))
+
+    if hasattr(cfg, "test_pipeline"):
+        patch_transforms(cfg.test_pipeline)
+
+    if hasattr(cfg, "data") and hasattr(cfg.data, "test") and hasattr(cfg.data.test, "pipeline"):
+        patch_transforms(cfg.data.test.pipeline)
 
 
 def str_to_class(classname):
@@ -45,7 +131,7 @@ def str_to_class(classname):
 
 
 class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
-    team_id = sly.env.team_id()
+    team_id = team_id
     in_train = False
 
     def initialize_custom_gui(self) -> Widget:
@@ -53,10 +139,12 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         models = self.get_models()
         filtered_models = utils.filter_models_structure(models)
         self.pretrained_models_table = PretrainedModelsSelector(filtered_models)
-        sly_mmseg = MMSegmentation(team_id)
-        custom_models = sly_mmseg.get_list()
+        custom_models = []
+        if team_id is not None:
+            sly_mmseg = MMSegmentation(team_id)
+            custom_models = sly_mmseg.get_list()
         self.custom_models_table = CustomModelsSelector(
-            team_id,
+            team_id or 0,
             custom_models,
             show_custom_checkpoint_path=True,
             custom_checkpoint_task_types=["semantic segmentation"],
@@ -186,6 +274,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
                 )
         try:
             cfg = Config.fromfile(local_config_path)
+            normalize_test_pipeline(cfg)
             cfg.model.pretrained = None
             cfg.model.train_cfg = None
 
@@ -264,6 +353,7 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
             sly.logger.debug(f"Model source if GUI is None: {model_source}")
 
         cfg = Config.fromfile(config_path)
+        normalize_test_pipeline(cfg)
         cfg.model.pretrained = None
         cfg.model.train_cfg = None
         model = build_segmentor(cfg.model, test_cfg=cfg.get("test_cfg"))
@@ -315,6 +405,8 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         model_yamls = sly.json.load_json_file(models_meta_path)
         model_config = {}
         for model_meta in model_yamls:
+            if not has_mmcls_models and model_meta["yml_file"].startswith("convnext/"):
+                continue
             mmseg_ver = version("mmsegmentation")
             model_yml_url = f"https://github.com/open-mmlab/mmsegmentation/tree/v{mmseg_ver}/configs/{model_meta['yml_file']}"
             model_yml_local = os.path.join(configs_dir, model_meta["yml_file"])
@@ -378,6 +470,10 @@ class MMSegmentationModel(sly.nn.inference.SemanticSegmentation):
         self, image_path: str, settings: Dict[str, Any]
     ) -> List[sly.nn.PredictionSegmentation]:
 
-        segmented_image = inference_segmentor(self.model, image_path)[0]
+        result = inference_model(self.model, image_path)
+        if hasattr(result, "pred_sem_seg"):
+            segmented_image = result.pred_sem_seg.data.squeeze().detach().cpu().numpy()
+        else:
+            segmented_image = result[0]
 
         return [sly.nn.PredictionSegmentation(segmented_image)]
