@@ -36,6 +36,35 @@ def _patch_missing_mmcv_ext_for_local_imports() -> None:
 
 _patch_missing_mmcv_ext_for_local_imports()
 
+
+def _patch_mmcv_parallel_for_torch_device_ids() -> None:
+    try:
+        import torch
+        import mmcv.parallel._functions as mmcv_parallel_functions
+    except ImportError:
+        return
+
+    original_get_stream = getattr(mmcv_parallel_functions, "_get_stream", None)
+    if original_get_stream is None or getattr(
+        original_get_stream, "_supervisely_accepts_int_device", False
+    ):
+        return
+
+    def _get_stream(device):
+        try:
+            return original_get_stream(device)
+        except AttributeError as e:
+            if isinstance(device, int) and "has no attribute 'type'" in str(e):
+                device = torch.device("cuda", device) if device >= 0 else torch.device("cpu")
+                return original_get_stream(device)
+            raise
+
+    _get_stream._supervisely_accepts_int_device = True
+    mmcv_parallel_functions._get_stream = _get_stream
+
+
+_patch_mmcv_parallel_for_torch_device_ids()
+
 try:
     from mmseg.apis import train_segmentor
 except ImportError:

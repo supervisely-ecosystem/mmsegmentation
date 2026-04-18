@@ -5,14 +5,15 @@ ARG EXTRA_BUILDER_LIBS=""
 
 FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04 AS cuda
 
-FROM python:3.8.10-slim-buster AS requirements-builder
+FROM python:3.10-slim-buster AS requirements-builder
 
 ENV LANG=C.UTF-8 \
   PYTHONDONTWRITEBYTECODE=1 \
   PYTHONUNBUFFERED=1 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
   PIP_NO_CACHE_DIR=1 \
-  PIP_PREFER_BINARY=1
+  PIP_PREFER_BINARY=1 \
+  TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 
 ARG REQUIREMENTS_FILE
 ARG EXTRA_BUILDER_LIBS
@@ -43,19 +44,22 @@ RUN set -eux; \
   /opt/venv/bin/python -m pip install --no-cache-dir --upgrade pip wheel; \
   /opt/venv/bin/python -m pip install --no-cache-dir setuptools==69.5.1; \
   /opt/venv/bin/python -m pip install --no-cache-dir requests; \
-  /opt/venv/bin/python -m pip install --no-cache-dir numpy; \
-  /opt/venv/bin/python -m pip install --no-cache-dir torch==1.10.2 torchvision==0.11.3; \
+  /opt/venv/bin/python -m pip install --no-cache-dir "numpy<2"; \
+  /opt/venv/bin/python -m pip install --no-cache-dir \
+    torch==2.7.1+cu128 torchvision==0.22.1+cu128 \
+    --index-url https://download.pytorch.org/whl/cu128; \
   if [ -s /tmp/requirements.txt ]; then \
-    MMCV_WITH_OPS=1 /opt/venv/bin/python -m pip wheel --no-cache-dir --no-build-isolation -r /tmp/requirements.txt -w /tmp/wheels; \
+    MMCV_WITH_OPS=0 /opt/venv/bin/python -m pip wheel --no-cache-dir --no-build-isolation -r /tmp/requirements.txt -w /tmp/wheels; \
   else \
     mkdir -p /tmp/wheels; \
   fi
 
-FROM python:3.8.10-slim-buster AS runtime
+FROM python:3.10-slim-buster AS runtime
 
 ENV LANG=C.UTF-8 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 
 ARG REQUIREMENTS_FILE
 
@@ -89,7 +93,7 @@ RUN --mount=from=requirements-builder,source=/tmp/wheels,target=/tmp/wheels,ro \
     set -- /tmp/wheels/*.whl; \
     if [ -e "$1" ]; then \
       /opt/venv/bin/python -m pip install --no-cache-dir --no-compile --no-index /tmp/wheels/*.whl; \
-      /opt/venv/bin/python -c "import pkg_resources, torch; print(torch.__version__)"; \
+      /opt/venv/bin/python -c "import pkg_resources, torch; print(torch.__version__, torch.version.cuda, torch.cuda.get_arch_list())"; \
       rm -rf \
         /opt/venv/lib/python*/site-packages/pip* \
         /opt/venv/lib/python*/site-packages/wheel* \
@@ -115,12 +119,12 @@ RUN --mount=from=requirements-builder,source=/tmp/wheels,target=/tmp/wheels,ro \
     /usr/bin/git \
     /usr/bin/curl \
     /usr/bin/wget \
-    /usr/local/lib/python3.8/site-packages/pip* \
-    /usr/local/lib/python3.8/site-packages/setuptools* \
-    /usr/local/lib/python3.8/site-packages/wheel* \
-    /usr/local/lib/python3.8/site-packages/pkg_resources* \
-    /usr/local/lib/python3.8/site-packages/_distutils* \
-    /usr/local/lib/python3.8/site-packages/distutils-precedence.pth; \
+    /usr/local/lib/python*/site-packages/pip* \
+    /usr/local/lib/python*/site-packages/setuptools* \
+    /usr/local/lib/python*/site-packages/wheel* \
+    /usr/local/lib/python*/site-packages/pkg_resources* \
+    /usr/local/lib/python*/site-packages/_distutils* \
+    /usr/local/lib/python*/site-packages/distutils-precedence.pth; \
   find /opt/venv -type d -name '__pycache__' -prune -exec rm -rf {} +; \
   find /opt/venv -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete; \
   find /opt/venv/lib/python*/site-packages -type d \( -name 'tests' -o -name 'test' \) -prune -exec rm -rf {} +; \
