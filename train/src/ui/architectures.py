@@ -8,10 +8,7 @@ import sly_globals as g
 import supervisely as sly
 from supervisely.app.v1.widgets.progress_bar import ProgressBar
 import init_default_cfg as init_dc
-try:
-    from mmengine.config import Config
-except ImportError:
-    from mmcv import Config
+from mmcv import Config
 
 cfg = None
 

@@ -8,10 +8,7 @@ import math
 import numpy as np
 from functools import partial
 from importlib.util import find_spec
-try:
-    from mmengine.model import revert_sync_batchnorm
-except ImportError:
-    from mmcv.cnn.utils import revert_sync_batchnorm
+from mmcv.cnn.utils import revert_sync_batchnorm
 
 def _patch_missing_mmcv_ext_for_local_imports() -> None:
     if find_spec("mmcv._ext") is not None:
@@ -65,16 +62,7 @@ def _patch_mmcv_parallel_for_torch_device_ids() -> None:
 
 _patch_mmcv_parallel_for_torch_device_ids()
 
-try:
-    from mmseg.apis import train_segmentor
-except ImportError:
-    from mmengine.runner import Runner
-
-    def train_segmentor(model, datasets, cfg, distributed=False, validate=True, meta=None):
-        runner = Runner.from_cfg(cfg)
-        runner.train()
-
-
+from mmseg.apis import train_segmentor
 from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from init_cfg import init_cfg

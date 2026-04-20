@@ -14,20 +14,9 @@ from typing import Any, Dict, List
 
 import yaml
 
-try:
-    from mmengine.config import Config
-except ImportError:
-    from mmcv import Config
-
-try:
-    from mmengine.model import revert_sync_batchnorm
-except ImportError:
-    from mmcv.cnn.utils import revert_sync_batchnorm
-
-try:
-    from mmengine.runner import load_checkpoint
-except ImportError:
-    from mmcv.runner import load_checkpoint
+from mmcv import Config
+from mmcv.cnn.utils import revert_sync_batchnorm
+from mmcv.runner import load_checkpoint
 
 
 def _patch_missing_mmcv_ext_for_local_imports() -> None:
@@ -83,13 +72,11 @@ def _patch_mmcv_parallel_for_torch_device_ids() -> None:
 
 _patch_mmcv_parallel_for_torch_device_ids()
 
-try:
-    from mmseg.apis.inference import inference_model
-except ImportError:
-    from mmseg.apis import inference_segmentor
+from mmseg.apis import inference_segmentor
 
-    def inference_model(model, image_path):
-        return inference_segmentor(model, image_path)
+
+def inference_model(model, image_path):
+    return inference_segmentor(model, image_path)
 
 from mmseg.datasets import *
 from mmseg.models import build_segmentor
@@ -139,12 +126,13 @@ def normalize_test_pipeline(cfg: Config) -> None:
             if not isinstance(transform, dict):
                 continue
             if transform.get("type") == "MultiScaleFlipAug":
-                if "img_scale" in transform and "scales" not in transform:
-                    transform["scales"] = transform.pop("img_scale")
-                if "flip" in transform and "allow_flip" not in transform:
-                    transform["allow_flip"] = transform.pop("flip")
-            elif "img_scale" in transform and "scale" not in transform:
-                transform["scale"] = transform.pop("img_scale")
+                if "scales" in transform and "img_scale" not in transform:
+                    transform["img_scale"] = transform.pop("scales")
+                if "allow_flip" in transform and "flip" not in transform:
+                    transform["flip"] = transform.pop("allow_flip")
+            elif transform.get("type") == "Resize":
+                if "scale" in transform and "img_scale" not in transform:
+                    transform["img_scale"] = transform.pop("scale")
 
             patch_transforms(transform.get("transforms"))
 
