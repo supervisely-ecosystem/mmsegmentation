@@ -449,6 +449,44 @@ def prepare_segmentation_data(state, img_dir, ann_dir, palette, target_classes):
     g.api.app.set_field(g.task_id, "state.preparingData", False)
 
 
+def ensure_bg_class_in_project_meta(project_path, bg_name="__bg__", bg_color=(0, 0, 0)):
+    project_fs = sly.Project(project_path, sly.OpenMode.READ)
+    class_names = [obj_class.name for obj_class in project_fs.meta.obj_classes]
+    existing_bg_name = get_bg_class_name(class_names)
+    if existing_bg_name is not None:
+        return existing_bg_name
+
+    project_fs.set_meta(
+        project_fs.meta.add_obj_class(
+            sly.ObjClass(name=bg_name, geometry_type=sly.Bitmap, color=bg_color)
+        )
+    )
+    sly.logger.info(
+        f"Added missing background class '{bg_name}' to benchmark project meta: {project_path}"
+    )
+    return bg_name
+
+
+def ensure_bg_class_in_benchmark_projects(gt_project_path, pred_project_path, classes):
+    bg_name = get_bg_class_name(classes) or "__bg__"
+    bg_color = (0, 0, 0)
+
+    for project_path in (gt_project_path, pred_project_path):
+        project_fs = sly.Project(project_path, sly.OpenMode.READ)
+        existing_bg_name = get_bg_class_name(
+            [obj_class.name for obj_class in project_fs.meta.obj_classes]
+        )
+        if existing_bg_name is not None:
+            obj_class = project_fs.meta.get_obj_class(existing_bg_name)
+            if obj_class is not None:
+                bg_name = existing_bg_name
+                bg_color = obj_class.color
+            break
+
+    ensure_bg_class_in_project_meta(gt_project_path, bg_name=bg_name, bg_color=bg_color)
+    ensure_bg_class_in_project_meta(pred_project_path, bg_name=bg_name, bg_color=bg_color)
+
+
 def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
     global m
 
@@ -639,6 +677,7 @@ def run_benchmark(api: sly.Api, task_id, classes, cfg, state, remote_dir):
 
         # 3. Pull results from the server
         gt_project_path, pred_project_path = bm.download_projects(save_images=False)
+        ensure_bg_class_in_benchmark_projects(gt_project_path, pred_project_path, classes)
 
         # 4. Evaluate
         bm._evaluate(gt_project_path, pred_project_path)
