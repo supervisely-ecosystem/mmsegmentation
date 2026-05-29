@@ -30,3 +30,4 @@ jobs:
       RELEASE_TYPE: "release-branch"
       SUBAPP_PATHS: "train, serve"
       RELEASE_SUBAPP_FILTER: "${{ inputs.RELEASE_SUBAPP_FILTER || '' }}"
+      WORKFLOWS_REF: "retry"
